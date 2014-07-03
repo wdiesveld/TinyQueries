@@ -6,7 +6,7 @@ It uses a simple and powerful syntax to merge and nest SQL queries.
 ## Example
 
 Suppose you want a nested data structure consisting of a list of users and for each user you want a list of the messages written by the user.
-For this you write two queries **users** and **messages**. To nest the data you can write:
+For this you write two queries **users** and **messages**. To nest the data you just need to write:
 
 	users(messages)
 
@@ -21,8 +21,8 @@ For this you write two queries **users** and **messages**. To nest the data you 
 * Copy the folder **TinyQueries** into your php lib folder.
 * Use the file **QueryDB.template.xml** to set the database credentials and save it as **QueryDB.xml** in the same folder as the PHP libs.
 * Create a folder **queries** and specify its path in **QueryDB.xml**.
-* Include **QueryDB.class.php** in your project
-* Create the database object by
+* Include **QueryDB.class.php** in your project.
+* Create the database object by:
 
 	$db = new TinyQueries\QueryDB();
 
