@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<querydb>
+	
+	<!-- Folder for compiled SQL queries - default is queries folder -->
+	<queries></queries>
+	
+	<!-- Optional settings -->
+	<query_output>
+		<nested value="true" />
+	</query_output>
+
+	<!-- You can specify credentials per server, or just leave out the server attribute to let the credentials apply to each server -->
+	<db server="DOMAINNAME1">
+		<host></host>
+		<dbname></dbname>
+		<username></username>
+		<password></password>
+	</db>
+
+	<!-- Optional: -->
+	<db server="DOMAINNAME2">
+		<host></host>
+		<dbname></dbname>
+		<username></username>
+		<password></password>
+	</db>
+	
+</querydb>
