@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.0.1
+ * @version     1.0.2
  * @package     TinyQueries
  *
  * License
@@ -325,6 +325,8 @@ class Query
 	 */
 	public function select($paramValues = null, $key = null)
 	{
+		$this->load();
+
 		if (!is_null($key))
 			$this->key( $key );
 		

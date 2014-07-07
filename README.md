@@ -28,10 +28,10 @@ For this you write two queries **users** and **messages**. To nest the data you 
 
 ## Hello World
 
-In the queries-folder create a json file **helloWorld.json**:
+In the queries-folder create a json file named **helloWorld.json** with the following content:
 
 	{
-		select: "'Hello World'"
+		"select": "'Hello World'"
 	}
 
 Then the query can be called as follows:
