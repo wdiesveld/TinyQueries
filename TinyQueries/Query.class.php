@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.0.2
+ * @version     1.1
  * @package     TinyQueries
  *
  * License
@@ -35,14 +35,20 @@ require_once('QuerySQL.class.php');
  */
 class Query
 {
+	// Query types
+	const PLAIN	= 'plain';
+	const TREE	= 'tree';
+	const MERGE	= 'merge';
+	const CHAIN	= 'chain';
+	
 	public $id;
 	public $compiled;
+	public $children;
 	public $params;
 	
 	private $db;
-	private $children;
 	private $loadChildren;
-	
+	private $type;
 	private $keys;
 	private $output;
 	private $select;
@@ -53,7 +59,6 @@ class Query
 	private $orderBy;
 	private $orderType;
 	private $maxResults;
-	
 	private $querySql;
 	private $paramValues;
 
@@ -61,11 +66,14 @@ class Query
 	 * Constructor
 	 *
 	 * @param {QueryDB} $db Handle to database
-	 * @param {string} $idList (optional) ID of the query, or a list of ID's like "a,b,c" (a merge), 
-	 *										or a nested structure of ID's like "a(b(c),d)" 
-	 *										or a combination like "a,b(c)"
+	 * @param {string} $idSpec (optional) 
+	 *		ID of the query, or a list of ID's like "a,b,c" (a merge), 
+	 *		or a nested structure of ID's like "a(b(c),d)" 
+	 *		or a chained structure like "a:b:c"
+	 *		or a combination like "a,b(c):d"
+	 *		If you supply this parameter, the meta data of the query and all subqueries is loaded from the JSON files
 	 */
-	public function __construct($db, $idList = null)
+	public function __construct($db, $idSpec = null)
 	{
 		$this->db 			= $db;
 		$this->select		= array();
@@ -79,6 +87,7 @@ class Query
 		$this->keys			= new \StdClass();
 		$this->params		= new \StdClass();
 		$this->output		= new \StdClass();
+		$this->type			= self::PLAIN;
 
 		$this->output->key 		= null;
 		$this->output->group	= false;
@@ -87,8 +96,8 @@ class Query
 		$this->output->nested 	= true;
 		$this->output->fields 	= new \StdClass();
 		
-		// Parse $idList
-		$this->parseList($idList);
+		// Parse $idSpec
+		$this->parseList($idSpec);
 	}
 
 	/**
@@ -159,93 +168,41 @@ class Query
 	}
 	
 	/**
-	 * Connects a query to this query
-	 *
-	 * @param {string} $idTree
-	 * @param {string} $type 'child'|'merge'
-	 *
-	 * @return {Query}
-	 */
-	private function add($idTree, $type)
-	{
-		$child = new Query($this->db, $idTree);
-
-		$this->children[] = $child;
-		
-		// If there is no id, it is assumed that this is a merge query, so we are ready
-		if (!$this->id)
-			return $this;
-		
-		// Load parent query
-		$this->load();
-		
-		// If parent is compiled & type=child we are ready (child specs are set by compiler)
-		if ($this->compiled && $type == 'child')
-			return $this;
-		
-		// Load child query
-		$child->load();
-		
-		if ($this->compiled != $child->compiled)
-			throw new \Exception("Query::add - parent & child queries should both be compiled or not compiled");
-		
-		// Find the matching key between parent & child
-		$matchKey = $this->match( $child );
-
-		if (!$matchKey)
-			throw new \Exception("Query::add - cannot add query; there is no unique matching key for '" . $this->id . "' and '" . $child->id . "'");
-		
-		$parentKey 	= $this->keys->$matchKey;
-		$childKey	= $child->keys->$matchKey;
-		
-		$parentKeyAlias = ($this->compiled) 
-			? $parentKey
-			: "__parentKey-" . count($this->children);
-
-		$childKeyAlias = ($this->compiled) 
-			? $childKey
-			: $matchKey;
-
-		// Add parentKey to select
-		if (!$this->compiled)
-			$this->select[] = $parentKey . " as '" . $parentKeyAlias . "'";
-				
-		// Create child definition which is compatible with the one used for compiled queries
-		$childDef = new \StdClass();
-		$childDef->type  		= $type;
-		$childDef->child 		= $child->id;
-		$childDef->parentKey 	= $parentKeyAlias;
-		$childDef->childKey		= $childKeyAlias;
-		$childDef->params 		= new \StdClass();
-		$childDef->params->$matchKey = $parentKeyAlias;
-		
-		$this->output->fields->{$child->id} = $childDef;
-		
-		// Modify child such that it can be linked to the parent
-		if (!$this->compiled)
-			$child->bind( $matchKey, $childKey );
-		
-		return $this;
-	}
-	
-	/**
 	 * Adds a parameter binding to the query
 	 *
 	 * @param {string} $paramName
-	 * @param {string} $fieldName
+	 * @param {string} $fieldName If null, then $this->keys->$paramName is used as fieldname
 	 */
-	public function bind($paramName, $fieldName)
+	public function bind($paramName, $fieldName = null)
 	{
+		// Compiled queries cannot be modified, so quit
 		if ($this->compiled)
-			throw new \Exception("Cannot add binding to compiled queries");
+			return $this;
+		
+		// For chain & merge do recursive call on children
+		if (in_array($this->type, array(self::MERGE, self::CHAIN)))
+		{
+			foreach ($this->children as $child)
+				$child->bind($paramName, $fieldName);
+				
+			return $this;
+		}
 			
 		if (property_exists($this->params, $paramName))
 			throw new \Exception("Query::bind - parameter '" . $paramName . "' already present in query '" . $this->id . "'");
+			
+		if (is_null($fieldName) && !property_exists($this->keys, $paramName))
+			throw new \Exception("Query::bind - key '" . $paramName . "' not found in query '" . $this->id . "'");
 		
-		$this->params->$paramName = new \StdClass();
-		$this->params->$paramName->doc		= "Auto generated parameter";
-		$this->params->$paramName->type 	= "string";
-		$this->params->$paramName->expose 	= "public";
+		if (is_null($fieldName))
+			$fieldName = $this->keys->$paramName;
+		
+		$param = new \StdClass();
+		$param->doc		= "Auto generated parameter";
+		$param->type 	= array("string", "array");
+		$param->expose 	= "public";
+		
+		$this->params->$paramName = $param;
 		
 		$this->select[] = $fieldName . " as '"  . $paramName . "'";
 		$this->where[] 	= $fieldName . " in (:" . $paramName . ")"; 
@@ -298,12 +255,14 @@ class Query
 	{
 		if (!is_null($paramValues))
 			$this->params( $paramValues );
-			
-		// If there is no ID and the query has children the output of this query is a merge of it children
-		if (!$this->id && count($this->children) > 0)
+
+		// Do merge 
+		if ($this->type == self::MERGE)
 			return $this->merge();
-			
-		$this->load();
+
+		// Do chaining 
+		if ($this->type == self::CHAIN)
+			return $this->chain();
 
 		if (!$this->compiled)
 		{
@@ -321,27 +280,26 @@ class Query
 	 * Generic select function
 	 *
 	 * @param {assoc} $paramValues
-	 * @param {string} $key
+	 * @param {string} $key (optional) Key field which can be used to group the output
 	 */
 	public function select($paramValues = null, $key = null)
 	{
-		$this->load();
-
-		if (!is_null($key))
-			$this->key( $key );
+		// If no key is supplied take default from JSON spec
+		if (is_null($key))
+			$key = $this->output->key;
 		
 		$data = $this->execute($paramValues);
 		
-		$this->bindChildren( $data );
+		$this->bindChildren( $data, $key );
 		
-		// Handle output settings 'key' and 'group'
+		// Handle $key and output->group
 		if ($this->output->columns == 'all' && $this->output->rows == 'all')
 		{
-			if ($this->output->key && $this->output->group)
-				return Arrays::groupBy($data, $this->output->key, true);
+			if ($key && $this->output->group)
+				return Arrays::groupBy($data, $key, true);
 			
-			if ($this->output->key)
-				return Arrays::toAssoc($data, $this->output->key);
+			if ($key)
+				return Arrays::toAssoc($data, $key);
 		}
 
 		return $data;
@@ -406,6 +364,126 @@ class Query
 				$query->output = false;
 		}
 			
+		return $this;
+	}
+	
+	/**
+	 * Basic 'explain' function which shows the query-tree
+	 *
+	 */
+	public function explain($depth = 0)
+	{
+		$expl = '';
+	
+		for ($i=0;$i<$depth;$i++)
+			$expl .= "  ";
+			
+		$expl .= "- ";
+		
+		if ($this->id)
+			$expl .= $this->id . " ";
+			
+		$expl .= "[" . $this->type . "]\n";
+		
+		foreach ($this->children as $child)
+			$expl .= $child->explain($depth+1);
+			
+		return $expl;
+	}
+	
+	/**
+	 * Updates meta info for this query 
+	 * (Now only keys & parameters are updated; should be extended with other fields like output-fields etc)
+	 */
+	private function update()
+	{
+		// Only applies for queries with children
+		if (!$this->children || count($this->children)==0)
+			return;
+		
+		// Call update recursively
+		foreach ($this->children as $child)
+			$child->update();
+			
+		// Code below only applies to merge & chain queries
+		if (!in_array($this->type, array(self::MERGE, self::CHAIN)))
+			return;
+			
+		// Determine the merge/chain key
+		$matchingKey = $this->match( $this->children );
+			
+		// Copy key from first child
+		$this->keys->$matchingKey = ($matchingKey)
+			? $this->children[ 0 ]->keys->$matchingKey
+			: new \StdClass();
+		
+		// Copy parameters from children
+		$this->params = new \StdClass();
+		foreach ($this->children as $child)
+			foreach ($child->params as $name => $spec)
+				$this->params->$name = $spec;
+	}
+	
+	/**
+	 * Connects a query to this query
+	 *
+	 * @param {string} $idSpec
+	 *
+	 * @return {Query}
+	 */
+	private function link($idSpec)
+	{
+		$child = new Query($this->db, $idSpec);
+
+		$this->children[] = $child;
+
+		// Only tree queries need further processing, so in this case we are ready
+		if ($this->type != self::TREE)
+			return $this;
+		
+		// If parent is compiled we are ready (child specs are set by compiler)
+		if ($this->compiled)
+			return $this;
+		
+		if ($this->compiled != $child->compiled)
+			throw new \Exception("Query::link - parent & child queries should both be compiled or not compiled");
+		
+		// Find the matching key between parent & child
+		$matchKey = $this->match( $child );
+
+		if (!$matchKey)
+			throw new \Exception("Query::link - cannot link query; there is no unique matching key for '" . $this->id . "' and '" . $child->id . "'");
+
+		$parentKey 	= $this->keys->$matchKey;
+		$childKey	= $child->keys->$matchKey;
+		
+		$parentKeyAlias = ($this->compiled) 
+			? $parentKey
+			: "__parentKey-" . count($this->children);
+
+		$childKeyAlias = ($this->compiled) 
+			? $childKey
+			: $matchKey;
+
+		// Add parentKey to select
+		if (!$this->compiled)
+			$this->select[] = $parentKey . " as '" . $parentKeyAlias . "'";
+				
+		// Create child definition which is compatible with the one used for compiled queries
+		$childDef = new \StdClass();
+		$childDef->type  		= 'child';
+		$childDef->child 		= $child->id;
+		$childDef->parentKey 	= $parentKeyAlias;
+		$childDef->childKey		= $childKeyAlias;
+		$childDef->params 		= new \StdClass();
+		$childDef->params->$matchKey = $parentKeyAlias;
+		
+		$this->output->fields->{$child->id} = $childDef;
+		
+		// Modify child such that it can be linked to the parent
+		if (!$this->compiled)
+			$child->bind( $matchKey, $childKey );
+		
 		return $this;
 	}
 	
@@ -492,42 +570,67 @@ class Query
 	 *
 	 * @param {string} $idList ID of the query, or a list of ID's like "a,b,c", or a nested structure of ID's like "a(b(c),d)" or a combination like "a,b(c)"
 	 */
-	private function parseList($idList = null, $alwaysCreateChildren = false)
+	private function parseList($idList = null, $prefix = null, $alwaysCreateChildren = false)
 	{
 		$list = $this->split($idList, ',');
+
+		if ($prefix)
+			foreach ($list as $i => $v)
+				$list[$i] = $prefix . "." . $list[$i];
 		
 		// If there is only one element, parse it as a double-dotted expression a:b:c
 		if (!$alwaysCreateChildren && count($list) == 1)
-			return $this->parseDotted( $list[0] );
-	
+			return $this->parseChain( $list[0] );
+
 		// Otherwise create a child query for each element
-		foreach ($list as $idTree)
-			$this->add( $idTree, 'child' );
+		foreach ($list as $element)
+			$this->link( $element );
+			
+		$this->update();
 	}
 	
 	/**
-	 * Parses a structure like a:b:c
+	 * Parses a chained ID-structure like a:b:c
 	 *
+	 * @param {string} $idChain
 	 */
-	private function parseDotted($idDotted)
+	private function parseChain($idChain, $prefix = null)
 	{
-		$list = $this->split($idDotted, ':');
+		if ($prefix)
+			$idChain = $prefix . "." . $idChain;
+			
+		$list = $this->split($idChain, ':');
 		
-		if (count($list) > 2)
-			throw new \Exception("Sorry, using more than one ':' is not yet supported");
-
+		// If there is only 1 element, parse it as a tree
 		if (count($list) == 1)
 			return $this->parseTree( $list[0] );
 		
-		$child = $list[0];
+		// Set type
+		$this->type = self::CHAIN;	
 		
-		list( $childID, $dummy ) = $this->parseID( $child );			
-					
-		$parent = $childID . "." . $list[1];
+		// Take ID of first element as the root
+		list( $root, $dummy ) = $this->parseID( $list[0] );
+
+		// Add root to all elements after the first
+		for ($i=1; $i<count($list); $i++)
+			$list[ $i ] = $root . "." . $list[ $i ];
 		
-		$this->parseTree( $parent );
+		// Create a child query for each element
+		foreach ($list as $element)
+			$this->link( $element );
 			
-		$this->add( $child, 'merge' );
+		$this->update();
+		
+		// Code below is only for non compiled queries
+		if ($this->compiled)
+			return;
+
+		// Get the chain key
+		list($key) = array_keys( get_object_vars( $this->keys ) );
+
+		// Add key-binding for all children except the last
+		for ($i=0; $i<count($this->children)-1; $i++)
+			$this->children[$i]->bind($key);
 	}
 	
 	/**
@@ -535,21 +638,48 @@ class Query
 	 *
 	 * @param {string} $idTree
 	 */
-	private function parseTree($idTree)
+	private function parseTree($idTree, $prefix = null)
 	{
-		list( $this->id, $children ) = $this->parseID( $idTree );
+		list( $id, $children ) = $this->parseID( $idTree );
 
-		if (!$this->id)
+		if (!$id && !$children)
 			throw new \Exception("Query: Cannot parse idTree " . $idTree);
+			
+		// Add prefix to id
+		if ($prefix && $id)
+			$id = $prefix . "." . $id;
+			
+		// Check if id contains only a prefix, like "a." or "a.b."
+		if ($id && substr($id, -1) == '.')
+		{
+			$prefix = substr($id, 0, -1);
+			$id = null;
+		}
 		
+		// Set query ID		
+		$this->id = $id;
+		
+		// Load the query meta info
+		$this->load();
+		
+		// If no children are specified, load all children by default
 		if (is_null($children))
 		{
-			// If no children are specified, load all children by default
 			$this->loadChildren = true;
 			return;
 		}
 		
-		$this->parseList( $children, true );
+		// Set type
+		$this->type = ($this->id)
+			? self::TREE
+			: self::MERGE;
+
+		// Only pass the prefix recursively if type==merge
+		$prefixChildren = ($this->type == self::MERGE) 
+			? $prefix
+			: null;
+		
+		$this->parseList( $children, $prefixChildren, true );
 	}
 	
 	/**
@@ -567,10 +697,14 @@ class Query
 			
 		$match = null;
 		
-		if (!preg_match('/^([\w\-\.]+)\s*\((.*)\)$/', $idTree, $match))
+		if (!preg_match('/^([\w\-\.]*)\s*\((.*)\)$/', $idTree, $match))
 			return array( null, null );
 			
-		return array( $match[1], trim( $match[2] ) );
+		$id = ($match[1])
+			? $match[1]
+			: null;
+			
+		return array( $id, trim( $match[2] ) );
 	}
 	
 	/**
@@ -589,8 +723,6 @@ class Query
 		
 		foreach ($list as $query)
 		{
-			$query->load();
-			
 			$keys = array_keys( get_object_vars( $query->keys ) );
 			
 			$matching = ($matching)
@@ -602,6 +734,71 @@ class Query
 			return null;
 			
 		return $matching[ 0 ];
+	}
+	
+	/**
+	 * Chains the output of the child queries
+	 *
+	 */
+	private function chain()
+	{
+		// Determine the chain key
+		$key = ($this->output->key)
+			? $this->output->key
+			: $this->match( $this->children );
+			
+		if (!$key)
+			throw new \Exception("Cannot chain queries - no common key found");
+			
+		$n = count($this->children);
+		
+		if ($n==0)
+			return array();
+		
+		// Take last query as base
+		$params		= $this->paramValues;
+		$rows 		= $this->children[ $n-1 ]->select( $params );
+		$keyBase 	= $this->children[ $n-1 ]->keys->$key;
+
+		// Attach all other queries
+		for ($i=$n-2; $i>=0; $i--)
+		{
+			// If the number of rows is 0 we can stop
+			if (count($rows) == 0)
+				return $rows;
+			
+			// Collect the key field values and set them as parameter value for the next query
+			$params[ $key ] = array();
+			foreach ($rows as $row)
+				$params[ $key ][] = $row[ $keyBase ];
+		
+			$query 		= $this->children[ $i ];
+			$keyField 	= $query->keys->$key;
+			$rows1 		= $query->select($params, $keyField);
+			
+			$j=0;
+			
+			// Do an intersection of $rows & $rows1
+			while ($j<count($rows))
+			{
+				$keyValue = $rows[$j][$keyBase];
+					
+				if (array_key_exists($keyValue, $rows1))
+				{
+					// Attach the fields of $rows1 to $rows
+					foreach ($rows1[ $keyValue ] as $name => $value)
+						$rows[$j][$name] = $value;
+					$j++;
+				}
+				else
+				{
+					// Remove elements which are not in the latest query result (rows1)
+					array_splice( $rows, $j, 1 );
+				}
+			}
+		}
+		
+		return $rows;
 	}
 	
 	/**
@@ -670,9 +867,10 @@ class Query
 		{
 			// Add the key to the select fields
 			if (!$query->compiled)
-				$query->select[] = $query->keys->$key . " as '" . $key . "'";
-				
-			$rows = $query->key( $key )->params( $this->paramValues )->select();
+				$query->select[] = $query->keys->$key;
+
+				// TODO: geen key( . ) gebruiken , want dan verdander je de query settings
+			$rows = $query->key( $query->keys->$key )->params( $this->paramValues )->select();
 				
 			Arrays::mergeAssocs( $result, $rows, $orderBy, $this->orderType );
 		}
@@ -688,8 +886,9 @@ class Query
 	 * Binds the child queries to the query output
 	 *
 	 * @param {array} $rows The rows/row as returned by QuerySQL
+	 * @param {string} $key Key which is passed to select( . )
 	 */
-	private function bindChildren(&$rows)
+	private function bindChildren(&$rows, $key)
 	{
 		// In this case child binding does not apply
 		if ($this->output->columns == 'first')
@@ -722,13 +921,18 @@ class Query
 				$columnsToRemove[] = $child->fieldName;
 		}
 
-		// Clean up helper columns
 		$registeredOutputFields = is_array($this->output->fields)
-									? $this->output->fields
-									: array_keys( get_object_vars($this->output->fields) );
+			? $this->output->fields
+			: array_keys( get_object_vars($this->output->fields) );
 
+		// Check which columns can be removed	
 		foreach (array_keys($rows[0]) as $field)
-			if (in_array($field, $columnsToRemove) || ($field != $this->output->key && preg_match("/^\_\_/", $field) && !in_array( $field, $registeredOutputFields )))
+			if ($field != $key && $field != $this->output->key && preg_match("/^\_\_/", $field) && !in_array( $field, $registeredOutputFields ))
+				$columnsToRemove[] = $field;
+				
+		// Clean up columns
+		foreach (array_keys($rows[0]) as $field)
+			if (in_array($field, $columnsToRemove))
 				for ($i=0;$i<count($rows);$i++)
 					unset( $rows[$i][$field] ); 
 					
@@ -771,7 +975,7 @@ class Query
 		$params 	= $this->paramValues; // Take parent parameters as default params for child
 		$childKey 	= $childDef->childKey;
 		$parentKey 	= $childDef->parentKey;
-		
+
 		// Check types
 		if (!is_array($parentRows))
 			throw new \Exception('bindChild: illegal function call - parentRows should be an array of associative arrays');
@@ -798,29 +1002,13 @@ class Query
 		$childRows = $child->group()->select( $params, $childKey );
 
 		// Combine child rows with parent rows
-		switch ($childDef->type)
+		for ($i=0;$i<count($parentRows);$i++)
 		{
-			case 'merge':
-				for ($i=0;$i<count($parentRows);$i++)
-				{
-					$keyValue = $parentRows[$i][$parentKey];
-					
-					if (array_key_exists($keyValue, $childRows))
-						foreach ($childRows[ $keyValue ][0] as $k => $v)
-							$parentRows[$i][ $k ] = $v;
-				}
-				break;
-				
-			case 'child':
-				for ($i=0;$i<count($parentRows);$i++)
-				{
-					$keyValue = $parentRows[$i][$parentKey];
+			$keyValue = $parentRows[$i][$parentKey];
 					 
-					$parentRows[$i][ $childDef->fieldName ] = (array_key_exists($keyValue, $childRows)) 
-																? $childRows[ $keyValue ]
-																: array();
-				}
-				break;
+			$parentRows[$i][ $childDef->fieldName ] = (array_key_exists($keyValue, $childRows)) 
+				? $childRows[ $keyValue ]
+				: array();
 		}
 		
 		return true;

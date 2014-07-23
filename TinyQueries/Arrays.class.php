@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.0.2
+ * @version     1.1
  * @package     TinyQueries
  *
  * License
@@ -68,7 +68,7 @@ class Arrays
 	 * Groups the rows on the given key
 	 *
 	 * @param {array} $rows
-	 * @param {string} $key;
+	 * @param {string} $key
 	 * @param {boolean} $deleteKey If true, removes the key-column from the result
 	 */
 	public static function groupBy($rows, $key, $deleteKey = false)
