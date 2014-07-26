@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.1
+ * @version     1.1.1
  * @package     TinyQueries
  *
  * License
@@ -953,23 +953,18 @@ class Query
 	private function bindChild(&$parentRows, $childDef)
 	{
 		$child = null;
-	
+
 		// Check if the child is in the list of children which are set by the idTree
 		foreach ($this->children as $c)
 			if ($c->id == $childDef->fieldName)
-			{
 				$child = $c;
 				
-				// Update the ID, since the ID tree-structure might contain aliases of queries instead of the queryID's
-				$child->id = $childDef->child;
-			}
-		
 		// If not and not all children should be loaded we are ready
 		if (!$child && !$this->loadChildren)
 			return false;
-		
-		// Create the child if it was not in the child-array
-		if (!$child)
+			
+		// Create the child if it was not in the child-array or the id differs from the childdef (this causes by an alias in the parent query)
+		if (!$child || $child->id != $childDef->child)
 			$child = new Query( $this->db, $childDef->child );
 		
 		$params 	= $this->paramValues; // Take parent parameters as default params for child
