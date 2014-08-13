@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.1.1
+ * @version     1.2
  * @package     TinyQueries
  *
  * License
@@ -236,7 +236,7 @@ class QueryApi
 	 */
 	protected function processRequest()
 	{
-		$querySpec	= \HttpTools::getRequestVar('query',		'/^[\w\.\:\-\,\(\)]+$/'); 
+		$querySpec	= \HttpTools::getRequestVar('query',		'/^[\w\.\:\-\,\(\)\|]+$/'); 
 		$idField	= \HttpTools::getRequestVar('id_field',		'/^[\w\.\-]+$/');
 		$orderBy	= \HttpTools::getRequestVar('order_by',		'/^[\w\.\-]+$/');
 		$orderType	= \HttpTools::getRequestVar('order_type',	'/^\w+$/');

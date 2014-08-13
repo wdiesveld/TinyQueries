@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.1.1
+ * @version     1.2
  * @package     TinyQueries
  *
  * License
@@ -66,14 +66,15 @@ class Query
 	 * Constructor
 	 *
 	 * @param {QueryDB} $db Handle to database
-	 * @param {string} $idSpec (optional) 
-	 *		ID of the query, or a list of ID's like "a,b,c" (a merge), 
+	 * @param {string} $term (optional) 
+	 *		A query term. This can be an ID of a query
+	 *		or a merge structure od ID's like "a|b|c"
 	 *		or a nested structure of ID's like "a(b(c),d)" 
 	 *		or a chained structure like "a:b:c"
-	 *		or a combination like "a,b(c):d"
+	 *		or a combination like "a,b(c):d|e"
 	 *		If you supply this parameter, the meta data of the query and all subqueries is loaded from the JSON files
 	 */
-	public function __construct($db, $idSpec = null)
+	public function __construct($db, $term = null)
 	{
 		$this->db 			= $db;
 		$this->select		= array();
@@ -96,8 +97,7 @@ class Query
 		$this->output->nested 	= true;
 		$this->output->fields 	= new \StdClass();
 		
-		// Parse $idSpec
-		$this->parseList($idSpec);
+		$this->parse( $term );
 	}
 
 	/**
@@ -410,12 +410,13 @@ class Query
 			return;
 			
 		// Determine the merge/chain key
+		$this->keys = new \StdClass();
+
 		$matchingKey = $this->match( $this->children );
 			
 		// Copy key from first child
-		$this->keys->$matchingKey = ($matchingKey)
-			? $this->children[ 0 ]->keys->$matchingKey
-			: new \StdClass();
+		if ($matchingKey)
+			$this->keys->$matchingKey = $this->children[ 0 ]->keys->$matchingKey;
 		
 		// Copy parameters from children
 		$this->params = new \StdClass();
@@ -566,22 +567,52 @@ class Query
 	}
 
 	/**
+	 * Starting point for parsing a query term
+	 * First tries to parse a structure like "( ... )" or "prefix.( ... )"
+	 * Then calls parseMerge
+	 *
+	 * @param {string} $term
+	 */
+	private function parse($term)
+	{
+		if (!$term)
+			return;
+			
+		list( $id, $children ) = $this->parseID( $term );
+		
+		// Extract the prefix from the id (if present)
+		$prefix = ($id && substr($id, -1) == '.')
+			? substr($id, 0, -1)
+			: null;
+		
+		// Determine the term to be passed to the merge parser
+		$termMerge = ($children && (!$id || $prefix))
+			? $children
+			: $term;
+			
+		$this->parseMerge( $termMerge, $prefix );
+	}
+	
+	/**
 	 * Parses an id list structure and sets the queryID + its children
 	 *
 	 * @param {string} $idList ID of the query, or a list of ID's like "a,b,c", or a nested structure of ID's like "a(b(c),d)" or a combination like "a,b(c)"
 	 */
-	private function parseList($idList = null, $prefix = null, $alwaysCreateChildren = false)
+	private function parseMerge($idList = null, $prefix = null)
 	{
-		$list = $this->split($idList, ',');
+		$list = $this->split($idList, '|');
 
 		if ($prefix)
 			foreach ($list as $i => $v)
 				$list[$i] = $prefix . "." . $list[$i];
 		
-		// If there is only one element, parse it as a double-dotted expression a:b:c
-		if (!$alwaysCreateChildren && count($list) == 1)
+		// If there is only one element, parse it as a chain a:b:c
+		if (count($list) == 1)
 			return $this->parseChain( $list[0] );
 
+		// Set type
+		$this->type = self::MERGE;	
+		
 		// Otherwise create a child query for each element
 		foreach ($list as $element)
 			$this->link( $element );
@@ -643,19 +674,15 @@ class Query
 		list( $id, $children ) = $this->parseID( $idTree );
 
 		if (!$id && !$children)
-			throw new \Exception("Query: Cannot parse idTree " . $idTree);
+			throw new \Exception("Query::parseTree - Cannot parse idTree " . $idTree);
+			
+		if (!$id)
+			throw new \Exception("Query::parseTree - No id found " . $idTree);
 			
 		// Add prefix to id
-		if ($prefix && $id)
+		if ($prefix)
 			$id = $prefix . "." . $id;
 			
-		// Check if id contains only a prefix, like "a." or "a.b."
-		if ($id && substr($id, -1) == '.')
-		{
-			$prefix = substr($id, 0, -1);
-			$id = null;
-		}
-		
 		// Set query ID		
 		$this->id = $id;
 		
@@ -670,16 +697,15 @@ class Query
 		}
 		
 		// Set type
-		$this->type = ($this->id)
-			? self::TREE
-			: self::MERGE;
+		$this->type = self::TREE;
 
-		// Only pass the prefix recursively if type==merge
-		$prefixChildren = ($this->type == self::MERGE) 
-			? $prefix
-			: null;
-		
-		$this->parseList( $children, $prefixChildren, true );
+		$list = $this->split($children, ',');
+
+		// Create a child query for each element
+		foreach ($list as $element)
+			$this->link( $element );
+
+		$this->update();
 	}
 	
 	/**
@@ -963,7 +989,7 @@ class Query
 		if (!$child && !$this->loadChildren)
 			return false;
 			
-		// Create the child if it was not in the child-array or the id differs from the childdef (this causes by an alias in the parent query)
+		// Create the child if it was not in the child-array or the id differs from the childdef (this is caused by an alias in the parent query)
 		if (!$child || $child->id != $childDef->child)
 			$child = new Query( $this->db, $childDef->child );
 		
