@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.2
+ * @version     1.2.1
  * @package     TinyQueries
  *
  * License
@@ -920,12 +920,12 @@ class Query
 		if ($this->output->columns == 'first')
 			return;
 		
+		if (!$rows || count($rows) == 0)
+			return;
+	
 		if ($this->output->rows == 'first')
 			$rows = array( $rows );
 			
-		if (count($rows) == 0)
-			return;
-	
 		$columnsToRemove = array();
 		
 		// Get the child definitions
