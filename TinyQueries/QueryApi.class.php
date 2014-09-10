@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.2.1
+ * @version     1.2.2
  * @package     TinyQueries
  *
  * License
@@ -37,7 +37,7 @@ class QueryApi
 {
 	protected $server;
 	protected $apiCallID;
-	protected $params;
+	protected $query;
 	protected $debugMode;
 	protected $dbConfigFile;
 	protected $addProfilingInfo;
@@ -247,10 +247,10 @@ class QueryApi
 		if (!$querySpec) 
 			throw new \Exception('query-param is empty'); 
 			
-		$query = $this->db->query($querySpec);
+		$this->query = $this->db->query($querySpec);
 		
 		$this->request['query']		= $querySpec;	
-		$this->request['queryID'] 	= $query->id;
+		$this->request['queryID'] 	= $this->query->id;
 	
 		if (!$this->checkRequestPermissions())
 			throw new \UserFeedback( 'You have no permission to do this request' );
@@ -269,7 +269,7 @@ class QueryApi
 		if ($this->addProfilingInfo)	
 			$this->profiler->begin('query');
 		
-		$query->params($params)
+		$this->query->params($params)
 				->key($idField)
 				->order($orderBy, $orderType)
 				->max($maxResults);
@@ -280,9 +280,9 @@ class QueryApi
 					"query"			=> $querySpec,
 					"params"		=> $params,
 					"apicall_id"	=> $this->apiCallID,
-					"rows"			=> $query->select()
+					"rows"			=> $this->query->select()
 				)
-			: $query->select();
+			: $this->query->select();
 
 		if ($this->addProfilingInfo)	
 			$this->profiler->end();
@@ -305,7 +305,6 @@ class QueryApi
 		$response = array
 		(
 			"query"			=> (array_key_exists('queryID', $this->request)) ? $this->request['queryID'] : null,
-			"params"		=> $this->params,
 			"apicall_id"	=> $this->apiCallID,
 			"error"			=> $errorMessage
 		);
