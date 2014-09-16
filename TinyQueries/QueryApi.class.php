@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.2.2
+ * @version     1.3
  * @package     TinyQueries
  *
  * License
@@ -236,11 +236,7 @@ class QueryApi
 	 */
 	protected function processRequest()
 	{
-		$querySpec	= \HttpTools::getRequestVar('query',		'/^[\w\.\:\-\,\(\)\|]+$/'); 
-		$idField	= \HttpTools::getRequestVar('id_field',		'/^[\w\.\-]+$/');
-		$orderBy	= \HttpTools::getRequestVar('order_by',		'/^[\w\.\-]+$/');
-		$orderType	= \HttpTools::getRequestVar('order_type',	'/^\w+$/');
-		$maxResults	= \HttpTools::getRequestVar('max_results',	'/^\d+$/');
+		$querySpec	= \HttpTools::getRequestVar('query', '/^[\w\.\:\-\,\(\)\|\+\s]+$/'); 
 		$params  	= array();
 		$response 	= null; 
 
@@ -269,10 +265,7 @@ class QueryApi
 		if ($this->addProfilingInfo)	
 			$this->profiler->begin('query');
 		
-		$this->query->params($params)
-				->key($idField)
-				->order($orderBy, $orderType)
-				->max($maxResults);
+		$this->query->params($params);
 			
 		$response = ($this->addProfilingInfo)
 			? array

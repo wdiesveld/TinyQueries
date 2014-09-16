@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.2.2
+ * @version     1.3
  * @package     TinyQueries
  *
  * License
@@ -36,10 +36,11 @@ require_once('QuerySQL.class.php');
 class Query
 {
 	// Query types
-	const PLAIN	= 'plain';
-	const TREE	= 'tree';
-	const MERGE	= 'merge';
-	const CHAIN	= 'chain';
+	const PLAIN		= 'plain';
+	const TREE		= 'tree';
+	const MERGE		= 'merge';
+	const CHAIN		= 'chain';
+	const ATTACH 	= 'attach';
 	
 	public $id;
 	public $compiled;
@@ -53,6 +54,7 @@ class Query
 	private $output;
 	private $select;
 	private $from;
+	private $root;
 	private $where;
 	private $groupBy;
 	private $having;
@@ -264,6 +266,10 @@ class Query
 		if ($this->type == self::CHAIN)
 			return $this->chain();
 
+		// Do attach 
+		if ($this->type == self::ATTACH)
+			return $this->attach();
+
 		if (!$this->compiled)
 		{
 			$this->querySql->setSql( $this->compile() );
@@ -292,16 +298,26 @@ class Query
 		
 		$this->bindChildren( $data, $key );
 		
-		// Handle $key and output->group
-		if ($this->output->columns == 'all' && $this->output->rows == 'all')
-		{
-			if ($key && $this->output->group)
-				return Arrays::groupBy($data, $key, true);
+		// We are ready if output is not an array of assocs
+		if ($this->output->columns != 'all' || $this->output->rows != 'all')
+			return $data;
 			
-			if ($key)
-				return Arrays::toAssoc($data, $key);
-		}
-
+		// Apply rows2columns transformation
+		if (property_exists($this->output, 'rows2columns'))
+			$data = Arrays::rows2columns( 
+				$data, 
+				$this->output->rows2columns->key,
+				$this->output->rows2columns->name,
+				$this->output->rows2columns->value );
+				
+		// Apply grouping transformation
+		if ($key && $this->output->group)
+			return Arrays::groupBy($data, $key, true);
+			
+		// Apply key transformation
+		if ($key)
+			return Arrays::toAssoc($data, $key);
+				
 		return $data;
 	}
 	
@@ -346,6 +362,7 @@ class Query
 		$this->groupBy 	= Arrays::toArray( property_exists($query, 'groupBy') 	? $query->groupBy 	: null );
 		$this->orderBy 	= Arrays::toArray( property_exists($query, 'orderBy')	? $query->orderBy 	: null );
 		$this->having 	= Arrays::toArray( property_exists($query, 'having') 	? $query->having 	: null );
+		$this->root		= property_exists( $query, 'root' ) ? $query->root : null;
 		
 		if (property_exists($query, 'keys'))	$this->keys 	= $query->keys;
 		if (property_exists($query, 'params'))	$this->params 	= $query->params;
@@ -354,7 +371,7 @@ class Query
 		{
 			if ($query->output)
 			{
-				$fields = array('key', 'group', 'rows', 'columns', 'nested', 'fields');
+				$fields = array('key', 'group', 'rows', 'columns', 'nested', 'fields', 'rows2columns');
 				foreach ($fields as $field)
 					if (property_exists($query->output, $field) && $query->output->$field)
 						$this->output->$field = $query->output->$field;
@@ -406,7 +423,7 @@ class Query
 			$child->update();
 			
 		// Code below only applies to merge & chain queries
-		if (!in_array($this->type, array(self::MERGE, self::CHAIN)))
+		if (!in_array($this->type, array(self::MERGE, self::CHAIN, self::ATTACH)))
 			return;
 			
 		// Determine the merge/chain key
@@ -440,11 +457,11 @@ class Query
 
 		// Only tree queries need further processing, so in this case we are ready
 		if ($this->type != self::TREE)
-			return $this;
+			return $child;
 		
 		// If parent is compiled we are ready (child specs are set by compiler)
 		if ($this->compiled)
-			return $this;
+			return $child;
 		
 		if ($this->compiled != $child->compiled)
 			throw new \Exception("Query::link - parent & child queries should both be compiled or not compiled");
@@ -485,7 +502,7 @@ class Query
 		if (!$this->compiled)
 			$child->bind( $matchKey, $childKey );
 		
-		return $this;
+		return $child;
 	}
 	
 	/**
@@ -632,23 +649,23 @@ class Query
 			
 		$list = $this->split($idChain, ':');
 		
-		// If there is only 1 element, parse it as a tree
+		// If there is only 1 element, parse it as an attach
 		if (count($list) == 1)
-			return $this->parseTree( $list[0] );
+			return $this->parseAttach( $list[0] );
 		
 		// Set type
 		$this->type = self::CHAIN;	
 		
-		// Take ID of first element as the root
-		list( $root, $dummy ) = $this->parseID( $list[0] );
-
-		// Add root to all elements after the first
-		for ($i=1; $i<count($list); $i++)
-			$list[ $i ] = $root . "." . $list[ $i ];
+		// Link first query to get root/id
+		$first = $this->link( $list[0] );
 		
-		// Create a child query for each element
-		foreach ($list as $element)
-			$this->link( $element );
+		$root = ($first->root)
+			? $first->root
+			: $first->id;
+		
+		// Add root to all elements after the first and link them
+		for ($i=1; $i<count($list); $i++)
+			$this->link( $root . "." . $list[ $i ] );
 			
 		$this->update();
 		
@@ -662,6 +679,38 @@ class Query
 		// Add key-binding for all children except the last
 		for ($i=0; $i<count($this->children)-1; $i++)
 			$this->children[$i]->bind($key);
+	}
+	
+	/**
+	 * Parses a structure like a+b+c
+	 *
+	 */
+	private function parseAttach($term, $prefix = null)
+	{
+		if ($prefix)
+			$term = $prefix . "." . $term;
+			
+		$list = $this->split($term, '+');
+		
+		// If there is only 1 element, parse it as a tree
+		if (count($list) == 1)
+			return $this->parseTree( $list[0] );
+		
+		// Set type
+		$this->type = self::ATTACH;	
+
+		// Link first query to get root/id
+		$first = $this->link( $list[0] );
+		
+		$root = ($first->root)
+			? $first->root
+			: $first->id;
+		
+		// Add root to all elements after the first and link them
+		for ($i=1; $i<count($list); $i++)
+			$this->link( $root . "." . $list[ $i ] );
+
+		$this->update();
 	}
 	
 	/**
@@ -760,6 +809,60 @@ class Query
 			return null;
 			
 		return $matching[ 0 ];
+	}
+	
+	/**
+	 * 'Left joins' the output of the child queries
+	 *
+	 */
+	private function attach()
+	{
+		// Determine the attach key
+		$key = ($this->output->key)
+			? $this->output->key
+			: $this->match( $this->children );
+			
+		if (!$key)
+			throw new \Exception("Cannot attach queries - no common key found");
+			
+		$n = count($this->children);
+		
+		if ($n==0)
+			return array();
+		
+		// Take first query as base
+		$params		= $this->paramValues;
+		$rows 		= $this->children[ 0 ]->select( $params );
+		$keyBase 	= $this->children[ 0 ]->keys->$key;
+
+		// If the number of rows is 0 we can stop
+		if (count($rows) == 0)
+			return $rows;
+			
+		// Collect the key field values and set them as parameter value for the other queries
+		$params[ $key ] = array();
+		foreach ($rows as $row)
+			$params[ $key ][] = $row[ $keyBase ];
+
+		// Attach all other queries
+		for ($i=1; $i<$n; $i++)
+		{
+			$query 		= $this->children[ $i ];
+			$keyField 	= $query->keys->$key;
+			$rows1 		= $query->select($params, $keyField);
+			
+			for ($j=0;$j<count($rows);$j++)
+			{
+				$keyValue = $rows[$j][$keyBase];
+					
+				// Attach the fields of $rows1 to $rows
+				if (array_key_exists($keyValue, $rows1))
+					foreach ($rows1[ $keyValue ] as $name => $value)
+						$rows[$j][$name] = $value;
+			}
+		}
+		
+		return $rows;
 	}
 	
 	/**
@@ -980,17 +1083,26 @@ class Query
 	{
 		$child = null;
 
-		// Check if the child is in the list of children which are set by the idTree
+		// Check if the child is in the list of children (or grandchildren) which are set by the idTree
 		foreach ($this->children as $c)
+		{
 			if ($c->id == $childDef->fieldName)
 				$child = $c;
+				
+			foreach ($c->children as $cc)
+				if ($cc->id == $childDef->fieldName)
+					$child = $c;
+					
+			if ($child)
+				break;
+		}
 				
 		// If not and not all children should be loaded we are ready
 		if (!$child && !$this->loadChildren)
 			return false;
 			
 		// Create the child if it was not in the child-array or the id differs from the childdef (this is caused by an alias in the parent query)
-		if (!$child || $child->id != $childDef->child)
+		if (!$child || ($child->id && $child->id != $childDef->child))
 			$child = new Query( $this->db, $childDef->child );
 		
 		$params 	= $this->paramValues; // Take parent parameters as default params for child

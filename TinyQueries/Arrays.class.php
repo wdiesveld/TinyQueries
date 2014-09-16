@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.2.2
+ * @version     1.3
  * @package     TinyQueries
  *
  * License
@@ -267,6 +267,34 @@ class Arrays
 			
 		// If not, then reduce the $fields to null
 		$fields = null;
+	}
+	
+	/**
+	 * Transforms rows to columns
+	 *
+	 * @param {array} $array Array of associative arrays
+	 * @param {string} $key 
+	 * @param {string} $name
+	 * @param {string} $value
+	 */
+	public static function rows2columns(&$array, $key, $name, $value)
+	{
+		$trans = array();
+		
+		foreach ($array as $row)
+		{
+			$id = "id" . $row[ $key ];
+			
+			if (!array_key_exists($id, $trans))
+				$trans[ $id ] = array
+				(
+					$key => $row[ $key ]
+				);
+				
+			$trans[ $id ][ $row[ $name ] ] = $row[ $value ];
+		}
+		
+		return self::toIndexed( $trans );
 	}
 	
 	/**
