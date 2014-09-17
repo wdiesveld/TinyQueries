@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.3
+ * @version     1.4
  * @package     TinyQueries
  *
  * License
@@ -81,7 +81,7 @@ class QuerySQL
 	{
 		list($sql, $pdoParams) = $this->getSql( $queryParams );
 		
-		return $this->db->doQuery( $sql, $pdoParams );
+		return $this->db->execute( $sql, $pdoParams );
 	}
 	
 	/**
@@ -402,7 +402,7 @@ class QuerySQL
 					$params[ $p ] = $props->{'default'};
 			
 		// Add global parameters (only if not present in given param list)
-		foreach ($this->db->getGlobalQueryParams() as $p => $val) 
+		foreach ($this->db->globals as $p => $val) 
 			if (!array_key_exists($p, $params) || is_null($params[$p]))
 				$params[ $p ] = $val;
 		

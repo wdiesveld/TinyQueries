@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.3
+ * @version     1.4
  * @package     TinyQueries
  *
  * License
@@ -105,13 +105,30 @@ class Query
 	/**
 	 * Sets the query parameter values
 	 *
-	 * @param {assoc} $params
+	 * @param {mixed} $paramValues
 	 *
 	 * @return {Query}
 	 */
-	public function params( $params )
+	public function params( $paramValues )
 	{
-		$this->paramValues = $params;
+		// If paramValues is already an assoc, just copy it
+		if (Arrays::isAssoc($paramValues) || is_null($paramValues))
+		{
+			$this->paramValues = $paramValues;
+			return $this;
+		}
+
+		$n = 0;
+		foreach ($this->params as $name => $dummy)
+		{
+			$n++;
+			$paramName = $name;
+		}
+		
+		if ($n > 1)
+			throw new \UserFeedback("Cannot call query with one parameter value; query has $n parameters");
+
+		$this->paramValues[ $paramName ] = $paramValues;
 		
 		return $this;
 	}
@@ -285,7 +302,7 @@ class Query
 	/**
 	 * Generic select function
 	 *
-	 * @param {assoc} $paramValues
+	 * @param {mixed} $paramValues
 	 * @param {string} $key (optional) Key field which can be used to group the output
 	 */
 	public function select($paramValues = null, $key = null)

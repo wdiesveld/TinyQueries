@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.3
+ * @version     1.4
  * @package     TinyQueries
  *
  * License
@@ -130,7 +130,7 @@ class QueryApi
 			$dbConnectedModus = ($this->db && $this->db->connected());
 			
 			if ($dbConnectedModus && $this->doTransaction)
-				$this->db->doQuery('START TRANSACTION');
+				$this->db->execute('START TRANSACTION');
 			
 			$response = $this->processRequest();
 
@@ -149,7 +149,7 @@ class QueryApi
 			if ($dbConnectedModus)
 			{
 				if ($this->doTransaction)
-					$this->db->doQuery('COMMIT');
+					$this->db->execute('COMMIT');
 					
 				$this->db->disconnect();
 			}
@@ -219,7 +219,7 @@ class QueryApi
 		if (!$this->db->getHandle())
 			return;
 			
-		$this->db->doQuery('ROLLBACK');
+		$this->db->execute('ROLLBACK');
 	}
 	
 	/**
@@ -257,9 +257,16 @@ class QueryApi
 			{
 				$paramname = substr($getkey, 6);
 				
-				// Prevent global parameters to be overwritten by api users
-				if (!$this->db->globalQueryParamExists($paramname))
-					$params[ $paramname ] = \HttpTools::getRequestVar($getkey); 
+				// Try/catch is needed to prevent global parameters to be overwritten by api users
+				try
+				{
+					// If param is NOT present, an error is thrown
+					$this->db->param($paramname);
+				}
+				catch (\Exception $e) 
+				{
+					$params[ $paramname ] = \HttpTools::getRequestVar($getkey);
+				}
 			}
 			
 		if ($this->addProfilingInfo)	

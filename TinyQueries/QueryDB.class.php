@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.3
+ * @version     1.4
  * @package     TinyQueries
  *
  * License
@@ -40,6 +40,7 @@ class QueryDB
 	public $nested; // Default setting whether or not query output should be nested - more info see Query::nested(.)
 	public $queries;
 	public $profiler;
+	public $globals;
 	
 	private $lastQueryExecTime;
 	private $totalQueryExecTime;
@@ -64,8 +65,8 @@ class QueryDB
 	 */
 	public function __construct( $pdoHandle = null, $configFileDB = null )
 	{
-		$this->globalQueryParams 	= array();
-		$this->nested 				= false;
+		$this->globals	= array();
+		$this->nested 	= true;
 		
 		$this->configFile = ($configFileDB)
 								? $configFileDB
@@ -82,43 +83,22 @@ class QueryDB
 	}
 	
 	/**
-	 * This method can be used to set a global params for query input parameters
+	 * Get/set method for global query parameters. If value is not specified, the value of the global is returned
 	 *
-	 * @param {string} $name Name of the parameter
-	 * @param {mixed} $value Can be any type which is accepted as query parameter (int, string, array)
-	 */
-	public function setGlobalQueryParam($name, $value)
-	{
-		$this->globalQueryParams[ $name ] = $value;
-	}
-	
-	/**
-	 * Checks if a global query parameter is set
-	 *
-	 * @param {string} $name Name of the parameter
-	 */
-	public function globalQueryParamExists($name)
-	{
-		return array_key_exists( $name, $this->globalQueryParams);
-	}
-	
-	/**
-	 * @return All query parameters
-	 */
-	public function getGlobalQueryParams()
-	{
-		return $this->globalQueryParams;
-	}
-	
-	/**
 	 * @param {string} $name
+	 * @param {mixed} $value
 	 */
-	public function getGlobalQueryParam($name)
+	public function param($name, $value = -99999999)
 	{
-		if (!$this->globalQueryParamExists($name))
-			throw new \Exception("getGlobalQueryParam: param '".$name."' does not exist");
-			
-		return $this->globalQueryParams[ $name ];
+		if ($value == -99999999)
+		{
+			if (!array_key_exists($name, $this->globals))
+				throw new \Exception("QueryDB::param - global parameter '".$name."' does not exist");
+				
+			return $this->globals[ $name ];
+		}
+		
+		$this->globals[ $name ] = $value;
 	}
 	
 	/**
@@ -132,22 +112,11 @@ class QueryDB
 		if (!$config) 		throw new \Exception("Cannot read db configfile " . $this->configFile);
 		if (!$config->db)	throw new \Exception("No db-tag found in configfile " . $this->configFile);
 		
-		$dbConfig = null;
-		
-		// Find the db-entry that matches the servername
-		$servername = $this->getServerName();
-		
-		foreach ($config->db as $db)
-			if (is_null($db['server']) || $db['server'] == $servername)
-				$dbConfig = $db;
-
-		if (!$dbConfig)	throw new \Exception("No DB-config found for server " . $servername);
-
 		// Read DB credentials
-		$this->host		= (string) $dbConfig->host;
-		$this->dbname	= (string) $dbConfig->dbname;
-		$this->user		= (string) $dbConfig->username;
-		$this->pw 		= (string) $dbConfig->password;
+		$this->host		= (string) $config->db->host;
+		$this->dbname	= (string) $config->db->dbname;
+		$this->user		= (string) $config->db->username;
+		$this->pw 		= (string) $config->db->password;
 		
 		// Read query output settings
 		if ($output = $config->query_output)
@@ -208,11 +177,24 @@ class QueryDB
 	}
 	
 	/**
+	 * Creates and returns a new Query object 
+	 *
 	 * @param {string} $queryID
 	 */
 	public function query($queryID)
 	{
 		return new Query( $this, $queryID );
+	}
+	
+	/**
+	 * Creates the given query, executes it and returns the query output
+	 *
+	 * @param {string} $queryID
+	 * @param {mixed} $paramValues
+	 */
+	public function get($queryID, $paramValues = null)
+	{
+		return $this->query($queryID)->select($paramValues);
 	}
 	
 	/**
@@ -246,41 +228,71 @@ class QueryDB
 	}
 	
 	/**
+	 * Executes query and returns numeric array of numeric arrays
 	 *
 	 * @param {string} $query SQL-query
+	 * @param {assoc} $params Query parameters
 	 */
 	public function selectAll($query, $params = array())
 	{
-		return $this->doQuery( $query, $params )->fetchAll( \PDO::FETCH_NUM );
+		return $this->execute( $query, $params )->fetchAll( \PDO::FETCH_NUM );
 	}
 
+	/**
+	 * Executes query and returns numeric array of associative arrays
+	 *
+	 * @param {string} $query SQL-query
+	 * @param {assoc} $params Query parameters
+	 */
 	public function selectAllAssoc($query, $params = array())
 	{
-		return $this->doQuery( $query, $params )->fetchAll( \PDO::FETCH_ASSOC );
+		return $this->execute( $query, $params )->fetchAll( \PDO::FETCH_ASSOC );
 	}
 
+	/**
+	 * Executes query and returns first record as numeric array
+	 *
+	 * @param {string} $query SQL-query
+	 * @param {assoc} $params Query parameters
+	 */
 	public function selectRow($query, $params = array())
 	{
-		return $this->doQuery( $query, $params )->fetch( \PDO::FETCH_NUM );
+		return $this->execute( $query, $params )->fetch( \PDO::FETCH_NUM );
 	}
 	
+	/**
+	 * Executes query and returns first record as associative array
+	 *
+	 * @param {string} $query SQL-query
+	 * @param {assoc} $params Query parameters
+	 */
 	public function selectAssoc($query, $params = array())
 	{
-		return $this->doQuery( $query, $params )->fetch(\PDO::FETCH_ASSOC);
+		return $this->execute( $query, $params )->fetch(\PDO::FETCH_ASSOC);
 	}
 	
-	// eerste kolom van eerste rij
+	/**
+	 * Executes query and returns first field of first record
+	 *
+	 * @param {string} $query SQL-query
+	 * @param {assoc} $params Query parameters
+	 */
 	public function selectFirst($query, $params = array()) 
 	{
-		$sth = $this->doQuery( $query, $params );
+		$sth = $this->execute( $query, $params );
 		$row = $sth->fetch(\PDO::FETCH_NUM);
 		return $row[0];
 	}
 	
-	// van alle rijden eerste kolom
+	/**
+	 * Executes query and returns numeric array containing first field of each row
+	 *
+	 * @param {string} $query SQL-query
+	 * @param {assoc} $params Query parameters
+	 */
 	public function selectAllFirst($query, $params = array()) 
 	{
-		$sth = $this->doQuery( $query, $params );
+		$sth = $this->execute( $query, $params );
 		$rows = $sth->fetchAll(\PDO::FETCH_NUM);
 		$firsts = array();
 		foreach ($rows as $row)
@@ -367,7 +379,7 @@ class QueryDB
 		if ($updateOnDuplicateKey)
 			$query .= " on duplicate key update " . $this->fieldList( $record, "," );
 		
-		$this->doQuery($query);
+		$this->execute($query);
 		
 		$id = $this->dbh->lastInsertId();
 
@@ -421,7 +433,7 @@ class QueryDB
 					" set " . $this->fieldList( $record, "," ) . 
 					" where " . $this->fieldList( $IDfields, " and ", true );
 		
-		$this->doQuery($query);
+		$this->execute($query);
 	}
 	
 	/**
@@ -439,10 +451,16 @@ class QueryDB
 			
 		$query = "delete from `" . $this->toSQL($table) . "` where " . $this->fieldList( $IDfields, " and ", true );
 		
-		$this->doQuery($query);
+		$this->execute($query);
 	}
 	
-	public function doQuery($query, $params = array())
+	/**
+	 * Executes the given query
+	 *
+	 * @param {string} $query SQL query
+	 * @param {assoc} $params Query parameters
+	 */
+	public function execute($query, $params = array())
 	{
 		$before = microtime(true);
 		
@@ -484,22 +502,6 @@ class QueryDB
 	{
 		$this->lastQueryExecTime  = 0;
 		$this->totalQueryExecTime = 0;
-	}	
-	
-	/**
-	 * Returns the name of the server
-	 */
-	protected static function getServerName()
-	{
-		$servername = ($_SERVER && array_key_exists('SERVER_NAME', $_SERVER) && $_SERVER['SERVER_NAME']) 
-								? $_SERVER['SERVER_NAME']
-								: "localhost";
-								
-		// add 'www.' if it is left out
-		if (preg_match('/^\w+\.\w+$/', $servername))
-			$servername = 'www.' . $servername;
-			
-		return $servername;
 	}	
 } 
 
