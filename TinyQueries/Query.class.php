@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.4
+ * @version     1.4.1
  * @package     TinyQueries
  *
  * License
@@ -125,6 +125,9 @@ class Query
 			$paramName = $name;
 		}
 		
+		if ($n == 0)
+			return $this;
+		
 		if ($n > 1)
 			throw new \UserFeedback("Cannot call query with one parameter value; query has $n parameters");
 
@@ -198,8 +201,8 @@ class Query
 		if ($this->compiled)
 			return $this;
 		
-		// For chain & merge do recursive call on children
-		if (in_array($this->type, array(self::MERGE, self::CHAIN)))
+		// For chain, attach & merge do recursive call on children
+		if (in_array($this->type, array(self::MERGE, self::CHAIN, self::ATTACH)))
 		{
 			foreach ($this->children as $child)
 				$child->bind($paramName, $fieldName);
@@ -381,6 +384,10 @@ class Query
 		$this->having 	= Arrays::toArray( property_exists($query, 'having') 	? $query->having 	: null );
 		$this->root		= property_exists( $query, 'root' ) ? $query->root : null;
 		
+		// Set root equal to from, if from does not contain a join (e.g. it is a plain table name)
+		if (!$this->root && preg_match( "/^[\w\.\-\_]+$/", $this->from))
+			$this->root = $this->from;
+		
 		if (property_exists($query, 'keys'))	$this->keys 	= $query->keys;
 		if (property_exists($query, 'params'))	$this->params 	= $query->params;
 		
@@ -457,18 +464,22 @@ class Query
 		foreach ($this->children as $child)
 			foreach ($child->params as $name => $spec)
 				$this->params->$name = $spec;
+				
+		// Copy other fields from first child
+		$this->root 	= $this->children[ 0 ]->root;
+		$this->compiled = $this->children[ 0 ]->compiled;
 	}
 	
 	/**
 	 * Connects a query to this query
 	 *
-	 * @param {string} $idSpec
+	 * @param {string} $term
 	 *
 	 * @return {Query}
 	 */
-	private function link($idSpec)
+	private function link($term)
 	{
-		$child = new Query($this->db, $idSpec);
+		$child = new Query($this->db, $term);
 
 		$this->children[] = $child;
 
@@ -521,6 +532,47 @@ class Query
 		
 		return $child;
 	}
+
+	/**
+	 * Links a list of terms to this query
+	 *
+	 * @param {string} $type
+	 * @param {array} $terms
+	 */
+	private function linkList($type, $terms)
+	{
+		$this->type = $type;
+		
+		$root = null;
+		$firstAsRoot = in_array( $type, array( self::ATTACH, self::CHAIN ) );
+		
+		if ($firstAsRoot)
+		{
+			$term = array_shift($terms);
+			
+			// Link first query to get root/id
+			$first = $this->link( $term );
+			
+			$first->update();
+			
+			$root = ($first->root)
+				? $first->root
+				: $first->id;
+				
+			if (!$root)
+				throw new \Exception("root not known for " . $list[0]);
+		}
+	
+		foreach ($terms as $term)
+		{
+			if ($root)
+				$term = $root . "." . $term;
+				
+			$this->link( $term );
+		}
+			
+		$this->update();
+	}
 	
 	/**
 	 * Compiles the query to SQL
@@ -542,7 +594,7 @@ class Query
 			foreach ($this->where as $w)
 				$where[] = "(" . $w . ")";
 				
-			$sql .= "where\n" . implode(" and\n", $where);
+			$sql .= "where\n" . implode(" and\n", $where) . "\n";
 		}
 		
 		if (count($this->groupBy) > 0)
@@ -603,7 +655,7 @@ class Query
 	/**
 	 * Starting point for parsing a query term
 	 * First tries to parse a structure like "( ... )" or "prefix.( ... )"
-	 * Then calls parseMerge
+	 * ( the second form is needed for parsing terms like a:(b|c) - a is passed as prefix to (b|c), like a.(b|c) )
 	 *
 	 * @param {string} $term
 	 */
@@ -628,69 +680,72 @@ class Query
 	}
 	
 	/**
-	 * Parses an id list structure and sets the queryID + its children
+	 * Parses a merge term, like a|b|c
 	 *
-	 * @param {string} $idList ID of the query, or a list of ID's like "a,b,c", or a nested structure of ID's like "a(b(c),d)" or a combination like "a,b(c)"
+	 * @param {string} $term 
 	 */
-	private function parseMerge($idList = null, $prefix = null)
+	private function parseMerge($term = null, $prefix = null)
 	{
-		$list = $this->split($idList, '|');
+		$list = $this->split($term, '|');
 
 		if ($prefix)
 			foreach ($list as $i => $v)
 				$list[$i] = $prefix . "." . $list[$i];
 		
-		// If there is only one element, parse it as a chain a:b:c
+		// If there is only one element, parse it as an attach
 		if (count($list) == 1)
-			return $this->parseChain( $list[0] );
+			return $this->parseAttach( $list[0] );
 
-		// Set type
-		$this->type = self::MERGE;	
-		
-		// Otherwise create a child query for each element
-		foreach ($list as $element)
-			$this->link( $element );
-			
-		$this->update();
+		$this->linkList( self::MERGE, $list );
 	}
 	
 	/**
-	 * Parses a chained ID-structure like a:b:c
+	 * Parses a attach term, like a+b+c
 	 *
-	 * @param {string} $idChain
+	 * @param {string} $term
 	 */
-	private function parseChain($idChain, $prefix = null)
+	private function parseAttach($term)
 	{
-		if ($prefix)
-			$idChain = $prefix . "." . $idChain;
-			
-		$list = $this->split($idChain, ':');
+		$list = $this->split($term, '+');
 		
-		// If there is only 1 element, parse it as an attach
+		// If there is only 1 element, parse it as a chain
 		if (count($list) == 1)
-			return $this->parseAttach( $list[0] );
+			return $this->parseChain( $list[0] );
 		
-		// Set type
-		$this->type = self::CHAIN;	
-		
-		// Link first query to get root/id
-		$first = $this->link( $list[0] );
-		
-		$root = ($first->root)
-			? $first->root
-			: $first->id;
-		
-		// Add root to all elements after the first and link them
-		for ($i=1; $i<count($list); $i++)
-			$this->link( $root . "." . $list[ $i ] );
-			
-		$this->update();
+		$this->linkList( self::ATTACH, $list );
 		
 		// Code below is only for non compiled queries
 		if ($this->compiled)
 			return;
 
-		// Get the chain key
+		// Get the link key
+		list($key) = array_keys( get_object_vars( $this->keys ) );
+
+		// Add key-binding for all children except the first
+		for ($i=1; $i<count($this->children); $i++)
+			$this->children[$i]->bind($key);
+	}
+	
+	/**
+	 * Parses a filter term, like a:b:c
+	 *
+	 * @param {string} $term
+	 */
+	private function parseChain($term)
+	{
+		$list = $this->split($term, ':');
+		
+		// If there is only 1 element, parse it as an tree
+		if (count($list) == 1)
+			return $this->parseTree( $list[0] );
+		
+		$this->linkList( self::CHAIN, $list );
+		
+		// Code below is only for non compiled queries
+		if ($this->compiled)
+			return;
+
+		// Get the link key
 		list($key) = array_keys( get_object_vars( $this->keys ) );
 
 		// Add key-binding for all children except the last
@@ -699,55 +754,19 @@ class Query
 	}
 	
 	/**
-	 * Parses a structure like a+b+c
-	 *
-	 */
-	private function parseAttach($term, $prefix = null)
-	{
-		if ($prefix)
-			$term = $prefix . "." . $term;
-			
-		$list = $this->split($term, '+');
-		
-		// If there is only 1 element, parse it as a tree
-		if (count($list) == 1)
-			return $this->parseTree( $list[0] );
-		
-		// Set type
-		$this->type = self::ATTACH;	
-
-		// Link first query to get root/id
-		$first = $this->link( $list[0] );
-		
-		$root = ($first->root)
-			? $first->root
-			: $first->id;
-		
-		// Add root to all elements after the first and link them
-		for ($i=1; $i<count($list); $i++)
-			$this->link( $root . "." . $list[ $i ] );
-
-		$this->update();
-	}
-	
-	/**
 	 * Parses a ID tree structure and sets the ID of this query and creates child queries
 	 *
-	 * @param {string} $idTree
+	 * @param {string} $term
 	 */
-	private function parseTree($idTree, $prefix = null)
+	private function parseTree($term)
 	{
-		list( $id, $children ) = $this->parseID( $idTree );
+		list( $id, $children ) = $this->parseID( $term );
 
 		if (!$id && !$children)
-			throw new \Exception("Query::parseTree - Cannot parse idTree " . $idTree);
+			throw new \Exception("Query::parseTree - Cannot parse term " . $term);
 			
 		if (!$id)
-			throw new \Exception("Query::parseTree - No id found " . $idTree);
-			
-		// Add prefix to id
-		if ($prefix)
-			$id = $prefix . "." . $id;
+			throw new \Exception("Query::parseTree - No id found " . $term);
 			
 		// Set query ID		
 		$this->id = $id;
@@ -762,16 +781,10 @@ class Query
 			return;
 		}
 		
-		// Set type
-		$this->type = self::TREE;
-
 		$list = $this->split($children, ',');
 
 		// Create a child query for each element
-		foreach ($list as $element)
-			$this->link( $element );
-
-		$this->update();
+		$this->linkList( self::TREE, $list );
 	}
 	
 	/**

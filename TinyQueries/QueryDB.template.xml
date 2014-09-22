@@ -9,20 +9,12 @@
 		<nested value="true" />
 	</query_output>
 
-	<!-- You can specify credentials per server, or just leave out the server attribute to let the credentials apply to each server -->
-	<db server="DOMAINNAME1">
-		<host></host>
+	<!-- Database credentials -->
+	<db>
+		<host>localhost</host>
 		<dbname></dbname>
 		<username></username>
 		<password></password>
 	</db>
 
-	<!-- Optional: -->
-	<db server="DOMAINNAME2">
-		<host></host>
-		<dbname></dbname>
-		<username></username>
-		<password></password>
-	</db>
-	
 </querydb>
