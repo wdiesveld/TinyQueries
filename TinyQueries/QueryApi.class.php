@@ -84,7 +84,7 @@ class QueryApi
 		if ($this->db)
 			return;
 		
-		$this->db = new QueryDB( $this->dbConfigFile );
+		$this->db = new QueryDB( null, $this->dbConfigFile );
 		
 		// Pass the profiler to the DB, so that each query can be profiled separately (not yet implemented)
 		$this->db->profiler = $this->profiler;
@@ -236,17 +236,17 @@ class QueryApi
 	 */
 	protected function processRequest()
 	{
-		$querySpec	= \HttpTools::getRequestVar('query', '/^[\w\.\:\-\,\(\)\|\+\s]+$/'); 
+		$term		= \HttpTools::getRequestVar('query', '/^[\w\.\:\-\,\(\)\|\+\s]+$/'); 
 		$params  	= array();
 		$response 	= null; 
 
-		if (!$querySpec) 
+		if (!$term) 
 			throw new \Exception('query-param is empty'); 
 			
-		$this->query = $this->db->query($querySpec);
+		$this->query = $this->db->query($term);
 		
-		$this->request['query']		= $querySpec;	
-		$this->request['queryID'] 	= $this->query->id;
+		$this->request['query']		= $term;	
+		$this->request['queryID'] 	= property_exists($this->query, 'id') ? $this->query->id : null;
 	
 		if (!$this->checkRequestPermissions())
 			throw new \UserFeedback( 'You have no permission to do this request' );
@@ -277,7 +277,7 @@ class QueryApi
 		$response = ($this->addProfilingInfo)
 			? array
 				(
-					"query"			=> $querySpec,
+					"query"			=> $term,
 					"params"		=> $params,
 					"apicall_id"	=> $this->apiCallID,
 					"rows"			=> $this->query->select()

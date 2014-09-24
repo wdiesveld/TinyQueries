@@ -72,6 +72,32 @@ class Term
 	}
 	
 	/**
+	 * Checks if the 'root' element of each terms should be replaced by an alias
+	 * For example "a(b,c)" and alias "a" => "d" will result in "d(b,c)"
+	 *
+	 * @param {array} $terms
+	 * @param {assoc} $aliases
+	 */
+	public static function convertAliases($terms, $aliases)
+	{
+		if (count($aliases) == 0)
+			return $terms;
+	
+		$terms1 = array();
+		
+		foreach ($terms as $term)
+		{
+			list( $id, $children ) = self::parseID( $term );
+			
+			$terms1[] = ($id && array_key_exists($id, $aliases))
+				? $aliases[ $id ] . (($children) ? "(" . $children . ")" : "")
+				: $term;
+		}
+		
+		return $terms1;
+	}
+	
+	/**
 	 * Parses a merge term, like a|b|c
 	 *
 	 * @param {string} $term 
@@ -139,7 +165,7 @@ class Term
 			throw new \Exception("Term::parseTree - No id found " . $term);
 		
 		// If there are no children, we are at the 'leaves', e.g. the atomic queries (either JSON or SQL)
-		if (is_null($children))
+		if (!$children)
 		{
 			// Try to load the SQL variant first
 			try

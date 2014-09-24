@@ -79,6 +79,15 @@ class QuerySQL extends Query
 	}
 	
 	/**
+	 * Returns the name of the query
+	 *
+	 */
+	public function name()
+	{
+		return $this->id;
+	}
+	
+	/**
 	 * Sets the nested flag to indicate that the output of the query should be nested.
 	 * This means that for example sql output fields named 'user.name' and 'user.email' will be converted to 
 	 * a nested structure 'user' having fields 'name' and 'email' 
@@ -97,30 +106,37 @@ class QuerySQL extends Query
 	 *
 	 * @param {assoc} $queryParams
 	 */
-	public function execute($queryParams = null)
+	public function execute($paramValues = null)
 	{
-		parent::execute($queryParams);
+		parent::execute($paramValues);
 		
 		$this->getInterface();
 
-		// If the query has no output just execute it
-		if (!$this->output)
+		try
 		{
-			list($sql, $pdoParams) = $this->getSql( $queryParams );
-			return $this->db->execute( $sql, $pdoParams );
+			// If the query has no output just execute it
+			if (!$this->output)
+			{
+				list($sql, $pdoParams) = $this->getSql( $this->paramValues );
+				return $this->db->execute( $sql, $pdoParams );
+			}
+			
+			$rows = (string) $this->_interface->output->rows;
+			$cols = (string) $this->_interface->output->columns;
+			
+			// Determine which select function should be used
+			if ($rows == "first" && $cols == "first")	return $this->selectFirst( $this->paramValues );
+			if ($rows == "first" && $cols == "all")		return $this->selectAssoc( $this->paramValues );
+			if ($rows == "all" 	 && $cols == "first")	return $this->selectAllFirst( $this->paramValues );
+			if ($rows == "all" 	 && $cols == "all")		return $this->selectAllAssoc( $this->paramValues );
+			
+			// Default:
+			return $this->selectAllAssoc( $this->paramValues );
 		}
-		
-		$rows = (string) $this->_interface->output->rows;
-		$cols = (string) $this->_interface->output->columns;
-		
-		// Determine which select function should be used
-		if ($rows == "first" && $cols == "first")	return $this->selectFirst( $queryParams );
-		if ($rows == "first" && $cols == "all")		return $this->selectAssoc( $queryParams );
-		if ($rows == "all" 	 && $cols == "first")	return $this->selectAllFirst( $queryParams );
-		if ($rows == "all" 	 && $cols == "all")		return $this->selectAllAssoc( $queryParams );
-		
-		// Default:
-		return $this->selectAllAssoc( $queryParams );
+		catch (\Exception $e)
+		{
+			throw new \Exception("SQL error for query " . $this->id . ": " . $e->getMessage());
+		}
 	}
 	
 	/**
@@ -398,6 +414,9 @@ class QuerySQL extends Query
 	// sql($sql) get/set van maken
 	
 		$pdoParams = array();
+		
+		if (is_null($params))
+			$params = array();
 		
 		if (!$this->id)
 			throw new \Exception('sql: Query ID not known');

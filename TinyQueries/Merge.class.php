@@ -131,5 +131,21 @@ class Merge extends Query
 		
 		return $result;
 	}
+	
+	/**
+	 * Updates meta info for this query 
+	 *
+	 */
+	protected function update()
+	{
+		parent::update();
+		
+		// Determine the common key of the children
+		$this->keys = new \StdClass();
+
+		// Copy key from first child
+		if ($matchingKey = $this->match( $this->children ))
+			$this->keys->$matchingKey = $this->children[ 0 ]->keys->$matchingKey;
+	}
 }
 

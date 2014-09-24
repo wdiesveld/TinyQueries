@@ -35,24 +35,33 @@ require_once('Query.class.php');
  */
 class Tree extends Query
 {
-	private $parent;
+	private $base; // Base query (actually the 'root' of the tree)
 	
 	/**
 	 * Constructor
 	 *
 	 * @param {QueryDB} $db Handle to database
-	 * @param {string} $id ID of parent query
+	 * @param {string} $id ID of parent query - $id should refer to an atomic query
 	 * @param {string} $terms Query terms corresponding to the child queries of the tree
 	 */
 	public function __construct($db, $id, $terms = array())
 	{
 		parent::__construct($db);
 		
-		// Create the parent query
-		$this->parent = $this->db->query($id);
+		// Create the root query
+		$this->base = $this->db->query($id);
 		
-		// Ensure parent query fields are copied to this query
+		// Ensure root query fields are copied to this query
 		$this->update();
+		
+		// Check for child aliases
+		$aliases = array();
+		
+		foreach ($this->output->fields as $field => $spec )
+			if (property_exists($spec, 'child') && $spec->child != $field)
+				$aliases[ $field ] = $spec->child;
+		
+		$terms = Term::convertAliases( $terms, $aliases );
 		
 		// Create a child query for each term
 		$this->linkList( $terms, false );
@@ -64,7 +73,7 @@ class Tree extends Query
 	 */
 	public function name()
 	{
-		return $this->parent->name();
+		return $this->base->name();
 	}
 	
 	/**
@@ -75,8 +84,8 @@ class Tree extends Query
 	 */
 	public function bind($paramName, $fieldName = null)
 	{
-		// Only bind to parent
-		$this->parent->bind($paramName, $fieldName);
+		// Only bind to root
+		$this->base->bind($paramName, $fieldName);
 				
 		return $this;
 	}	
@@ -89,8 +98,8 @@ class Tree extends Query
 	public function execute($paramValues = null)
 	{
 		parent::execute($paramValues);
-		
-		$data = $this->parent->execute($paramValues);
+
+		$data = $this->base->execute( $this->paramValues );
 		
 		$this->bindChildren($data);
 		
@@ -109,15 +118,15 @@ class Tree extends Query
 		$child = parent::link($term);
 
 		// If parent is compiled we are ready (child specs are set by compiler)
-		if (get_class($this->parent) == "TinyQueries\\QuerySQL")
+		if (get_class($this->base) == "TinyQueries\\QuerySQL")
 			return $child;
 		
 		// Find the matching key between parent & child
-		$queries = array( $this->parent, $child );
+		$queries = array( $this->base, $child );
 		$matchKey = $this->match( $queries );
 
 		if (!$matchKey)
-			throw new \Exception("Tree::link - cannot link query; there is no unique matching key for '" . $this->parent->id . "' and '" . $child->id . "'");
+			throw new \Exception("Tree::link - cannot link query; there is no unique matching key for '" . $this->base->name() . "' and '" . $child->name() . "'");
 
 		$parentKey 		= $this->keys->$matchKey;
 		$childKey		= $child->keys->$matchKey;
@@ -125,18 +134,18 @@ class Tree extends Query
 		$childKeyAlias 	= $matchKey;
 
 		// Add parentKey to select
-		$this->parent->addSelect($parentKey, $parentKeyAlias);
+		$this->base->addSelect($parentKey, $parentKeyAlias);
 				
 		// Create child definition which is compatible with the one used for compiled queries
 		$childDef = new \StdClass();
 		$childDef->type  		= 'child';
-		$childDef->child 		= $child->id;
+		$childDef->child 		= $child->name();
 		$childDef->parentKey 	= $parentKeyAlias;
 		$childDef->childKey		= $childKeyAlias;
 		$childDef->params 		= new \StdClass();
 		$childDef->params->$matchKey = $parentKeyAlias;
 		
-		$this->output->fields->{$child->id} = $childDef;
+		$this->output->fields->{$child->name()} = $childDef;
 		
 		// Modify child such that it can be linked to the parent
 		$child->bind( $matchKey, $childKey );
@@ -150,10 +159,13 @@ class Tree extends Query
 	 */
 	protected function update()
 	{
+		// Update base query
+		$this->base->update();
+		
 		// Copy fields from parent
 		$fields = array('root', 'params', 'output', 'keys');
 		foreach ($fields as $field)
-			$this->$field = $this->parent->$field;
+			$this->$field = $this->base->$field;
 	}
 	
 	/**
@@ -173,8 +185,6 @@ class Tree extends Query
 		if ($this->output->rows == 'first')
 			$rows = array( $rows );
 			
-		$columnsToRemove = array();
-		
 		// Get the child definitions
 		$children = array();
 		foreach ($this->output->fields as $name => $type)
@@ -187,19 +197,8 @@ class Tree extends Query
 		
 		// Merge the child queries with this query
 		foreach ($children as $child)
-		{
-			$r = $this->bindChild($rows, $child);
-			
-			if (!$r)
-				$columnsToRemove[] = $child->fieldName;
-		}
+			$this->bindChild($rows, $child);
 
-		// Clean up columns
-		foreach (array_keys($rows[0]) as $field)
-			if (in_array($field, $columnsToRemove))
-				for ($i=0;$i<count($rows);$i++)
-					unset( $rows[$i][$field] ); 
-					
 		if ($this->output->rows == 'first')
 			$rows = $rows[ 0 ];
 	}
@@ -218,29 +217,19 @@ class Tree extends Query
 	{
 		$child = null;
 
-		// Check if the child is in the list of children (or grandchildren) which are set by the idTree
+		// Check if the child is in the list of children which are set by the query term
 		foreach ($this->children as $c)
-		{
-			if ($c->id == $childDef->fieldName) // TODO dit kan ws opgelost worden met name()
+			if ($c->name() == $childDef->child)
+			{
 				$child = $c;
-				
-			foreach ($c->children as $cc)
-				if ($cc->id == $childDef->fieldName)
-					$child = $c;
-					
-			if ($child)
 				break;
-		}
+			}
 				
 		// If no child is found we are ready
 		if (!$child)
-			return false;
+			return;
 			
-		// Create the child if it was not in the child-array or the id differs from the childdef (this is caused by an alias in the parent query)
-		if (!$child || ($child->id && $child->id != $childDef->child))
-			$child = $this->db->query( $childDef->child );
-		
-		$params 	= $this->paramValues; // Take parent parameters as default params for child
+		$params 	= $this->paramValues; // Take root parameters as default params for child
 		$childKey 	= $childDef->childKey;
 		$parentKey 	= $childDef->parentKey;
 
@@ -278,8 +267,5 @@ class Tree extends Query
 				? $childRows[ $keyValue ]
 				: array();
 		}
-		
-		return true;
 	}
 }
-

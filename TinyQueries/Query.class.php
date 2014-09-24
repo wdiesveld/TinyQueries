@@ -96,7 +96,7 @@ class Query
 			return $this;
 		
 		if ($n > 1)
-			throw new \UserFeedback("Cannot call query with one parameter value; query has $n parameters");
+			throw new \Exception("Cannot call query with one parameter value; query has $n parameters");
 
 		$this->paramValues[ $paramName ] = $paramValues;
 		
@@ -162,13 +162,10 @@ class Query
 	 */
 	public function name()
 	{
-		if (property_exists($this, 'id'))
-			return $this->id;
+		if (count($this->children) == 0)
+			return null;
 			
-		if (count($this->children)>0)
-			return $this->children[0]->name();
-			
-		return null;
+		return $this->children[0]->name();
 	}
 	
 	/**
@@ -305,12 +302,14 @@ class Query
 		for ($i=0;$i<$depth;$i++)
 			$expl .= "  ";
 			
-		$expl .= "- ";
-		
-		if (property_exists('id', $this))
-			$expl .= $this->id . " ";
+		$expl .= "- " . $this->name() . " ";
 			
-		$expl .= "[" . get_class( $this ) . "]\n";
+		// Remove main namespace from classname
+		$class = explode( "\\", get_class( $this ) );
+		array_shift($class);
+		$class = implode( "\\", $class );
+		
+		$expl .= "[" . $class . "]\n";
 		
 		foreach ($this->children as $child)
 			$expl .= $child->explain($depth+1);
@@ -344,8 +343,13 @@ class Query
 		foreach (array_keys($rows[0]) as $field)
 			if ($field != $key && $field != $this->output->key && preg_match("/^\_\_/", $field) && !in_array( $field, $registeredOutputFields ))
 				$columnsToRemove[] = $field;
-		
-		// Clean up columns
+				
+		// Also check for columns corresponding to child definitions which are not loaded
+		foreach ($rows[0] as $field => $value)
+			if (is_null($value) && property_exists($this->output->fields, $field) && property_exists($this->output->fields->$field, 'child'))
+				$columnsToRemove[] = $field;
+				
+		// Do the clean up
 		foreach (array_keys($rows[0]) as $field)
 			if (in_array($field, $columnsToRemove))
 				for ($i=0;$i<count($rows);$i++)
@@ -362,30 +366,17 @@ class Query
 	protected function update()
 	{
 		// Only applies for queries with children
-		if (!$this->children || count($this->children)==0)
+		if (count($this->children) == 0)
 			return;
 		
 		// Call update recursively
 		foreach ($this->children as $child)
 			$child->update();
 			
-		// Determine the merge/chain key
-		$this->keys = new \StdClass();
-
-		$matchingKey = $this->match( $this->children );
-			
-		// Copy key from first child
-		if ($matchingKey)
-			$this->keys->$matchingKey = $this->children[ 0 ]->keys->$matchingKey;
-		
 		// Copy parameters from children
-		$this->params = new \StdClass();
 		foreach ($this->children as $child)
 			foreach ($child->params as $name => $spec)
 				$this->params->$name = $spec;
-				
-		// Copy other fields from first child
-		$this->root = $this->children[ 0 ]->root;
 	}
 	
 	/**
