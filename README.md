@@ -1,7 +1,7 @@
 # TinyQueries
 
 TinyQueries is a framework to create any data structure out of standard relational databases. 
-It uses a simple and powerful syntax to merge and nest SQL queries. 
+It uses a simple and powerful syntax to combine SQL queries. 
 
 ## Example
 
@@ -36,7 +36,7 @@ In the queries-folder create a json file named **helloWorld.json** with the foll
 
 Then the query can be called as follows:
 
-	$output = $db->query( "helloWorld" )->select();
+	$output = $db->get( "helloWorld" );
 	
 	var_dump( $output );
 	
