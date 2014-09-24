@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.4.1
+ * @version     1.5a
  * @package     TinyQueries
  *
  * License
@@ -23,7 +23,7 @@
  */
 namespace TinyQueries;
 
-require_once('QueryDB.class.php');
+require_once('Query.class.php');
 require_once('Arrays.class.php');
 
 /**
@@ -34,14 +34,13 @@ require_once('Arrays.class.php');
  * @author 	Wouter Diesveld <wouter@tinyqueries.com>
  * @package TinyQueries
  */
-class QuerySQL
+class QuerySQL extends Query
 {
 	public $id;
 	
-	private $db;
 	private $nested;
 	private $sql;
-	private $_interface;
+	protected $_interface;
 
 	/**
 	 * Constructor
@@ -51,13 +50,34 @@ class QuerySQL
 	 */
 	public function __construct($db, $id = null)
 	{
-		$this->db 	= $db;
-		$this->id 	= $id;
+		parent::__construct($db);
+		
+		$this->id = $id;
 		
 		// Take default setting from db
-		$this->nested	= $this->db->nested;
+		$this->nested = $this->db->nested;
+		
+		$this->load();
 	}
 
+	/**
+	 * Loads the JSON and/or SQL files which correspond to this query
+	 *
+	 */
+	public function load()
+	{
+		if (!$this->id)
+			return $this;
+	
+		// Already loaded
+		if ($this->_interface)
+			return $this;
+		
+		$this->import( $this->getInterface() );
+		
+		return $this;
+	}
+	
 	/**
 	 * Sets the nested flag to indicate that the output of the query should be nested.
 	 * This means that for example sql output fields named 'user.name' and 'user.email' will be converted to 
@@ -77,21 +97,18 @@ class QuerySQL
 	 *
 	 * @param {assoc} $queryParams
 	 */
-	public function execute( $queryParams = null )
+	public function execute($queryParams = null)
 	{
-		list($sql, $pdoParams) = $this->getSql( $queryParams );
+		parent::execute($queryParams);
 		
-		return $this->db->execute( $sql, $pdoParams );
-	}
-	
-	/**
-	 * Generic select function
-	 *
-	 * @param {assoc} $queryParams
-	 */
-	public function select($queryParams = null)
-	{
 		$this->getInterface();
+
+		// If the query has no output just execute it
+		if (!$this->output)
+		{
+			list($sql, $pdoParams) = $this->getSql( $queryParams );
+			return $this->db->execute( $sql, $pdoParams );
+		}
 		
 		$rows = (string) $this->_interface->output->rows;
 		$cols = (string) $this->_interface->output->columns;

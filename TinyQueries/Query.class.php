@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.4.1
+ * @version     1.5a
  * @package     TinyQueries
  *
  * License
@@ -23,7 +23,7 @@
  */
 namespace TinyQueries;
 
-require_once('QuerySQL.class.php');
+require_once('QueryDB.class.php');
 
 /**
  * Query
@@ -33,73 +33,40 @@ require_once('QuerySQL.class.php');
  * @author 	Wouter Diesveld <wouter@tinyqueries.com>
  * @package TinyQueries
  */
-class Query
+class Query 
 {
-	// Query types
-	const PLAIN		= 'plain';
-	const TREE		= 'tree';
-	const MERGE		= 'merge';
-	const CHAIN		= 'chain';
-	const ATTACH 	= 'attach';
-	
-	public $id;
-	public $compiled;
-	public $children;
 	public $params;
 	
-	private $db;
-	private $loadChildren;
-	private $type;
-	private $keys;
-	private $output;
-	private $select;
-	private $from;
-	private $root;
-	private $where;
-	private $groupBy;
-	private $having;
-	private $orderBy;
-	private $orderType;
-	private $maxResults;
-	private $querySql;
-	private $paramValues;
+	protected $db;
+	protected $keys;
+	protected $output;
+	protected $root;
+	protected $children;
+	protected $orderBy;
+	protected $orderType;
+	protected $maxResults;
+	protected $paramValues;
 
 	/**
 	 * Constructor
 	 *
 	 * @param {QueryDB} $db Handle to database
-	 * @param {string} $term (optional) 
-	 *		A query term. This can be an ID of a query
-	 *		or a merge structure od ID's like "a|b|c"
-	 *		or a nested structure of ID's like "a(b(c),d)" 
-	 *		or a chained structure like "a:b:c"
-	 *		or a combination like "a,b(c):d|e"
-	 *		If you supply this parameter, the meta data of the query and all subqueries is loaded from the JSON files
 	 */
-	public function __construct($db, $term = null)
+	public function __construct($db)
 	{
-		$this->db 			= $db;
-		$this->select		= array();
-		$this->where		= array();
-		$this->groupBy		= array();
-		$this->having		= array();
-		$this->orderBy		= array();
-		$this->children		= array();
-		$this->paramValues 	= array();
-		$this->loadChildren = false;
-		$this->keys			= new \StdClass();
-		$this->params		= new \StdClass();
-		$this->output		= new \StdClass();
-		$this->type			= self::PLAIN;
-
+		$this->db 				= $db;
+		$this->orderBy			= array();
+		$this->children			= array();
+		$this->paramValues 		= array();
+		$this->keys				= new \StdClass();
+		$this->params			= new \StdClass();
+		$this->output			= new \StdClass();
 		$this->output->key 		= null;
 		$this->output->group	= false;
 		$this->output->rows 	= "all";
 		$this->output->columns 	= "all";
 		$this->output->nested 	= true;
 		$this->output->fields 	= new \StdClass();
-		
-		$this->parse( $term );
 	}
 
 	/**
@@ -190,81 +157,32 @@ class Query
 	}
 	
 	/**
-	 * Adds a parameter binding to the query
+	 * Returns the name of the query
 	 *
-	 * @param {string} $paramName
-	 * @param {string} $fieldName If null, then $this->keys->$paramName is used as fieldname
 	 */
-	public function bind($paramName, $fieldName = null)
+	public function name()
 	{
-		// Compiled queries cannot be modified, so quit
-		if ($this->compiled)
-			return $this;
-		
-		// For chain, attach & merge do recursive call on children
-		if (in_array($this->type, array(self::MERGE, self::CHAIN, self::ATTACH)))
-		{
-			foreach ($this->children as $child)
-				$child->bind($paramName, $fieldName);
-				
-			return $this;
-		}
+		if (property_exists($this, 'id'))
+			return $this->id;
 			
-		if (property_exists($this->params, $paramName))
-			throw new \Exception("Query::bind - parameter '" . $paramName . "' already present in query '" . $this->id . "'");
+		if (count($this->children)>0)
+			return $this->children[0]->name();
 			
-		if (is_null($fieldName) && !property_exists($this->keys, $paramName))
-			throw new \Exception("Query::bind - key '" . $paramName . "' not found in query '" . $this->id . "'");
-		
-		if (is_null($fieldName))
-			$fieldName = $this->keys->$paramName;
-		
-		$param = new \StdClass();
-		$param->doc		= "Auto generated parameter";
-		$param->type 	= array("string", "array");
-		$param->expose 	= "public";
-		
-		$this->params->$paramName = $param;
-		
-		$this->select[] = $fieldName . " as '"  . $paramName . "'";
-		$this->where[] 	= $fieldName . " in (:" . $paramName . ")"; 
-		
-		return $this;
+		return null;
 	}
 	
 	/**
-	 * Loads the JSON and/or SQL files which correspond to this query
+	 * Adds a parameter binding to the query
 	 *
+	 * @param {string} $paramName
+	 * @param {string} $fieldName 
 	 */
-	public function load()
+	public function bind($paramName, $fieldName = null)
 	{
-		if (!$this->id)
-			return $this;
-	
-		// Already loaded
-		if ($this->querySql)
-			return $this;
-			
-		// Create the SQL query
-		$this->querySql = new QuerySQL( $this->db, $this->id );
-		
-		$json = null;
-			
-		try
-		{
-			// Try the compiled query first
-			$json = $this->querySql->getInterface();
-			$this->compiled = true;
-		}
-		catch (\Exception $e)
-		{
-			// If no compiled query is present, load the uncompiled json
-			$json = $this->db->queries->json( $this->id );
-			$this->compiled = false;
-		}
-		
-		$this->import( $json );
-		
+		// Do recursive call on children
+		foreach ($this->children as $child)
+			$child->bind($paramName, $fieldName);
+				
 		return $this;
 	}
 	
@@ -277,29 +195,8 @@ class Query
 	{
 		if (!is_null($paramValues))
 			$this->params( $paramValues );
-
-		// Do merge 
-		if ($this->type == self::MERGE)
-			return $this->merge();
-
-		// Do chaining 
-		if ($this->type == self::CHAIN)
-			return $this->chain();
-
-		// Do attach 
-		if ($this->type == self::ATTACH)
-			return $this->attach();
-
-		if (!$this->compiled)
-		{
-			$this->querySql->setSql( $this->compile() );
-			$this->querySql->setInterface( $this->params, $this->output );
-		}
-		
-		// If the query has output, do select, otherwise just execute it
-		return ($this->output)
-			? $this->querySql->select( $this->paramValues )
-			: $this->querySql->execute( $this->paramValues );
+			
+		return null;	
 	}
 	
 	/**
@@ -316,7 +213,7 @@ class Query
 		
 		$data = $this->execute($paramValues);
 		
-		$this->bindChildren( $data, $key );
+		$this->cleanUp($data, $key);
 		
 		// We are ready if output is not an array of assocs
 		if ($this->output->columns != 'all' || $this->output->rows != 'all')
@@ -376,18 +273,7 @@ class Query
 	 */
 	public function import($query)
 	{
-		$this->select 	= Arrays::toArray( property_exists($query, 'select') 	? $query->select 	: null );
-		$this->from 	= property_exists( $query, 'from') ? $query->from : null;
-		$this->where 	= Arrays::toArray( property_exists($query, 'where') 	? $query->where 	: null );
-		$this->groupBy 	= Arrays::toArray( property_exists($query, 'groupBy') 	? $query->groupBy 	: null );
-		$this->orderBy 	= Arrays::toArray( property_exists($query, 'orderBy')	? $query->orderBy 	: null );
-		$this->having 	= Arrays::toArray( property_exists($query, 'having') 	? $query->having 	: null );
-		$this->root		= property_exists( $query, 'root' ) ? $query->root : null;
-		
-		// Set root equal to from, if from does not contain a join (e.g. it is a plain table name)
-		if (!$this->root && preg_match( "/^[\w\.\-\_]+$/", $this->from))
-			$this->root = $this->from;
-		
+		if (property_exists($query, 'root'))	$this->root 	= $query->root;
 		if (property_exists($query, 'keys'))	$this->keys 	= $query->keys;
 		if (property_exists($query, 'params'))	$this->params 	= $query->params;
 		
@@ -421,10 +307,10 @@ class Query
 			
 		$expl .= "- ";
 		
-		if ($this->id)
+		if (property_exists('id', $this))
 			$expl .= $this->id . " ";
 			
-		$expl .= "[" . $this->type . "]\n";
+		$expl .= "[" . get_class( $this ) . "]\n";
 		
 		foreach ($this->children as $child)
 			$expl .= $child->explain($depth+1);
@@ -433,10 +319,47 @@ class Query
 	}
 	
 	/**
+	 * Cleans up columns which should not be in the query output
+	 *
+	 * @param {mixed} $data Query output
+	 */
+	protected function cleanUp(&$rows, $key = null)
+	{
+		if ($this->output->columns == 'first')
+			return;
+			
+		if (!$rows || count($rows) == 0)
+			return;			
+
+		if ($this->output->rows == 'first')
+			$rows = array( $rows );
+		
+		$columnsToRemove = array();
+		
+		$registeredOutputFields = is_array($this->output->fields)
+			? $this->output->fields
+			: array_keys( get_object_vars($this->output->fields) );
+
+		// Check which columns can be removed	
+		foreach (array_keys($rows[0]) as $field)
+			if ($field != $key && $field != $this->output->key && preg_match("/^\_\_/", $field) && !in_array( $field, $registeredOutputFields ))
+				$columnsToRemove[] = $field;
+		
+		// Clean up columns
+		foreach (array_keys($rows[0]) as $field)
+			if (in_array($field, $columnsToRemove))
+				for ($i=0;$i<count($rows);$i++)
+					unset( $rows[$i][$field] ); 
+					
+		if ($this->output->rows == 'first')
+			$rows = $rows[0];
+	}
+	
+	/**
 	 * Updates meta info for this query 
 	 * (Now only keys & parameters are updated; should be extended with other fields like output-fields etc)
 	 */
-	private function update()
+	protected function update()
 	{
 		// Only applies for queries with children
 		if (!$this->children || count($this->children)==0)
@@ -445,10 +368,6 @@ class Query
 		// Call update recursively
 		foreach ($this->children as $child)
 			$child->update();
-			
-		// Code below only applies to merge & chain queries
-		if (!in_array($this->type, array(self::MERGE, self::CHAIN, self::ATTACH)))
-			return;
 			
 		// Determine the merge/chain key
 		$this->keys = new \StdClass();
@@ -466,98 +385,31 @@ class Query
 				$this->params->$name = $spec;
 				
 		// Copy other fields from first child
-		$this->root 	= $this->children[ 0 ]->root;
-		$this->compiled = $this->children[ 0 ]->compiled;
+		$this->root = $this->children[ 0 ]->root;
 	}
 	
 	/**
-	 * Connects a query to this query
-	 *
-	 * @param {string} $term
-	 *
-	 * @return {Query}
-	 */
-	private function link($term)
-	{
-		$child = new Query($this->db, $term);
-
-		$this->children[] = $child;
-
-		// Only tree queries need further processing, so in this case we are ready
-		if ($this->type != self::TREE)
-			return $child;
-		
-		// If parent is compiled we are ready (child specs are set by compiler)
-		if ($this->compiled)
-			return $child;
-		
-		if ($this->compiled != $child->compiled)
-			throw new \Exception("Query::link - parent & child queries should both be compiled or not compiled");
-		
-		// Find the matching key between parent & child
-		$matchKey = $this->match( $child );
-
-		if (!$matchKey)
-			throw new \Exception("Query::link - cannot link query; there is no unique matching key for '" . $this->id . "' and '" . $child->id . "'");
-
-		$parentKey 	= $this->keys->$matchKey;
-		$childKey	= $child->keys->$matchKey;
-		
-		$parentKeyAlias = ($this->compiled) 
-			? $parentKey
-			: "__parentKey-" . count($this->children);
-
-		$childKeyAlias = ($this->compiled) 
-			? $childKey
-			: $matchKey;
-
-		// Add parentKey to select
-		if (!$this->compiled)
-			$this->select[] = $parentKey . " as '" . $parentKeyAlias . "'";
-				
-		// Create child definition which is compatible with the one used for compiled queries
-		$childDef = new \StdClass();
-		$childDef->type  		= 'child';
-		$childDef->child 		= $child->id;
-		$childDef->parentKey 	= $parentKeyAlias;
-		$childDef->childKey		= $childKeyAlias;
-		$childDef->params 		= new \StdClass();
-		$childDef->params->$matchKey = $parentKeyAlias;
-		
-		$this->output->fields->{$child->id} = $childDef;
-		
-		// Modify child such that it can be linked to the parent
-		if (!$this->compiled)
-			$child->bind( $matchKey, $childKey );
-		
-		return $child;
-	}
-
-	/**
 	 * Links a list of terms to this query
 	 *
-	 * @param {string} $type
 	 * @param {array} $terms
+	 * @param {boolean} $firstAsRoot
 	 */
-	private function linkList($type, $terms)
+	protected function linkList($terms, $firstAsRoot)
 	{
-		$this->type = $type;
-		
 		$root = null;
-		$firstAsRoot = in_array( $type, array( self::ATTACH, self::CHAIN ) );
 		
 		if ($firstAsRoot)
 		{
 			$term = array_shift($terms);
 			
-			// Link first query to get root/id
+			// Link first query to get root/name
 			$first = $this->link( $term );
 			
 			$first->update();
 			
 			$root = ($first->root)
 				? $first->root
-				: $first->id;
+				: $first->name();
 				
 			if (!$root)
 				throw new \Exception("root not known for " . $list[0]);
@@ -575,250 +427,28 @@ class Query
 	}
 	
 	/**
-	 * Compiles the query to SQL
-	 *
-	 */
-	private function compile()
-	{
-		if (!$this->select)
-			throw new \Exception("compile: 'select' is missing");
-			
-		$sql = "select\n" . implode(",\n", $this->select) . "\n";
-		
-		if ($this->from)
-			$sql .= "from\n" . $this->from . "\n";
-			
-		if (count($this->where) > 0)
-		{
-			$where = array();
-			foreach ($this->where as $w)
-				$where[] = "(" . $w . ")";
-				
-			$sql .= "where\n" . implode(" and\n", $where) . "\n";
-		}
-		
-		if (count($this->groupBy) > 0)
-			$sql .= "group by\n" . implode(",\n", $this->groupBy) . "\n";
-		
-		if (count($this->orderBy) > 0)
-			$sql .= "order by\n" . implode(",\n", $this->orderBy) . "\n";
-			
-		if ($this->orderType)
-			$sql .= $this->orderType;
-		
-		return $sql;
-	}
-	
-	/**
-	 * Splits the string by the separator, respecting possible nested parenthesis structures
-	 *
-	 * @param {string} $string
-	 * @param {string} $separator Must be a single char!
-	 */
-	private function split($string, $separator)
-	{
-		$string = trim( $string );
-		$stack 	= 0;
-		$part 	= '';
-		$list 	= array();
-		
-		if ($string == '')
-			return $list;
-		
-		for ($i=0; $i<strlen($string); $i++)
-		{
-			$char = substr( $string, $i, 1 );
-			
-			switch ($char)
-			{
-				case '(': $stack++; break;
-				case ')': $stack--; break;
-				case $separator: 
-					if ($stack == 0)
-					{
-						$list[] = $part;
-						$part 	= '';
-						$char 	= '';
-					}
-					break;
-			}
-
-			$part .= $char;
-		}
-		
-		// Add last element
-		$list[] = $part;
-		
-		return $list;
-	}
-
-	/**
-	 * Starting point for parsing a query term
-	 * First tries to parse a structure like "( ... )" or "prefix.( ... )"
-	 * ( the second form is needed for parsing terms like a:(b|c) - a is passed as prefix to (b|c), like a.(b|c) )
+	 * Connects a query to this query
 	 *
 	 * @param {string} $term
-	 */
-	private function parse($term)
-	{
-		if (!$term)
-			return;
-			
-		list( $id, $children ) = $this->parseID( $term );
-		
-		// Extract the prefix from the id (if present)
-		$prefix = ($id && substr($id, -1) == '.')
-			? substr($id, 0, -1)
-			: null;
-		
-		// Determine the term to be passed to the merge parser
-		$termMerge = ($children && (!$id || $prefix))
-			? $children
-			: $term;
-			
-		$this->parseMerge( $termMerge, $prefix );
-	}
-	
-	/**
-	 * Parses a merge term, like a|b|c
 	 *
-	 * @param {string} $term 
+	 * @return {Query}
 	 */
-	private function parseMerge($term = null, $prefix = null)
+	protected function link($term)
 	{
-		$list = $this->split($term, '|');
+		$child = $this->db->query($term);
 
-		if ($prefix)
-			foreach ($list as $i => $v)
-				$list[$i] = $prefix . "." . $list[$i];
-		
-		// If there is only one element, parse it as an attach
-		if (count($list) == 1)
-			return $this->parseAttach( $list[0] );
+		$this->children[] = $child;
 
-		$this->linkList( self::MERGE, $list );
+		return $child;
 	}
-	
-	/**
-	 * Parses a attach term, like a+b+c
-	 *
-	 * @param {string} $term
-	 */
-	private function parseAttach($term)
-	{
-		$list = $this->split($term, '+');
-		
-		// If there is only 1 element, parse it as a chain
-		if (count($list) == 1)
-			return $this->parseChain( $list[0] );
-		
-		$this->linkList( self::ATTACH, $list );
-		
-		// Code below is only for non compiled queries
-		if ($this->compiled)
-			return;
 
-		// Get the link key
-		list($key) = array_keys( get_object_vars( $this->keys ) );
-
-		// Add key-binding for all children except the first
-		for ($i=1; $i<count($this->children); $i++)
-			$this->children[$i]->bind($key);
-	}
-	
-	/**
-	 * Parses a filter term, like a:b:c
-	 *
-	 * @param {string} $term
-	 */
-	private function parseChain($term)
-	{
-		$list = $this->split($term, ':');
-		
-		// If there is only 1 element, parse it as an tree
-		if (count($list) == 1)
-			return $this->parseTree( $list[0] );
-		
-		$this->linkList( self::CHAIN, $list );
-		
-		// Code below is only for non compiled queries
-		if ($this->compiled)
-			return;
-
-		// Get the link key
-		list($key) = array_keys( get_object_vars( $this->keys ) );
-
-		// Add key-binding for all children except the last
-		for ($i=0; $i<count($this->children)-1; $i++)
-			$this->children[$i]->bind($key);
-	}
-	
-	/**
-	 * Parses a ID tree structure and sets the ID of this query and creates child queries
-	 *
-	 * @param {string} $term
-	 */
-	private function parseTree($term)
-	{
-		list( $id, $children ) = $this->parseID( $term );
-
-		if (!$id && !$children)
-			throw new \Exception("Query::parseTree - Cannot parse term " . $term);
-			
-		if (!$id)
-			throw new \Exception("Query::parseTree - No id found " . $term);
-			
-		// Set query ID		
-		$this->id = $id;
-		
-		// Load the query meta info
-		$this->load();
-		
-		// If no children are specified, load all children by default
-		if (is_null($children))
-		{
-			$this->loadChildren = true;
-			return;
-		}
-		
-		$list = $this->split($children, ',');
-
-		// Create a child query for each element
-		$this->linkList( self::TREE, $list );
-	}
-	
-	/**
-	 * Gets the ID part and children-part out of a tree structure, so "a(b(c),d)" will return "a" & "b(c),d"
-	 *
-	 * @param {string} $idTree
-	 */
-	private function parseID($idTree)
-	{
-		$idTree = trim($idTree);
-		
-		// If tree has only one node this is just the ID of the query
-		if (preg_match('/^[\w\-\.]+$/', $idTree))
-			return array($idTree, null);
-			
-		$match = null;
-		
-		if (!preg_match('/^([\w\-\.]*)\s*\((.*)\)$/', $idTree, $match))
-			return array( null, null );
-			
-		$id = ($match[1])
-			? $match[1]
-			: null;
-			
-		return array( $id, trim( $match[2] ) );
-	}
-	
 	/**
 	 * Checks if the given queries match based on common keys.
 	 * If one query is passed, then it is compared with this query
 	 *
 	 * @param {array|Query} $queries
 	 */
-	private function match(&$queries)
+	protected function match(&$queries)
 	{
 		$matching = null;
 		
@@ -840,341 +470,4 @@ class Query
 			
 		return $matching[ 0 ];
 	}
-	
-	/**
-	 * 'Left joins' the output of the child queries
-	 *
-	 */
-	private function attach()
-	{
-		// Determine the attach key
-		$key = ($this->output->key)
-			? $this->output->key
-			: $this->match( $this->children );
-			
-		if (!$key)
-			throw new \Exception("Cannot attach queries - no common key found");
-			
-		$n = count($this->children);
-		
-		if ($n==0)
-			return array();
-		
-		// Take first query as base
-		$params		= $this->paramValues;
-		$rows 		= $this->children[ 0 ]->select( $params );
-		$keyBase 	= $this->children[ 0 ]->keys->$key;
-
-		// If the number of rows is 0 we can stop
-		if (count($rows) == 0)
-			return $rows;
-			
-		// Collect the key field values and set them as parameter value for the other queries
-		$params[ $key ] = array();
-		foreach ($rows as $row)
-			$params[ $key ][] = $row[ $keyBase ];
-
-		// Attach all other queries
-		for ($i=1; $i<$n; $i++)
-		{
-			$query 		= $this->children[ $i ];
-			$keyField 	= $query->keys->$key;
-			$rows1 		= $query->select($params, $keyField);
-			
-			for ($j=0;$j<count($rows);$j++)
-			{
-				$keyValue = $rows[$j][$keyBase];
-					
-				// Attach the fields of $rows1 to $rows
-				if (array_key_exists($keyValue, $rows1))
-					foreach ($rows1[ $keyValue ] as $name => $value)
-						$rows[$j][$name] = $value;
-			}
-		}
-		
-		return $rows;
-	}
-	
-	/**
-	 * Chains the output of the child queries
-	 *
-	 */
-	private function chain()
-	{
-		// Determine the chain key
-		$key = ($this->output->key)
-			? $this->output->key
-			: $this->match( $this->children );
-			
-		if (!$key)
-			throw new \Exception("Cannot chain queries - no common key found");
-			
-		$n = count($this->children);
-		
-		if ($n==0)
-			return array();
-		
-		// Take last query as base
-		$params		= $this->paramValues;
-		$rows 		= $this->children[ $n-1 ]->select( $params );
-		$keyBase 	= $this->children[ $n-1 ]->keys->$key;
-
-		// Attach all other queries
-		for ($i=$n-2; $i>=0; $i--)
-		{
-			// If the number of rows is 0 we can stop
-			if (count($rows) == 0)
-				return $rows;
-			
-			// Collect the key field values and set them as parameter value for the next query
-			$params[ $key ] = array();
-			foreach ($rows as $row)
-				$params[ $key ][] = $row[ $keyBase ];
-		
-			$query 		= $this->children[ $i ];
-			$keyField 	= $query->keys->$key;
-			$rows1 		= $query->select($params, $keyField);
-			
-			$j=0;
-			
-			// Do an intersection of $rows & $rows1
-			while ($j<count($rows))
-			{
-				$keyValue = $rows[$j][$keyBase];
-					
-				if (array_key_exists($keyValue, $rows1))
-				{
-					// Attach the fields of $rows1 to $rows
-					foreach ($rows1[ $keyValue ] as $name => $value)
-						$rows[$j][$name] = $value;
-					$j++;
-				}
-				else
-				{
-					// Remove elements which are not in the latest query result (rows1)
-					array_splice( $rows, $j, 1 );
-				}
-			}
-		}
-		
-		return $rows;
-	}
-	
-	/**
-	 * Merges the output of the child queries
-	 *
-	 */
-	private function merge()
-	{
-		// Determine the merge key
-		$mergeKey = ($this->output->key)
-			? $this->output->key
-			: $this->match( $this->children );
-
-		$orderBy = (count($this->orderBy) == 1)
-					? $this->orderBy[0]
-					: null;
-		
-		$result = ($mergeKey)
-			? $this->mergeByKey( $mergeKey, $orderBy )
-			: $this->mergePlain( $orderBy );
-			
-		if ($this->maxResults)
-		{
-			if (Arrays::isAssoc($result))
-				Arrays::spliceAssoc($result, (int) $this->maxResults);
-			else
-				array_splice($result, $this->maxResults);
-		}
-		
-		// If there is orderBy, the result should be an index-based array
-		// However, if there is also an key, the intermediate result should be an associative array, which is needed for correct merging
-		// So in this case, the intermediate result should be converted to an index-based array
-		if ($this->output->key && count($this->orderBy)==1 && Arrays::isAssoc($result))
-			$result = Arrays::toIndexed($result); 
-		
-		return $result;
-	}
-	
-	/**
-	 * Merges the output of the child queries without a key
-	 *
-	 */
-	private function mergePlain($orderBy)
-	{
-		$result = array();
-		
-		foreach ($this->children as $query)
-		{
-			$rows = $query->params( $this->paramValues )->select();
-			Arrays::mergeArrays( $result, $rows, $orderBy, $this->orderType );
-		}
-		
-		return $result;
-	}
-	
-	/**
-	 * Merges the output of the child queries by using a common key
-	 *
-	 * @param {string} $key
-	 */
-	private function mergeByKey($key, $orderBy)
-	{
-		$result = array();
-		
-		foreach ($this->children as $query)
-		{
-			// Add the key to the select fields
-			if (!$query->compiled)
-				$query->select[] = $query->keys->$key;
-
-				// TODO: geen key( . ) gebruiken , want dan verdander je de query settings
-			$rows = $query->key( $query->keys->$key )->params( $this->paramValues )->select();
-				
-			Arrays::mergeAssocs( $result, $rows, $orderBy, $this->orderType );
-		}
-
-		// Convert 'back' to indexed array in case the main query has no output key
-		if (!$this->output->key)
-			return Arrays::toIndexed($result);
-		
-		return $result;
-	}
-	
-	/**
-	 * Binds the child queries to the query output
-	 *
-	 * @param {array} $rows The rows/row as returned by QuerySQL
-	 * @param {string} $key Key which is passed to select( . )
-	 */
-	private function bindChildren(&$rows, $key)
-	{
-		// In this case child binding does not apply
-		if ($this->output->columns == 'first')
-			return;
-		
-		if (!$rows || count($rows) == 0)
-			return;
-	
-		if ($this->output->rows == 'first')
-			$rows = array( $rows );
-			
-		$columnsToRemove = array();
-		
-		// Get the child definitions
-		$children = array();
-		foreach ($this->output->fields as $name => $type)
-			if (property_exists($type, 'child'))
-			{
-				 $childDef = $type;
-				 $childDef->fieldName = $name;
-				 $children[] = $childDef;
-			}				
-		
-		// Merge the child queries with this query
-		foreach ($children as $child)
-		{
-			$r = $this->bindChild($rows, $child);
-			
-			if (!$r)
-				$columnsToRemove[] = $child->fieldName;
-		}
-
-		$registeredOutputFields = is_array($this->output->fields)
-			? $this->output->fields
-			: array_keys( get_object_vars($this->output->fields) );
-
-		// Check which columns can be removed	
-		foreach (array_keys($rows[0]) as $field)
-			if ($field != $key && $field != $this->output->key && preg_match("/^\_\_/", $field) && !in_array( $field, $registeredOutputFields ))
-				$columnsToRemove[] = $field;
-				
-		// Clean up columns
-		foreach (array_keys($rows[0]) as $field)
-			if (in_array($field, $columnsToRemove))
-				for ($i=0;$i<count($rows);$i++)
-					unset( $rows[$i][$field] ); 
-					
-		if ($this->output->rows == 'first')
-			$rows = $rows[ 0 ];
-	}
-
-	/**
-	 * Creates the child query based on the given child definition, executes it and ties 
-	 * the result to the output of the parent query
-	 *
-	 * @param {array} $parentRows Query output of the parent query
-	 * @param {object} $childDef Definition of the child query. This object has the following fields:
-	 *					{string} $child ID of the child query
-	 *					{string} $childKey Fieldname which is present in the child query, which matched the:
-	 *					{string} $parentKey Fieldname which is present in the parent query
-	 */
-	private function bindChild(&$parentRows, $childDef)
-	{
-		$child = null;
-
-		// Check if the child is in the list of children (or grandchildren) which are set by the idTree
-		foreach ($this->children as $c)
-		{
-			if ($c->id == $childDef->fieldName)
-				$child = $c;
-				
-			foreach ($c->children as $cc)
-				if ($cc->id == $childDef->fieldName)
-					$child = $c;
-					
-			if ($child)
-				break;
-		}
-				
-		// If not and not all children should be loaded we are ready
-		if (!$child && !$this->loadChildren)
-			return false;
-			
-		// Create the child if it was not in the child-array or the id differs from the childdef (this is caused by an alias in the parent query)
-		if (!$child || ($child->id && $child->id != $childDef->child))
-			$child = new Query( $this->db, $childDef->child );
-		
-		$params 	= $this->paramValues; // Take parent parameters as default params for child
-		$childKey 	= $childDef->childKey;
-		$parentKey 	= $childDef->parentKey;
-
-		// Check types
-		if (!is_array($parentRows))
-			throw new \Exception('bindChild: illegal function call - parentRows should be an array of associative arrays');
-
-		if (count($parentRows)>0 && !is_array($parentRows[0]))
-			throw new \Exception('bindChild: illegal function call - parentRows should be an array of associative arrays');
-		
-		if (count($parentRows)>0 && !array_key_exists($parentKey, $parentRows[0]))
-			throw new \Exception('bindChild: illegal function call - parentRows should consist of associative arrays containing the field '.$parentKey);
-		
-		// Select the childQuery parameter values from the parent query output
-		foreach ($childDef->params as $name => $parentColumn)
-		{
-			$values = array();
-			
-			foreach ($parentRows as $row)
-				if (!in_array( $row[ $parentColumn ], $values))
-					$values[] = $row[ $parentColumn ];
-				
-			$params[ $name ] = $values;
-		}
-
-		// Execute child query and group results
-		$childRows = $child->group()->select( $params, $childKey );
-
-		// Combine child rows with parent rows
-		for ($i=0;$i<count($parentRows);$i++)
-		{
-			$keyValue = $parentRows[$i][$parentKey];
-					 
-			$parentRows[$i][ $childDef->fieldName ] = (array_key_exists($keyValue, $childRows)) 
-				? $childRows[ $keyValue ]
-				: array();
-		}
-		
-		return true;
-	}
 }
-

@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.4.1
+ * @version     1.5a
  * @package     TinyQueries
  *
  * License
@@ -23,6 +23,7 @@
  */
 namespace TinyQueries;
 
+require_once('Term.class.php');
 require_once('Query.class.php');
 require_once('QuerySet.class.php');
 
@@ -179,22 +180,22 @@ class QueryDB
 	/**
 	 * Creates and returns a new Query object 
 	 *
-	 * @param {string} $queryID
+	 * @param {string} $term A query term like "a" or "a:b+c(d|e)"
 	 */
-	public function query($queryID)
+	public function query($term)
 	{
-		return new Query( $this, $queryID );
+		return Term::parse($this, $term);
 	}
 	
 	/**
-	 * Creates the given query, executes it and returns the query output
+	 * Creates a query based on $term, executes it and returns the query output
 	 *
-	 * @param {string} $queryID
+	 * @param {string} $term
 	 * @param {mixed} $paramValues
 	 */
-	public function get($queryID, $paramValues = null)
+	public function get($term, $paramValues = null)
 	{
-		return $this->query($queryID)->select($paramValues);
+		return $this->query($term)->select($paramValues);
 	}
 	
 	/**
