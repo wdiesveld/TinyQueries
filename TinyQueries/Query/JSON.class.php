@@ -23,10 +23,10 @@
  */
 namespace TinyQueries;
 
-require_once('QuerySQL.class.php');
+require_once('SQL.class.php');
 
 /**
- * QueryJSON
+ * JSON
  *
  * This class represents a query defined by JSON
  *

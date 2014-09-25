@@ -24,7 +24,6 @@
 namespace TinyQueries;
 
 require_once('Term.class.php');
-require_once('Query.class.php');
 require_once('QuerySet.class.php');
 
 /**

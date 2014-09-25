@@ -23,17 +23,19 @@
  */
 namespace TinyQueries;
 
-require_once("QueryDB.class.php");
+require_once( 'HttpTools.class.php' );
+require_once( 'UserFeedback.class.php' );
+require_once( dirname(__FILE__) . '/../QueryDB.class.php' );
 
 /**
- * QueryApi
+ * Api
  *
- * This is a simple json api based on the modules HttpTools & UserFeedback.
+ * This is a simple JSON API which can be used on top of QueryDB
  *
  * @author 	Wouter Diesveld <wouter@tinyqueries.com>
  * @package TinyQueries
  */
-class QueryApi
+class Api extends HttpTools
 {
 	protected $server;
 	protected $apiCallID;
@@ -56,7 +58,7 @@ class QueryApi
 	 */
 	public function __construct($dbConfigFile = null, $debugMode = false, $addProfilingInfo = false)
 	{
-		$this->server 	 		= \HttpTools::getServerVar('SERVER_NAME');
+		$this->server 	 		= self::getServerVar('SERVER_NAME');
 		$this->debugMode 		= $debugMode;
 		$this->dbConfigFile 	= $dbConfigFile;
 		$this->addProfilingInfo = $addProfilingInfo;
@@ -65,12 +67,12 @@ class QueryApi
 
 		// Overrule profiling setting if param _profiling is send
 		if (array_key_exists('_profiling', $_REQUEST))
-			$this->addProfilingInfo	= \HttpTools::getRequestVar('_profiling', '/^\d+$/'); 
+			$this->addProfilingInfo	= self::getRequestVar('_profiling', '/^\d+$/'); 
 		
 		// Create Profiler object
 		if ($this->addProfilingInfo)
 		{
-			require_once("Profiler.class.php");
+			require_once( dirname(__FILE__) . '/../Profiler.class.php' );
 			$this->profiler	= new Profiler();
 		}
 	}
@@ -110,8 +112,8 @@ class QueryApi
 	public function sendResponse($contentType = "application/json; charset=utf-8", $postProcess = null)
 	{
 		// optional parameters for redirect (non ajax only)
-		$urlSuccess	= \HttpTools::getRequestVar('url-success');
-		$urlError 	= \HttpTools::getRequestVar('url-error');
+		$urlSuccess	= self::getRequestVar('url-success');
+		$urlError 	= self::getRequestVar('url-error');
 		
 		// Set content type
 		header( 'Content-type: ' . $contentType);
@@ -123,7 +125,7 @@ class QueryApi
  			// vang alle eventuele warnings/errors op
 			ob_start();
 			
-			$this->apiCallID = \HttpTools::getRequestVar('apicall_id',	'/^[\d\w\-]+$/'); // is sent back to caller; can be used to discriminate between responses
+			$this->apiCallID = self::getRequestVar('apicall_id',	'/^[\d\w\-]+$/'); // is sent back to caller; can be used to discriminate between responses
 			
 			$this->init();
 			
@@ -171,11 +173,11 @@ class QueryApi
 
 			$errorMessage = $e->getMessage();
 		
-			$showToUser = (get_class( $e ) == 'UserFeedback' || $this->debugMode == true) 
+			$showToUser = (get_class( $e ) == "TinyQueries\\UserFeedback" || $this->debugMode == true) 
 								? true 
 								: false;
 								
-			$httpCode	= (get_class( $e ) == 'UserFeedback')
+			$httpCode	= (get_class( $e ) == "TinyQueries\\UserFeedback")
 								? $e->getCode()
 								: 400;
 
@@ -191,13 +193,13 @@ class QueryApi
 		
 		if ($urlSuccess && !array_key_exists('error', $response))
 		{
-			header('Location: ' . \HttpTools::addParamsToURL($urlSuccess, $response));
+			header('Location: ' . self::addParamsToURL($urlSuccess, $response));
 			exit;
 		}
 		
 		if ($urlError && array_key_exists('error', $response))
 		{
-			header('Location: ' . \HttpTools::addParamsToURL($urlError, $response));
+			header('Location: ' . self::addParamsToURL($urlError, $response));
 			exit;
 		}
 
@@ -236,7 +238,7 @@ class QueryApi
 	 */
 	protected function processRequest()
 	{
-		$term		= \HttpTools::getRequestVar('query', '/^[\w\.\:\-\,\(\)\|\+\s]+$/'); 
+		$term		= self::getRequestVar('query', '/^[\w\.\:\-\,\(\)\|\+\s]+$/'); 
 		$params  	= array();
 		$response 	= null; 
 
@@ -249,7 +251,7 @@ class QueryApi
 		$this->request['queryID'] 	= property_exists($this->query, 'id') ? $this->query->id : null;
 	
 		if (!$this->checkRequestPermissions())
-			throw new \UserFeedback( 'You have no permission to do this request' );
+			throw new UserFeedback( 'You have no permission to do this request' );
 		
 		// read the query-parameters
 		foreach (array_keys($_GET) as $getkey)
@@ -265,7 +267,7 @@ class QueryApi
 				}
 				catch (\Exception $e) 
 				{
-					$params[ $paramname ] = \HttpTools::getRequestVar($getkey);
+					$params[ $paramname ] = self::getRequestVar($getkey);
 				}
 			}
 			

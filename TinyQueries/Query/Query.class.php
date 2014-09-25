@@ -23,7 +23,7 @@
  */
 namespace TinyQueries;
 
-require_once('QueryDB.class.php');
+require_once( dirname(__FILE__) . '/../QueryDB.class.php' );
 
 /**
  * Query

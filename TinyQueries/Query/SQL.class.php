@@ -23,11 +23,11 @@
  */
 namespace TinyQueries;
 
-require_once('Query.class.php');
-require_once('Arrays.class.php');
+require_once( 'Query.class.php' );
+require_once( dirname(__FILE__) . '/../Arrays.class.php' );
 
 /**
- * QuerySQL
+ * SQL
  *
  * This class represents one SQL query
  *
@@ -272,7 +272,7 @@ class QuerySQL extends Query
 					$this->setType($field[$name], $subtype);
 				break;
 				
-			// Child queries are handled by Query::tieParentChild
+			// Child queries are handled by QueryTree
 			case 'child':
 				break;
 			

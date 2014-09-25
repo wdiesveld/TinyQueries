@@ -33,7 +33,7 @@ require_once('Query.class.php');
  * @author 	Wouter Diesveld <wouter@tinyqueries.com>
  * @package TinyQueries
  */
-class Filter extends Query
+class QueryFilter extends Query
 {
 	/**
 	 * Constructor

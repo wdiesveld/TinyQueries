@@ -33,7 +33,7 @@ require_once('Query.class.php');
  * @author 	Wouter Diesveld <wouter@tinyqueries.com>
  * @package TinyQueries
  */
-class Merge extends Query
+class QueryMerge extends Query
 {
 	/**
 	 * Constructor

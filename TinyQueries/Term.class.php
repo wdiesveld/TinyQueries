@@ -23,13 +23,12 @@
  */
 namespace TinyQueries;
 
-require_once('Query.class.php');
-require_once('QueryJSON.class.php');
-require_once('QuerySQL.class.php');
-require_once('Attach.class.php');
-require_once('Filter.class.php');
-require_once('Merge.class.php');
-require_once('Tree.class.php');
+require_once('Query/Attach.class.php');
+require_once('Query/Filter.class.php');
+require_once('Query/JSON.class.php');
+require_once('Query/Merge.class.php');
+require_once('Query/SQL.class.php');
+require_once('Query/Tree.class.php');
 
 /**
  * Term
@@ -114,7 +113,7 @@ class Term
 		if (count($list) == 1)
 			return self::parseAttach( $db, $list[0] );
 
-		return new Merge($db, $list);
+		return new QueryMerge($db, $list);
 	}
 	
 	/**
@@ -130,7 +129,7 @@ class Term
 		if (count($list) == 1)
 			return self::parseChain( $db, $list[0] );
 
-		return new Attach($db, $list);
+		return new QueryAttach($db, $list);
 	}
 	
 	/**
@@ -146,7 +145,7 @@ class Term
 		if (count($list) == 1)
 			return self::parseTree( $db, $list[0] );
 
-		return new Filter($db, $list);
+		return new QueryFilter($db, $list);
 	}
 	
 	/**
@@ -182,7 +181,7 @@ class Term
 			
 		$list = self::split($children, ',');
 		
-		return new Tree( $db, $id, $list );
+		return new QueryTree( $db, $id, $list );
 	}
 	
 	/**

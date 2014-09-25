@@ -33,7 +33,7 @@ require_once('Query.class.php');
  * @author 	Wouter Diesveld <wouter@tinyqueries.com>
  * @package TinyQueries
  */
-class Tree extends Query
+class QueryTree extends Query
 {
 	private $base; // Base query (actually the 'root' of the tree)
 	
