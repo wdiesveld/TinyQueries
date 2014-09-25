@@ -36,12 +36,12 @@ require_once('QueryDB.class.php');
 class Query 
 {
 	public $params;
+	public $children;
 	
 	protected $db;
 	protected $keys;
 	protected $output;
 	protected $root;
-	protected $children;
 	protected $orderBy;
 	protected $orderType;
 	protected $maxResults;

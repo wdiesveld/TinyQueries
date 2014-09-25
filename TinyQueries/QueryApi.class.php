@@ -216,7 +216,7 @@ class QueryApi
 		if (!$this->db)
 			return;
 			
-		if (!$this->db->getHandle())
+		if (!$this->db->pdo())
 			return;
 			
 		$this->db->execute('ROLLBACK');

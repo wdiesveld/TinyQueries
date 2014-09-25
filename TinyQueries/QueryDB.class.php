@@ -103,38 +103,6 @@ class QueryDB
 	}
 	
 	/**
-	 * Reads the XML config-file
-	 *
-	 */
-	private function readConfig()
-	{
-		$config = @simplexml_load_file( $this->configFile );
-		
-		if (!$config) 		throw new \Exception("Cannot read db configfile " . $this->configFile);
-		if (!$config->db)	throw new \Exception("No db-tag found in configfile " . $this->configFile);
-		
-		// Read DB credentials
-		$this->host		= (string) $config->db->host;
-		$this->dbname	= (string) $config->db->dbname;
-		$this->user		= (string) $config->db->username;
-		$this->pw 		= (string) $config->db->password;
-		
-		// Read query output settings
-		if ($output = $config->query_output)
-		{
-			if ($output->nested)
-			{
-				if ($output->nested['value'] == 'true')		$this->nested = true;
-				if ($output->nested['value'] == 'false') 	$this->nested = false;
-			}
-		}
-
-		// Read path for SQL queries
-		if ($config->queries)
-			$this->queries = new QuerySet( (string) $config->queries );
-	}
-	
-	/**
 	 * Reads the configfile and sets up the database connection
 	 *
 	 */
@@ -172,7 +140,7 @@ class QueryDB
 	/**
 	 * @return {PDO} The PDO DB handle
 	 */
-	public function getHandle()
+	public function pdo()
 	{
 		return $this->dbh;
 	}
@@ -199,121 +167,6 @@ class QueryDB
 	}
 	
 	/**
-	 * Escapes a string such that it can be used in a query
-	 *
-	 * @param {string} $string
-	 * @param {boolean} $addquotes (optional)
-	 * @param {boolean} $useNULLforEmptyValue (optional)
-	 */
-	public function toSQL($string, $addquotes = false, $useNULLforEmptyValue = false)
-	{
-		if (!$this->dbh) 
-			throw new \Exception("toSQL called before creation of dbh-object");
-		
-		if ((($string === '') || is_null($string)) && $useNULLforEmptyValue)
-			return "NULL";
-
-		$sql = '';
-
-		if (!isset($string)) $string = "";
-
-		$sql = $this->dbh->quote( $string );
-
-		if (!$addquotes)
-		{
-			// remove quotes added by quote(.)
-			$sql = substr($sql, 1, strlen($sql)-2);
-		}
-
-		return $sql;
-	}
-	
-	/**
-	 * Executes query and returns numeric array of numeric arrays
-	 *
-	 * @param {string} $query SQL-query
-	 * @param {assoc} $params Query parameters
-	 */
-	public function selectAll($query, $params = array())
-	{
-		return $this->execute( $query, $params )->fetchAll( \PDO::FETCH_NUM );
-	}
-
-	/**
-	 * Executes query and returns numeric array of associative arrays
-	 *
-	 * @param {string} $query SQL-query
-	 * @param {assoc} $params Query parameters
-	 */
-	public function selectAllAssoc($query, $params = array())
-	{
-		return $this->execute( $query, $params )->fetchAll( \PDO::FETCH_ASSOC );
-	}
-
-	/**
-	 * Executes query and returns first record as numeric array
-	 *
-	 * @param {string} $query SQL-query
-	 * @param {assoc} $params Query parameters
-	 */
-	public function selectRow($query, $params = array())
-	{
-		return $this->execute( $query, $params )->fetch( \PDO::FETCH_NUM );
-	}
-	
-	/**
-	 * Executes query and returns first record as associative array
-	 *
-	 * @param {string} $query SQL-query
-	 * @param {assoc} $params Query parameters
-	 */
-	public function selectAssoc($query, $params = array())
-	{
-		return $this->execute( $query, $params )->fetch(\PDO::FETCH_ASSOC);
-	}
-	
-	/**
-	 * Executes query and returns first field of first record
-	 *
-	 * @param {string} $query SQL-query
-	 * @param {assoc} $params Query parameters
-	 */
-	public function selectFirst($query, $params = array()) 
-	{
-		$sth = $this->execute( $query, $params );
-		$row = $sth->fetch(\PDO::FETCH_NUM);
-		return $row[0];
-	}
-	
-	/**
-	 * Executes query and returns numeric array containing first field of each row
-	 *
-	 * @param {string} $query SQL-query
-	 * @param {assoc} $params Query parameters
-	 */
-	public function selectAllFirst($query, $params = array()) 
-	{
-		$sth = $this->execute( $query, $params );
-		$rows = $sth->fetchAll(\PDO::FETCH_NUM);
-		$firsts = array();
-		foreach ($rows as $row)
-			$firsts[] = $row[0];
-		return $firsts;
-	}
-	
-	/**
-	 * Selects a record from the given table
-	 *
-	 * @param {string} $field Fieldname which is used for selection
-	 * @param {string} $table
-	 * @param {int|string} $value Fieldvalue
-	 */
-	public function getRecordBy($field, $table, $value)
-	{
-		return $this->getRecord($table, array( $field => $value ));
-	}
-
-	/**
 	 * Selects a record from the given table
 	 *
 	 * @param {string} $table
@@ -332,28 +185,17 @@ class QueryDB
 	}
 	
 	/**
-	 * Create a concatenation of `fieldname` = "value" strings
+	 * Selects a record from the given table
 	 *
-	 * @param {assoc} $fields
-	 * @param {string} $glue
-	 * @param {boolean} $isOnNull If true, it uses 'is' for NULL values
+	 * @param {string} $field Fieldname which is used for selection
+	 * @param {string} $table
+	 * @param {int|string} $value Fieldvalue
 	 */
-	private function fieldList($fields, $glue, $isOnNull = false)
+	public function getRecordBy($field, $table, $value)
 	{
-		$list = array();
-		
-		foreach ($fields as $name => $value)
-		{
-			$equalsSign = ($isOnNull && is_null($value)) 
-							? " is " 
-							: " = ";
-							
-			$list[] = "`" . $this->toSQL($name) . "`" . $equalsSign . $this->toSQL($value, true, true);
-		}
-	
-		return implode( $glue, $list );
+		return $this->getRecord($table, array( $field => $value ));
 	}
-	
+
 	/**
 	 * Inserts a record in the given table
 	 *
@@ -489,6 +331,164 @@ class QueryDB
 		return $sth;
 	}
 
+	/**
+	 * Escapes a string such that it can be used in a query
+	 *
+	 * @param {string} $string
+	 * @param {boolean} $addquotes (optional)
+	 * @param {boolean} $useNULLforEmptyValue (optional)
+	 */
+	public function toSQL($string, $addquotes = false, $useNULLforEmptyValue = false)
+	{
+		if (!$this->dbh) 
+			throw new \Exception("toSQL called before creation of dbh-object");
+		
+		if ((($string === '') || is_null($string)) && $useNULLforEmptyValue)
+			return "NULL";
+
+		$sql = '';
+
+		if (!isset($string)) $string = "";
+
+		$sql = $this->dbh->quote( $string );
+
+		if (!$addquotes)
+		{
+			// remove quotes added by quote(.)
+			$sql = substr($sql, 1, strlen($sql)-2);
+		}
+
+		return $sql;
+	}
+	
+	/**
+	 * Executes query and returns numeric array of numeric arrays
+	 *
+	 * @param {string} $query SQL-query
+	 * @param {assoc} $params Query parameters
+	 */
+	public function selectAll($query, $params = array())
+	{
+		return $this->execute( $query, $params )->fetchAll( \PDO::FETCH_NUM );
+	}
+
+	/**
+	 * Executes query and returns numeric array of associative arrays
+	 *
+	 * @param {string} $query SQL-query
+	 * @param {assoc} $params Query parameters
+	 */
+	public function selectAllAssoc($query, $params = array())
+	{
+		return $this->execute( $query, $params )->fetchAll( \PDO::FETCH_ASSOC );
+	}
+
+	/**
+	 * Executes query and returns first record as numeric array
+	 *
+	 * @param {string} $query SQL-query
+	 * @param {assoc} $params Query parameters
+	 */
+	public function selectRow($query, $params = array())
+	{
+		return $this->execute( $query, $params )->fetch( \PDO::FETCH_NUM );
+	}
+	
+	/**
+	 * Executes query and returns first record as associative array
+	 *
+	 * @param {string} $query SQL-query
+	 * @param {assoc} $params Query parameters
+	 */
+	public function selectAssoc($query, $params = array())
+	{
+		return $this->execute( $query, $params )->fetch(\PDO::FETCH_ASSOC);
+	}
+	
+	/**
+	 * Executes query and returns first field of first record
+	 *
+	 * @param {string} $query SQL-query
+	 * @param {assoc} $params Query parameters
+	 */
+	public function selectFirst($query, $params = array()) 
+	{
+		$sth = $this->execute( $query, $params );
+		$row = $sth->fetch(\PDO::FETCH_NUM);
+		return $row[0];
+	}
+	
+	/**
+	 * Executes query and returns numeric array containing first field of each row
+	 *
+	 * @param {string} $query SQL-query
+	 * @param {assoc} $params Query parameters
+	 */
+	public function selectAllFirst($query, $params = array()) 
+	{
+		$sth = $this->execute( $query, $params );
+		$rows = $sth->fetchAll(\PDO::FETCH_NUM);
+		$firsts = array();
+		foreach ($rows as $row)
+			$firsts[] = $row[0];
+		return $firsts;
+	}
+	
+	/**
+	 * Reads the XML config-file
+	 *
+	 */
+	private function readConfig()
+	{
+		$config = @simplexml_load_file( $this->configFile );
+		
+		if (!$config) 		throw new \Exception("Cannot read db configfile " . $this->configFile);
+		if (!$config->db)	throw new \Exception("No db-tag found in configfile " . $this->configFile);
+		
+		// Read DB credentials
+		$this->host		= (string) $config->db->host;
+		$this->dbname	= (string) $config->db->dbname;
+		$this->user		= (string) $config->db->username;
+		$this->pw 		= (string) $config->db->password;
+		
+		// Read query output settings
+		if ($output = $config->query_output)
+		{
+			if ($output->nested)
+			{
+				if ($output->nested['value'] == 'true')		$this->nested = true;
+				if ($output->nested['value'] == 'false') 	$this->nested = false;
+			}
+		}
+
+		// Read path for SQL queries
+		if ($config->queries)
+			$this->queries = new QuerySet( (string) $config->queries );
+	}
+	
+	/**
+	 * Create a concatenation of `fieldname` = "value" strings
+	 *
+	 * @param {assoc} $fields
+	 * @param {string} $glue
+	 * @param {boolean} $isOnNull If true, it uses 'is' for NULL values
+	 */
+	private function fieldList($fields, $glue, $isOnNull = false)
+	{
+		$list = array();
+		
+		foreach ($fields as $name => $value)
+		{
+			$equalsSign = ($isOnNull && is_null($value)) 
+							? " is " 
+							: " = ";
+							
+			$list[] = "`" . $this->toSQL($name) . "`" . $equalsSign . $this->toSQL($value, true, true);
+		}
+	
+		return implode( $glue, $list );
+	}
+	
 	public function getTotalQueryTime()
 	{
 		return $this->totalQueryExecTime;
