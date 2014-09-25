@@ -88,6 +88,21 @@ class QueryMerge extends Query
 	}
 
 	/**
+	 * Adds a parameter binding to the query
+	 *
+	 * @param {string} $paramName
+	 * @param {string} $fieldName 
+	 */
+	public function bind($paramName, $fieldName = null)
+	{
+		// Do recursive call on children
+		foreach ($this->children as $child)
+			$child->bind($paramName, $fieldName);
+				
+		return $this;
+	}
+	
+	/**
 	 * Merges the output of the child queries without a key
 	 *
 	 */

@@ -176,10 +176,6 @@ class Query
 	 */
 	public function bind($paramName, $fieldName = null)
 	{
-		// Do recursive call on children
-		foreach ($this->children as $child)
-			$child->bind($paramName, $fieldName);
-				
 		return $this;
 	}
 	

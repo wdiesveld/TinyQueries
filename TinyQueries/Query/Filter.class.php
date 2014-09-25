@@ -124,6 +124,20 @@ class QueryFilter extends Query
 	}
 
 	/**
+	 * Adds a parameter binding to the query
+	 *
+	 * @param {string} $paramName
+	 * @param {string} $fieldName 
+	 */
+	public function bind($paramName, $fieldName = null)
+	{
+		// Only bind to first child ('root')
+		$this->children[ 0 ]->bind($paramName, $fieldName);
+		
+		return $this;
+	}
+	
+	/**
 	 * Updates meta info for this query 
 	 *
 	 */

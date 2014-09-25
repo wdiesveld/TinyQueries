@@ -40,6 +40,7 @@ class QueryJSON extends QuerySQL
 	private $where;
 	private $groupBy;
 	private $having;
+	private $bindings;
 
 	/**
 	 * Constructor
@@ -53,6 +54,7 @@ class QueryJSON extends QuerySQL
 		$this->where	= array();
 		$this->groupBy	= array();
 		$this->having	= array();
+		$this->bindings	= array();
 
 		parent::__construct($db, $id);
 	}
@@ -81,14 +83,21 @@ class QueryJSON extends QuerySQL
 	{
 		parent::bind($paramName, $fieldName);
 		
-		if (property_exists($this->params, $paramName))
-			throw new \Exception("Query::bind - parameter '" . $paramName . "' already present in query '" . $this->id . "'");
-			
 		if (is_null($fieldName) && !property_exists($this->keys, $paramName))
 			throw new \Exception("Query::bind - key '" . $paramName . "' not found in query '" . $this->id . "'");
-		
+			
 		if (is_null($fieldName))
 			$fieldName = $this->keys->$paramName;
+			
+		if (array_key_exists($paramName, $this->bindings) && $this->bindings[ $paramName ] != $fieldName)
+			throw new \Exception("QueryJSON::bind - conflicting bind: trying to bind parameter '" . $paramName . "' with both " . $fieldName . " and " . $this->bindings[ $paramName ]);
+
+		// We are ready, already binded with the same fieldname
+		if (array_key_exists($paramName, $this->bindings))
+			return $this;
+			
+		// Remember binding
+		$this->bindings[ $paramName ] = $fieldName;	
 		
 		$param = new \StdClass();
 		$param->doc		= "Auto generated parameter";
