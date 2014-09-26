@@ -1,4 +1,4 @@
-# TinyQueries
+[![TinyQueries](http://tinyqueries.com/css/images/tiny-queries-logo-large.png)](http://www.tinyqueries.com/)
 
 TinyQueries is a framework to create any data structure out of standard relational databases. 
 It uses a simple and powerful syntax to combine SQL queries. 
