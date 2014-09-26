@@ -134,8 +134,7 @@ class QueryMerge extends Query
 			if (get_class($query) == "TinyQueries\\QueryJSON")
 				$query->addSelect($query->keys->$key);
 
-				// TODO: geen key( . ) gebruiken , want dan verdander je de query settings
-			$rows = $query->key( $query->keys->$key )->params( $this->paramValues )->select();
+			$rows = $query->select( $this->paramValues, $query->keys->$key );
 				
 			Arrays::mergeAssocs( $result, $rows, $orderBy, $this->orderType );
 		}
