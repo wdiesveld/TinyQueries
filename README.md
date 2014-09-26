@@ -31,14 +31,18 @@ For this you write two queries **users** and **messages**. To nest the data you 
 In the queries-folder create a json file named **helloWorld.json** with the following content:
 
 	{
-		"select": "'Hello World'"
+		"select": "'World!' as 'hello'"
 	}
 
 Then the query can be called as follows:
 
 	$output = $db->get( "helloWorld" );
 	
-	var_dump( $output );
+$output will have the following structure (if converted to JSON):
+
+	{
+		"hello": "World!"
+	}
 	
 
 
