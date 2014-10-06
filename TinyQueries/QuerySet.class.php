@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.5
+ * @version     1.5.1
  * @package     TinyQueries
  *
  * License
@@ -206,6 +206,9 @@ class QuerySet
 			
 		if (!$parseAsJSON)
 			return $content;
+			
+		// Replace EOL's and tabs by a space character (these chars are forbidden to be used within json strings)
+		$content = preg_replace("/[\n\r\t]/", " ", $content);
 			
 		$json = @json_decode( $content );
 		

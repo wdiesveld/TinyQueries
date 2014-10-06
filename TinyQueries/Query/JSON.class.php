@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.5
+ * @version     1.5.1
  * @package     TinyQueries
  *
  * License
@@ -198,7 +198,10 @@ class QueryJSON extends QuerySQL
 			$sql .= "order by\n" . implode(",\n", $this->orderBy) . "\n";
 			
 		if ($this->orderType)
-			$sql .= $this->orderType;
+			$sql .= $this->orderType . "\n";
+			
+		if ($this->maxResults)
+			$sql .= "limit " . $this->maxResults . "\n";
 		
 		return $sql;
 	}
