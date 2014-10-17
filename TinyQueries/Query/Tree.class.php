@@ -200,7 +200,7 @@ class QueryTree extends Query
 		// Merge the child queries with this query
 		foreach ($children as $child)
 			$this->bindChild($rows, $child);
-
+			
 		if ($this->output->rows == 'first')
 			$rows = $rows[ 0 ];
 	}
@@ -259,7 +259,7 @@ class QueryTree extends Query
 
 		// Execute child query and group results; cleanUp can also be done at this point
 		$childRows = $child->group()->select( $params, $childKey, true );
-
+		
 		// Combine child rows with parent rows
 		for ($i=0;$i<count($parentRows);$i++)
 		{

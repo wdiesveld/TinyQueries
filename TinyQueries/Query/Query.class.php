@@ -270,7 +270,7 @@ class Query
 		$data = $this->execute($paramValues);
 		
 		if ($cleanUp)
-			$this->cleanUp($data);
+			$this->cleanUp($data, $key);
 		
 		// We are ready if output is not an array of assocs
 		if ($this->output->columns != 'all' || $this->output->rows != 'all')
