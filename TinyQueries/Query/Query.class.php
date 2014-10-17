@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.5.1
+ * @version     1.6a
  * @package     TinyQueries
  *
  * License
@@ -132,6 +132,68 @@ class Query
 	}
 	
 	/**
+	 * Returns the field name in the select-part which corresponds to $key;
+	 *
+	 * @param {string} $key
+	 */
+	protected function keyField($key)
+	{
+		if (!property_exists($this->keys, $key))
+			return $key;
+			
+		return is_array( $this->keys->$key ) 
+			? "__" . $key 
+			: $this->keys->$key;
+	}
+	
+	/**
+	 * Collects the values from $rows corresponding to the $key
+	 *
+	 * @param {string} $key
+	 * @param {array} $rows
+	 */
+	protected function keyValues($key, &$rows)
+	{
+		if (!property_exists($this->keys, $key))
+			throw new \Exception("Key $key is not present in " . $this->name());
+		
+		$values		= array();	
+		$keyField 	= $this->keys->$key;
+		
+		if (count($rows)==0)
+			return $values;
+			
+		// Simple case, just select the values from the key-column
+		if (!is_array($keyField))
+		{
+			if (!array_key_exists($keyField, $rows[0]))
+				throw new \Exception("Field $keyField is not present in rows");
+				
+			for ($i=0; $i<count($rows); $i++)
+				$values[] = $rows[ $i ][ $keyField ];
+				
+			return $values;
+		}
+
+		// Check existence of each key field
+		foreach ($keyField as $field)
+			if (!array_key_exists($field, $rows[0]))
+				throw new \Exception("Field $field is not present in rows");
+		
+		// Create an array of arrays
+		for ($i=0; $i<count($rows); $i++)
+		{
+			$value = array();
+			foreach ($keyField as $field)
+				$value[] = $rows[$i][ $field ];
+				
+			$values[] = $value;
+		}
+		
+		return $values;
+	}
+	
+	/**
 	 * Sets whether the output should be grouped by the key
 	 * so you get a structure like: { a: [..], b: [..] }
 	 *
@@ -197,8 +259,9 @@ class Query
 	 *
 	 * @param {mixed} $paramValues
 	 * @param {string} $key (optional) Key field which can be used to group the output
+	 * @param {boolean} $cleanUp Do clean up of columns in query output
 	 */
-	public function select($paramValues = null, $key = null)
+	public function select($paramValues = null, $key = null, $cleanUp = true)
 	{
 		// If no key is supplied take default from JSON spec
 		if (is_null($key))
@@ -206,7 +269,8 @@ class Query
 		
 		$data = $this->execute($paramValues);
 		
-		$this->cleanUp($data, $key);
+		if ($cleanUp)
+			$this->cleanUp($data);
 		
 		// We are ready if output is not an array of assocs
 		if ($this->output->columns != 'all' || $this->output->rows != 'all')
@@ -443,16 +507,19 @@ class Query
 		$list = (is_array($queries))
 			? $queries
 			: array( $this, $queries );
-		
+
 		foreach ($list as $query)
 		{
 			$keys = array_keys( get_object_vars( $query->keys ) );
-			
+	
 			$matching = ($matching)
 				? array_intersect( $matching, $keys )
 				: $keys;
 		}
-				
+		
+		// Convert back to normal array - array_intersect preserves the indices, which might result in an assoc array
+		$matching = array_values($matching);
+
 		if (count($matching) != 1)
 			return null;
 			

@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.5.1
+ * @version     1.6a
  * @package     TinyQueries
  *
  * License
@@ -79,28 +79,26 @@ class QueryAttach extends Query
 		
 		// Take first query as base
 		$params		= $this->paramValues;
-		$rows 		= $this->children[ 0 ]->select( $params );
-		$keyBase 	= $this->children[ 0 ]->keys->$key;
+		$baseQuery	= $this->children[ 0 ];
+		$rows 		= $baseQuery->select( $params, null, false );
+		$fieldBase	= $baseQuery->keyField($key);
 
 		// If the number of rows is 0 we can stop
 		if (count($rows) == 0)
 			return $rows;
 			
 		// Collect the key field values and set them as parameter value for the other queries
-		$params[ $key ] = array();
-		foreach ($rows as $row)
-			$params[ $key ][] = $row[ $keyBase ];
+		$params[ $key ] = $baseQuery->keyValues($key, $rows);
 
 		// Attach all other queries
 		for ($i=1; $i<$n; $i++)
 		{
-			$query 		= $this->children[ $i ];
-			$keyField 	= $query->keys->$key;
-			$rows1 		= $query->select($params, $keyField);
+			$query 	= $this->children[ $i ];
+			$rows1 	= $query->select($params, $query->keyField($key), false );
 			
 			for ($j=0;$j<count($rows);$j++)
 			{
-				$keyValue = $rows[$j][$keyBase];
+				$keyValue = $rows[$j][$fieldBase];
 					
 				// Attach the fields of $rows1 to $rows
 				if (array_key_exists($keyValue, $rows1))
@@ -134,12 +132,11 @@ class QueryAttach extends Query
 	{
 		parent::update();
 		
-		// Determine the common key of the children
+		// Copy all keys from all children
 		$this->keys = new \StdClass();
-
-		// Copy key from first child
-		if ($matchingKey = $this->match( $this->children ))
-			$this->keys->$matchingKey = $this->children[ 0 ]->keys->$matchingKey;
+		foreach ($this->children as $child)
+			foreach ($child->keys as $key => $field)
+				$this->keys->$key = $field;
 		
 		// Copy other fields from first child
 		$this->root = $this->children[ 0 ]->root;

@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.5.1
+ * @version     1.6a
  * @package     TinyQueries
  *
  * License
@@ -79,8 +79,9 @@ class QueryFilter extends Query
 		
 		// Take last query as base
 		$params		= $this->paramValues;
-		$rows 		= $this->children[ $n-1 ]->select( $params );
-		$keyBase 	= $this->children[ $n-1 ]->keys->$key;
+		$baseQuery	= $this->children[ $n-1 ];
+		$rows 		= $baseQuery->select( $params, null, false );
+		$fieldBase	= $baseQuery->keyField($key);
 
 		// Attach all other queries
 		for ($i=$n-2; $i>=0; $i--)
@@ -89,21 +90,17 @@ class QueryFilter extends Query
 			if (count($rows) == 0)
 				return $rows;
 			
-			// Collect the key field values and set them as parameter value for the next query
-			$params[ $key ] = array();
-			foreach ($rows as $row)
-				$params[ $key ][] = $row[ $keyBase ];
-		
-			$query 		= $this->children[ $i ];
-			$keyField 	= $query->keys->$key;
-			$rows1 		= $query->select($params, $keyField);
+			$params[ $key ] = $baseQuery->keyValues($key, $rows);
+			
+			$query 	= $this->children[ $i ];
+			$rows1 	= $query->select($params, $query->keyField($key), false );
 			
 			$j=0;
 			
 			// Do an intersection of $rows & $rows1
 			while ($j<count($rows))
 			{
-				$keyValue = $rows[$j][$keyBase];
+				$keyValue = $rows[$j][$fieldBase];
 					
 				if (array_key_exists($keyValue, $rows1))
 				{
@@ -145,12 +142,11 @@ class QueryFilter extends Query
 	{
 		parent::update();
 		
-		// Determine the common key of the children
+		// Copy all keys from all children
 		$this->keys = new \StdClass();
-
-		// Copy key from first child
-		if ($matchingKey = $this->match( $this->children ))
-			$this->keys->$matchingKey = $this->children[ 0 ]->keys->$matchingKey;
+		foreach ($this->children as $child)
+			foreach ($child->keys as $key => $field)
+				$this->keys->$key = $field;
 		
 		// Copy other fields from first child
 		$this->root = $this->children[ 0 ]->root;

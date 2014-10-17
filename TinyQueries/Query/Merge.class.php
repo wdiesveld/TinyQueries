@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.5.1
+ * @version     1.6a
  * @package     TinyQueries
  *
  * License
@@ -134,7 +134,7 @@ class QueryMerge extends Query
 			if (get_class($query) == "TinyQueries\\QueryJSON")
 				$query->addSelect($query->keys->$key);
 
-			$rows = $query->select( $this->paramValues, $query->keys->$key );
+			$rows = $query->select( $this->paramValues, $query->keyField($key), false );
 				
 			Arrays::mergeAssocs( $result, $rows, $orderBy, $this->orderType );
 		}
@@ -154,12 +154,11 @@ class QueryMerge extends Query
 	{
 		parent::update();
 		
-		// Determine the common key of the children
+		// Copy all keys from all children
 		$this->keys = new \StdClass();
-
-		// Copy key from first child
-		if ($matchingKey = $this->match( $this->children ))
-			$this->keys->$matchingKey = $this->children[ 0 ]->keys->$matchingKey;
+		foreach ($this->children as $child)
+			foreach ($child->keys as $key => $field)
+				$this->keys->$key = $field;
 	}
 }
 

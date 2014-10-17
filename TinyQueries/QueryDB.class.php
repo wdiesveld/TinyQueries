@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.5.1
+ * @version     1.6a
  * @package     TinyQueries
  *
  * License
@@ -347,17 +347,29 @@ class QueryDB
 
 		$sql = '';
 
-		if (!isset($string)) $string = "";
-
+		if (!isset($string)) 
+			$string = "";
+			
 		$sql = $this->dbh->quote( $string );
 
+		// remove quotes added by quote(.)
 		if (!$addquotes)
-		{
-			// remove quotes added by quote(.)
 			$sql = substr($sql, 1, strlen($sql)-2);
-		}
 
 		return $sql;
+	}
+	
+	/**
+	 * Same as toSQL, except that integers & tuples like (1,2,3) are not quoted
+	 *
+	 * @param {string} $string
+	 */
+	public function encode($string)
+	{
+		if (is_string($string) && (preg_match("/^\d+$/", $string) || preg_match("/^\([\d\,]+\)$/",$string)))
+			return $string;
+			
+		return $this->toSQL($string, true, true);
 	}
 	
 	/**

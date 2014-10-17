@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.5.1
+ * @version     1.6a
  * @package     TinyQueries
  *
  * License
@@ -452,20 +452,10 @@ class QuerySQL extends Query
 
 		// Set the parameters
 		foreach ($params as $name => $value)
-		{ 
 			// Convert array to CSV which is suitable for IN
 			if (is_array($value))
 			{
-				$values = array();
-				foreach ($value as $v)
-					$values[] = $this->db->toSQL( $v, true, true );
-
-				$valueSQL = (count($values)==0)
-							? "NULL"
-							: implode(",", $values);
-				
-				// Replace the ":param" string with the value
-				$sqlParsed = preg_replace("/\:" . $name . "(\W)/", $valueSQL . "$1", $sqlParsed . " ");
+				$this->setArrayParam($sqlParsed, $name, $value);
 			}
 			// Param is a registered parameter
 			elseif (property_exists($this->_interface->params, $name))
@@ -486,13 +476,88 @@ class QuerySQL extends Query
 			else
 			{
 				$valueSQL = $this->db->toSQL( $value, true, true );
-				
-				// Replace the ":param" string with the value
-				$sqlParsed = preg_replace("/\:" . $name . "(\W)/", $valueSQL . "$1", $sqlParsed . " ");
+				$this->setParam($sqlParsed, $name, $valueSQL);
 			}
-		}
 
 		return array($sqlParsed, $pdoParams);	
+	}
+	
+	/**
+	 * Helper function to convert parameters which are arrays into a format suitable to be used in the query
+	 *
+	 * @param {string} $sql
+	 * @param {string} $name Parameter name
+	 * @param {array} $value Parameter value
+	 */
+	private function setArrayParam(&$sql, $name, $value)
+	{
+		$values = array();
+		
+		// In case $value is an array of arrays, create tuples like (1,2,3)
+		if (count($value)>0 && is_array($value[0]))
+			return $this->setTupleParam($sql, $name, $value);
+		
+		foreach ($value as $v)
+			$values[] = $this->db->encode( $v );
+		
+		$this->setParam($sql, $name, $values);
+	}
+	
+	/**
+	 * Helper function to convert parameters which are arrays of tuples into a format suitable to be used in the query
+	 *
+	 * @param {string} $sql
+	 * @param {string} $name Parameter name
+	 * @param {array} $value Parameter value
+	 */
+	private function setTupleParam(&$sql, $name, $value)
+	{
+		$tuples = array();
+		$values = array();
+		
+		// Init array $values
+		foreach ($value[0] as $i => $v)
+			$values[$i] = array();
+		
+		
+		// Create the tuples, but also collect the separate values
+		foreach ($value as $v)
+		{
+			$tuple = array();
+			
+			foreach ($v as $i => $w)
+			{
+				$encval = $this->db->encode( $w );
+				
+				$values[$i][] 	= $encval;
+				$tuple[] 		= $encval;
+			}
+				
+			$tuples[] = "(" . implode(",", $tuple) . ")";
+		}
+		
+		// Set parameters $name[0], $name[1] etc.
+		for ($i=0; $i<count($values); $i++)
+			$this->setParam($sql, $name . "\[" . $i . "\]", $values[$i]);
+		
+		$this->setParam($sql, $name, $tuples);
+	}
+	
+	/**
+	 * Replace the ":param" string with the value
+	 *
+	 * @param {string} $sql
+	 * @param {string} $name Parameter name
+	 * @param {mixed} $value SQL encoded parameter value or array of SQL encoded parameter values
+	 */
+	private function setParam(&$sql, $name, $value)
+	{
+		if (is_array($value))
+			$value = (count($value)==0)
+				? "NULL"
+				: implode(",", $value);
+			
+		$sql = preg_replace("/\:" . $name . "(\W)/", $value . "$1", $sql . " ");
 	}
 	
 	/**
