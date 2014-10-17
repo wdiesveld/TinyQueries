@@ -82,6 +82,10 @@ class QueryAttach extends Query
 		$baseQuery	= $this->children[ 0 ];
 		$rows 		= $baseQuery->select( $params, null, false );
 		$fieldBase	= $baseQuery->keyField($key);
+		
+		// Rewrite to array for single row queries
+		if ($baseQuery->output->rows == 'first')
+			$rows = array( $rows );
 
 		// If the number of rows is 0 we can stop
 		if (count($rows) == 0)
@@ -93,8 +97,12 @@ class QueryAttach extends Query
 		// Attach all other queries
 		for ($i=1; $i<$n; $i++)
 		{
-			$query 	= $this->children[ $i ];
-			$rows1 	= $query->select($params, $query->keyField($key), false );
+			$query 		= $this->children[ $i ];
+			$keyField 	= $query->keyField($key);
+			$rows1 		= $query->select($params, $keyField, false );
+			
+			if ($query->output->rows == 'first')
+				$rows1 = array( $rows1[$keyField] => $rows1 );
 			
 			for ($j=0;$j<count($rows);$j++)
 			{
@@ -107,7 +115,9 @@ class QueryAttach extends Query
 			}
 		}
 		
-		return $rows;
+		return ($baseQuery->output->rows == 'first')
+			? $rows[0]
+			: $rows;
 	}
 	
 	/**
@@ -139,7 +149,8 @@ class QueryAttach extends Query
 				$this->keys->$key = $field;
 		
 		// Copy other fields from first child
-		$this->root = $this->children[ 0 ]->root;
+		$this->root 	= $this->children[ 0 ]->root;
+		$this->output	= clone $this->children[ 0 ]->output;
 	}
 }
 
