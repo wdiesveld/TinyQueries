@@ -83,14 +83,14 @@ class QueryAttach extends Query
 		$rows 		= $baseQuery->select( $params, null, false );
 		$fieldBase	= $baseQuery->keyField($key);
 		
+		// If there is no output or the number of rows is 0 we can stop
+		if (!$rows || count($rows) == 0)
+			return $rows;
+			
 		// Rewrite to array for single row queries
 		if ($baseQuery->output->rows == 'first')
 			$rows = array( $rows );
 
-		// If the number of rows is 0 we can stop
-		if (count($rows) == 0)
-			return $rows;
-			
 		// Collect the key field values and set them as parameter value for the other queries
 		$params[ $key ] = $baseQuery->keyValues($key, $rows);
 

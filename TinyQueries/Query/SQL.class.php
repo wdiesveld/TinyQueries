@@ -475,7 +475,7 @@ class QuerySQL extends Query
 			// Param is not registered (DEPRECATED - but still needed for global params)
 			else
 			{
-				$valueSQL = $this->db->toSQL( $value, true, true );
+				$valueSQL = $this->db->toSQL( $value, true );
 				$this->setParam($sqlParsed, $name, $valueSQL);
 			}
 

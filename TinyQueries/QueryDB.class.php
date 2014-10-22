@@ -210,7 +210,7 @@ class QueryDB
 		for ($i=0;$i<count($keys);$i++)
 		{
 			$keys[$i] 	= "`" . $this->toSQL($keys[$i]) . "`";
-			$values[$i] = $this->toSQL($values[$i], true, true);
+			$values[$i] = $this->toSQL($values[$i], true);
 		}
 		
 		$keysSQL 	= implode(",", $keys);
@@ -341,8 +341,11 @@ class QueryDB
 	{
 		if (!$this->dbh) 
 			throw new \Exception("toSQL called before creation of dbh-object");
+			
+		if (is_null($string))
+			return "NULL";
 		
-		if ((($string === '') || is_null($string)) && $useNULLforEmptyValue)
+		if ($string === '' && $useNULLforEmptyValue)
 			return "NULL";
 
 		$sql = '';
@@ -369,7 +372,7 @@ class QueryDB
 		if (is_string($string) && (preg_match("/^\d+$/", $string) || preg_match("/^\([\d\,]+\)$/",$string)))
 			return $string;
 			
-		return $this->toSQL($string, true, true);
+		return $this->toSQL($string, true);
 	}
 	
 	/**
@@ -494,7 +497,7 @@ class QueryDB
 							? " is " 
 							: " = ";
 							
-			$list[] = "`" . $this->toSQL($name) . "`" . $equalsSign . $this->toSQL($value, true, true);
+			$list[] = "`" . $this->toSQL($name) . "`" . $equalsSign . $this->toSQL($value, true);
 		}
 	
 		return implode( $glue, $list );
