@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.6a
+ * @version     1.6
  * @package     TinyQueries
  *
  * License
@@ -269,8 +269,12 @@ class Query
 		
 		$data = $this->execute($paramValues);
 		
+		// Keys should not always be cleaned up
 		if ($cleanUp)
-			$this->cleanUp($data, $key);
+			$this->cleanUp($data, 'keys', $key);
+		
+		// Child defs should always be cleaned up
+		$this->cleanUp($data, 'childDefs', $key);
 		
 		// We are ready if output is not an array of assocs
 		if ($this->output->columns != 'all' || $this->output->rows != 'all')
@@ -382,8 +386,10 @@ class Query
 	 * Cleans up columns which should not be in the query output
 	 *
 	 * @param {mixed} $data Query output
+	 * @param {string} $type Type of cleaning 'keys' or 'childDefs'
+	 * @param {string} $key Key field which should be excluded from clean up
 	 */
-	protected function cleanUp(&$rows, $key = null)
+	protected function cleanUp(&$rows, $type, $key = null)
 	{
 		if ($this->output->columns == 'first')
 			return;
@@ -396,19 +402,26 @@ class Query
 		
 		$columnsToRemove = array();
 		
-		$registeredOutputFields = is_array($this->output->fields)
-			? $this->output->fields
-			: array_keys( get_object_vars($this->output->fields) );
+		switch ($type)
+		{
+			case 'keys':
+				$registeredOutputFields = is_array($this->output->fields)
+					? $this->output->fields
+					: array_keys( get_object_vars($this->output->fields) );
 
-		// Check which columns can be removed	
-		foreach (array_keys($rows[0]) as $field)
-			if ($field != $key && $field != $this->output->key && preg_match("/^\_\_/", $field) && !in_array( $field, $registeredOutputFields ))
-				$columnsToRemove[] = $field;
+				// Check which columns can be removed	
+				foreach (array_keys($rows[0]) as $field)
+					if ($field != $key && $field != $this->output->key && preg_match("/^\_\_/", $field) && !in_array( $field, $registeredOutputFields ))
+						$columnsToRemove[] = $field;
+				break;
 				
-		// Also check for columns corresponding to child definitions which are not loaded
-		foreach ($rows[0] as $field => $value)
-			if (is_null($value) && property_exists($this->output->fields, $field) && property_exists($this->output->fields->$field, 'child'))
-				$columnsToRemove[] = $field;
+			case 'childDefs':
+				foreach ($rows[0] as $field => $value)
+					if (is_null($value) && property_exists($this->output->fields, $field) && property_exists($this->output->fields->$field, 'child'))
+						$columnsToRemove[] = $field;
+						
+				break;
+		}
 				
 		// Do the clean up
 		foreach (array_keys($rows[0]) as $field)
