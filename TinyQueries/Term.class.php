@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.6
+ * @version     1.6.1
  * @package     TinyQueries
  *
  * License
@@ -54,6 +54,11 @@ class Term
 	{
 		if (!$term)
 			return;
+		
+		// Replace return chars by space
+		$term = str_replace("\t", " ", $term);
+		$term = str_replace("\r", " ", $term);
+		$term = str_replace("\n", " ", $term);
 			
 		list( $id, $children ) = self::parseID( $term );
 		
