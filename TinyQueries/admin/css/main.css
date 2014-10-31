@@ -1,0 +1,37 @@
+body {
+  padding-top: 50px;
+  padding-bottom: 50px;
+}
+
+.navbar {
+  margin-bottom: 20px;
+}
+
+.navbar-brand {
+	padding-top: 9px;
+	padding-bottom: 9px;
+}
+
+.doc .line
+{
+	min-height: 1em;
+}
+
+.label-array	{ background-color: #FF9900; }
+.label-boolean	{ background-color: #128327; }
+.label-int		{ background-color: #BD3F42; }
+.label-float	{ background-color: #BD3F42; }
+.label-json		{ background-color: #999999; }
+.label-object	{ background-color: #999999; }
+.label-child	{ background-color: #800080; }
+.label-string	{ background-color: #3A87AD; }
+
+.query-list
+{
+	position: fixed; 
+	width: 15%; 
+	overflow-x: hidden; 
+	overflow-y: scroll; 
+	height: calc(100% - 50px);
+	padding: 20px 0 20px 0;
+}
