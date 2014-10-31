@@ -188,7 +188,7 @@ class QuerySet
 		if ($this->queries)
 			return $this->queries;
 			
-		$filename = $this->path() . self::PATH_INTERFACE . "/" . "__index.json";
+		$filename = $this->path() . self::PATH_INTERFACE . "/" . "_project.json";
 		
 		$this->queries = $this->load( $filename, true );
 		

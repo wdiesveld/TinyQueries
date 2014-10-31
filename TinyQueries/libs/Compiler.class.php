@@ -38,7 +38,7 @@ require_once("QuerySet.class.php");
 class Compiler
 {
 	const DEFAULT_SERVER 	= 'https://compiler1.tinyqueries.com';
-	const DEFAULT_CONFIG	= dirname(__FILE__) . '/../config/Compiler.xml';
+	const DEFAULT_CONFIG	= '../config/Compiler.xml';
 
 	private $server;
 	private $apiKey;
@@ -56,9 +56,11 @@ class Compiler
 	 *
 	 * @param {string} $configFile Optionally you can provide a config file
 	 */
-	public function __construct($configFile = self::DEFAULT_CONFIG)
+	public function __construct($configFile = null)
 	{
-		$this->configFile = $configFile;
+		$this->configFile = ($configFile)
+			? $configFile
+			: dirname(__FILE__) . "/" . self::DEFAULT_CONFIG;
 								
 		$this->readConfig();			
 	}
@@ -100,7 +102,7 @@ class Compiler
 		// Get max time of all project files
 		foreach ($this->inputFiles() as $file)
 		{
-			$mtime = filemtime($this->inputFolder . "/" . $file);
+			$mtime = filemtime($this->folderInput . "/" . $file);
 			if ($mtime > $qplChanged)
 				$qplChanged = $mtime;
 		}
@@ -166,7 +168,7 @@ class Compiler
 	{
 		$inputFiles = array();
 
-		foreach (scandir($this->inputFolder) as $file)
+		foreach (scandir($this->folderInput) as $file)
 			if (preg_match('/\.json$/', $file))
 				$inputFiles[] = $file;
 				
@@ -197,7 +199,7 @@ class Compiler
 		// Read project files and add them to the postBody
 		foreach ($this->inputFiles() as $file)
 		{
-			$content = @file_get_contents( $this->inputFolder . "/" . $file );
+			$content = @file_get_contents( $this->folderInput . "/" . $file );
 		
 			if (!$content) 	
 				throw new \Exception('Cannot read ' . $file);
@@ -274,12 +276,12 @@ class Compiler
 		{
 			$queryID = $queryIDs->query[$i]->attributes()->id;
 			
-			$this->writeSQLfile($queryID, $queryCode->query[$i]->sql);
-			$this->writeFile( $this->querySet->path() . QuerySet::PATH_INTERFACE . "/" . $queryID . ".json", $queryCode->query[$i]->{'interface'} );
+			$this->writeSQLfile( $queryID, $queryCode->query[$i]->sql );
+			$this->writeInterface( $queryID, $queryCode->query[$i]->{'interface'} );
 		}
 		
 		if ($queryCode->{'interface'})
-			$this->writeInterface( (string) $queryCode->{'interface'} );
+			$this->writeInterface( '_project', (string) $queryCode->{'interface'} );
 		
 		// Update log-file
 		$this->log('SQL-files updated successfully');
@@ -302,11 +304,12 @@ class Compiler
 	/**
 	 * Writes the interface file
 	 *
+	 * @param {string} $fileID 
 	 * @param {string} $interface
 	 */
-	private function writeInterface($interface)
+	private function writeInterface($fileID, $interface)
 	{
-		$filename = $this->querySet->path() . QuerySet::PATH_INTERFACE . "/" . "__index.json";
+		$filename = $this->querySet->path() . QuerySet::PATH_INTERFACE . "/" . $fileID . ".json";
 
 		$this->writeFile( $filename, $interface );
 	}
@@ -314,12 +317,12 @@ class Compiler
 	/**
 	 * Creates a .sql file containing the query. The name of the file will be [$queryID].sql
 	 *
-	 * @param {string} $queryID 
+	 * @param {string} $fileID 
 	 * @param {string} $sqlCode
 	 */
-	private function writeSQLfile($queryID, $sqlCode)
+	private function writeSQLfile($fileID, $sqlCode)
 	{
-		$filename = $this->querySet->path() . QuerySet::PATH_SQL . "/" . $queryID . ".sql";
+		$filename = $this->querySet->path() . QuerySet::PATH_SQL . "/" . $fileID . ".sql";
 			
 		$this->writeFile( $filename, $sqlCode );
 	}
@@ -332,7 +335,7 @@ class Compiler
 	 */
 	private function writeFile($filename, $content)
 	{
-		$r = @file_put_contents($filename, $content);
+		$r = @file_put_contents($filename, (string) $content);
 			
 		if (!$r) 
 			throw new \Exception('Error writing ' . $filename . ' -  are the permissions set correctly?' );

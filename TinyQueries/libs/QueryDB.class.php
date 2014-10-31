@@ -36,7 +36,7 @@ require_once('QuerySet.class.php');
  */
 class QueryDB
 {
-	const DEFAULT_CONFIG = dirname(__FILE__) . '/../config/QueryDB.xml';
+	const DEFAULT_CONFIG = '../config/QueryDB.xml';
 	
 	public $dbh;	// PDO database handle
 	public $nested; // Default setting whether or not query output should be nested - more info see Query::nested(.)
@@ -65,11 +65,14 @@ class QueryDB
 	 * @param {PDO} $pdoHandle (optional) Use this if you already have a PDO database connection.
 	 * @param {string} $configFile (optional) Use this to specify your custom XML-configfile containing DB-info like username/password
 	 */
-	public function __construct( $pdoHandle = null, $configFile = self::DEFAULT_CONFIG )
+	public function __construct( $pdoHandle = null, $configFile = null )
 	{
 		$this->globals		= array();
 		$this->nested 		= true;
-		$this->configFile 	= $configFile;
+		
+		$this->configFile = ($configFile)
+			? $configFile
+			: dirname(__FILE__) . "/" . self::DEFAULT_CONFIG;
 		
 		// Default primary key name
 		$this->primaryKey = 'id'; 
