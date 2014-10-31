@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.6.1
+ * @version     2.0a
  * @package     TinyQueries
  *
  * License
@@ -36,6 +36,8 @@ require_once('QuerySet.class.php');
  */
 class QueryDB
 {
+	const DEFAULT_CONFIG = dirname(__FILE__) . '/../config/QueryDB.xml';
+	
 	public $dbh;	// PDO database handle
 	public $nested; // Default setting whether or not query output should be nested - more info see Query::nested(.)
 	public $queries;
@@ -56,21 +58,18 @@ class QueryDB
 	/**
 	 * Constructor
 	 *
-	 * If no parameters are specified, database-parameters like username/passwd are read from the default configfile "./QueryDB.config.xml"
+	 * If no parameters are specified, database-parameters like username/passwd are read from the default configfile QueryDB.xml
 	 * The connection should be explicitly set up by calling the connect-method after the DB-object is constructed.
 	 * If you specify a $pdoHandle, this method should not be called.
 	 *
 	 * @param {PDO} $pdoHandle (optional) Use this if you already have a PDO database connection.
-	 * @param {string} $configFileDB (optional) Use this to specify your custom XML-configfile containing DB-info like username/password
+	 * @param {string} $configFile (optional) Use this to specify your custom XML-configfile containing DB-info like username/password
 	 */
-	public function __construct( $pdoHandle = null, $configFileDB = null )
+	public function __construct( $pdoHandle = null, $configFile = self::DEFAULT_CONFIG )
 	{
-		$this->globals	= array();
-		$this->nested 	= true;
-		
-		$this->configFile = ($configFileDB)
-								? $configFileDB
-								: dirname(__FILE__) . "/QueryDB.xml";
+		$this->globals		= array();
+		$this->nested 		= true;
+		$this->configFile 	= $configFile;
 		
 		// Default primary key name
 		$this->primaryKey = 'id'; 

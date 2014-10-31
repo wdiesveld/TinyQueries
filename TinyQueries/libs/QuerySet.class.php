@@ -5,7 +5,7 @@
  * @author      Wouter Diesveld <wouter@tinyqueries.com>
  * @copyright   2012 - 2014 Diesveld Query Technology
  * @link        http://www.tinyqueries.com
- * @version     1.6.1
+ * @version     2.0a
  * @package     TinyQueries
  *
  * License
@@ -116,6 +116,35 @@ class QuerySet
 	}
 	
 	/**
+	 * Loads the content of a file
+	 *
+	 * @param {string} $filename
+	 */
+	public static function load($filename, $parseAsJSON = false)
+	{
+		if (!file_exists($filename)) 	
+			throw new \Exception('Cannot find ' . $filename); 
+		
+		$content = @file_get_contents( $filename );
+		
+		if (!$content)
+			throw new \Exception('File ' . $filename . ' is empty');
+			
+		if (!$parseAsJSON)
+			return $content;
+			
+		// Replace EOL's and tabs by a space character (these chars are forbidden to be used within json strings)
+		$content = preg_replace("/[\n\r\t]/", " ", $content);
+			
+		$json = @json_decode( $content );
+		
+		if (!$json)
+			throw new \Exception("Error parsing JSON of " . $filename);
+		
+		return $json;
+	}
+	
+	/**
 	 * Gets all meta data related to the given query
 	 *
 	 * @param {string} $queryID
@@ -187,35 +216,6 @@ class QuerySet
 		}
 		
 		return $this->model;
-	}
-	
-	/**
-	 * Loads a file
-	 *
-	 * @param {string} $filename
-	 */
-	private function load($filename, $parseAsJSON = false)
-	{
-		if (!file_exists($filename)) 	
-			throw new \Exception('Cannot find ' . $filename); 
-		
-		$content = @file_get_contents( $filename );
-		
-		if (!$content)
-			throw new \Exception('File ' . $filename . ' is empty');
-			
-		if (!$parseAsJSON)
-			return $content;
-			
-		// Replace EOL's and tabs by a space character (these chars are forbidden to be used within json strings)
-		$content = preg_replace("/[\n\r\t]/", " ", $content);
-			
-		$json = @json_decode( $content );
-		
-		if (!$json)
-			throw new \Exception("Error parsing JSON of " . $filename);
-		
-		return $json;
 	}
 };
 

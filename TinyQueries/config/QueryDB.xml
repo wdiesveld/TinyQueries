@@ -4,11 +4,6 @@
 	<!-- Folder for compiled SQL queries - default is queries folder -->
 	<queries></queries>
 	
-	<!-- Optional settings -->
-	<query_output>
-		<nested value="true" />
-	</query_output>
-
 	<!-- Database credentials -->
 	<db>
 		<host>localhost</host>
