@@ -1,7 +1,8 @@
 /**
  * TinyQueries Admin Tool
  *
- * (c) 2013, 2014 Diesveld Query Technology
+ * @author 	Wouter Diesveld <wouter@tinyqueries.com>
+ * @package TinyQueries
  */
  
 var admin = angular.module('TinyQueriesAdmin', ['ngCookies', 'ngRoute']);
@@ -34,20 +35,21 @@ admin.factory('$api', ['$http', function($http)
 	 * Returns the interface for the api object
 	 */
 	return {
-		getQueryList:	getQueryList,
-		getQuery:		getQuery
+		getProject:	getProject,
+		getQuery:	getQuery
 	};
+	
+	function getProject()
+	{
+		return $http.get('api/?method=getProject');
+	}
 	
 	function getQuery(queryID)
 	{
-		return $http.get('../interface/' + queryID + '.json');
-	}
-	
-	function getQueryList()
-	{
-		return $http.get('../interface/_project.json');
+		return $http.get('api/?method=getInterface&query=' + queryID);
 	}
 }]);
+
  
 /**
  * Main controller which is attached to the body element
@@ -59,11 +61,12 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 	$scope.queries 	= {};
 	$scope.globals 	= {};
 	$scope.error	= null;
-	
+	$scope.config	= null;
+
 	// Initialize queries var
 	$scope.refresh = function() 
 	{
-		$api.getQueryList().success( function(data)
+		$api.getProject().success( function(data)
 		{
 			$scope.project	= data.id;
 			$scope.globals 	= data.globals;

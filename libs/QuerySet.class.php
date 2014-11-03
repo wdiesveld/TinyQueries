@@ -14,8 +14,7 @@ class QuerySet
 	const PATH_SQL 			= '/sql';
 	const PATH_INTERFACE 	= '/interface';
 	
-	private $queries;
-	private $model;
+	private $project;
 	private $pathQueries;
 	private $labelQuerySet;
 	private $callbacks;
@@ -30,8 +29,7 @@ class QuerySet
 		$this->path($pathQueries);
 		
 		$this->callbacks 	= array();
-		$this->queries		= null;
-		$this->model		= null;
+		$this->project		= null;
 	}
 
 	/**
@@ -159,41 +157,18 @@ class QuerySet
 	}
 	
 	/**
-	 * Returns the list of queries
+	 * Returns the project info contained in _project.json
 	 */
-	public function queries()
+	public function project()
 	{
-		if ($this->queries)
-			return $this->queries;
+		if ($this->project)
+			return $this->project;
 			
 		$filename = $this->path() . self::PATH_INTERFACE . "/" . "_project.json";
 		
-		$this->queries = $this->load( $filename, true );
+		$this->project = $this->load( $filename, true );
 		
-		return $this->queries;
-	}
-	
-	/**
-	 * Returns the model
-	 */
-	public function model()
-	{
-		if ($this->model)
-			return $this->model;
-			
-		$filename = $this->path() . "/" . "__model.json";
-		
-		try
-		{
-			$this->model = $this->load( $filename, true );
-		}
-		catch (\Exception $e)
-		{
-			// The model is optional, so don't throw an error if it cannot be loaded
-			$this->model = new \StdClass();
-		}
-		
-		return $this->model;
+		return $this->project;
 	}
 };
 

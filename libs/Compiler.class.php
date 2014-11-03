@@ -16,13 +16,14 @@ require_once("QuerySet.class.php");
  */
 class Compiler
 {
+	public $querySet;
+	
 	private $apiKey;
 	private $folderInput;
 	private $folderOutput;
 	private $server;
 	private $version;
 	private $logfile;
-	private $querySet;
 	private $verbose;
 	private $curlOutput;
 	

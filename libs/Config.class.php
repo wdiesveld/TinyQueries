@@ -43,29 +43,29 @@ class Config
 		
 		// Check required fields
 		if (!$config)						throw new \Exception("Cannot read configfile " . $this->configFile);
-		if (!$config->database)				throw new \Exception("Element 'database' not found in " . $this->configFile);
-		if (!$config->database['name'])		throw new \Exception("Field 'name' not found in " . $this->configFile);
-		if (!$config->database['user'])		throw new \Exception("Field 'user' not found in " . $this->configFile);
-		if (!$config->database['password'])	throw new \Exception("Field 'password' not found in " . $this->configFile);
-		if (!$config->compiler)				throw new \Exception("Element 'compiler' not found in " . $this->configFile);
-		if (!$config->compiler['api_key'])	throw new \Exception("Field 'api_key' not found in " . $this->configFile);
-		if (!$config->compiler['input'])	throw new \Exception("Field 'input' not found in " . $this->configFile);
-		if (!$config->compiler['output'])	throw new \Exception("Field 'output' not found in " . $this->configFile);
+		if (!$config->database)				throw new \Exception("Tag 'database' not found in " . $this->configFile);
+		if (!$config->database['name'])		throw new \Exception("Field 'name' not found in database tag of " . $this->configFile);
+		if (!$config->database['user'])		throw new \Exception("Field 'user' not found in database tag of " . $this->configFile);
+		if (!$config->database['password'])	throw new \Exception("Field 'password' not found in database tag of " . $this->configFile);
+		if (!$config->compiler)				throw new \Exception("Tag 'compiler' not found in " . $this->configFile);
+		if (!$config->compiler['api_key'])	throw new \Exception("Field 'api_key' not found in compiler tag of " . $this->configFile);
+		if (!$config->compiler['input'])	throw new \Exception("Field 'input' not found in compiler tag of " . $this->configFile);
+		if (!$config->compiler['output'])	throw new \Exception("Field 'output' not found in compiler tag of " . $this->configFile);
 		
 		// Import database fields
 		$this->database = new \StdClass();
-		$this->database->host		= ($config['host']) ? (string) $config['host'] : 'localhost';
-		$this->database->name		= (string) $config['name'];
-		$this->database->user		= (string) $config['user'];
-		$this->database->password	= (string) $config['password'];
+		$this->database->host		= ($config['host']) ? (string) $config->database['host'] : 'localhost';
+		$this->database->name		= (string) $config->database['name'];
+		$this->database->user		= (string) $config->database['user'];
+		$this->database->password	= (string) $config->database['password'];
 		
 		// Import compiler fields
 		$this->compiler = new \StdClass();
-		$this->compiler->api_key	= (string) $config['api_key'];
-		$this->compiler->input 		= (string) $config['input'];
-		$this->compiler->output		= (string) $config['output'];
-		$this->compiler->server		= ($config['server']) 	? (string) $config['server'] : self::DEFAULT_COMPILER;
-		$this->compiler->version	= ($config['version']) 	? (string) $config['version'] : null;
+		$this->compiler->api_key	= (string) $config->compiler['api_key'];
+		$this->compiler->input 		= (string) $config->compiler['input'];
+		$this->compiler->output		= (string) $config->compiler['output'];
+		$this->compiler->server		= ($config['server']) 	? (string) $config->compiler['server'] : self::DEFAULT_COMPILER;
+		$this->compiler->version	= ($config['version']) 	? (string) $config->compiler['version'] : null;
 		$this->compiler->logfile	= null;
 		
 		// Logfile needs special treatment 
