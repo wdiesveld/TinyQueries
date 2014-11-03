@@ -2,97 +2,156 @@
 		
 	<h1>{{query.id}}</h1>
 	
-	<p class="doc">
-		<div class="line" ng-repeat="line in query.doc">{{line}}</div>
-	</p>
-
-	<h3>Parameters</h3>
-	
-	<table class="table table-striped table-condensed">
-		<thead>
-			<tr>
-				<th>Name</th>
-				<th>Type</th>
-				<th>Default</th>
-				<th>Details</th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr ng-repeat="(name, def) in query.params">
-				<td>{{name}}</td>
-				<td>
-					<span ng-repeat="type in def.type">
-						<span class="label label-{{type}}">{{type}}</span>
-					</span>
-				</td>
-				<td>{{def.default_str}}</td>
-				<td>{{def.doc}}</td>
-			</tr>
-		</tbody>
-	</table>
-			
-	<h3>Output</h3>
-	
-	<div ng-show="query.output.rows == 'first' && query.output.columns == 'first'">
-		<p>
-			<span ng-repeat="(name, def) in query.output.fields">
-				<span class="label label-{{def.type[0]}}">{{def.type[0]}}</span>
-			</span>
-		</p>
+	<ul class="nav nav-tabs">
+		<li ng-class="{active: tab=='run'}"><a ng-click="tab='run'">Execute</a></li>
+		<li ng-class="{active: tab=='doc'}"><a ng-click="tab='doc'">Documentation</a></li>
+	</ul>
 		
-		<p>The query will return a single value.</p>
-	</div>
-	<div ng-show="query.output.rows == 'first' && query.output.columns == 'all'">
-		<p><span class="label label-object">object</span> <code>{ .. }</code></p>
-		<p>The query will return an object containing the fields as described below.</p>
-	</div>
-	<div ng-show="query.output.rows == 'all' && query.output.columns == 'first'">
-		<p><span class="label label-array">array</span> <code>[ .., .., .. ]</code></p>
-		<p>The query will return an array.</p>
-	</div>
-	<div ng-show="query.output.rows == 'all' && query.output.columns == 'all'">
-		<p><span class="label label-array">array</span> <code>[ { .. }, { .. }, { .. } ]</code></p>
-		<p>The query will return an array of objects. Each object contains the fields as described below.</p>
-	</div>
+	<div ng-show="tab=='run'">
 	
-	<div ng-show="query.output.rows != 'first' || query.output.columns != 'first'">
-	<table class="table table-striped table-condensed">
-		<thead>
-			<tr>
-				<th>Name</th>
-				<th>Type</th>
-				<th>Details</th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr ng-repeat="(name, def) in query.output.fields">
-				<td>
-					<div ng-show="def.type == 'child'">
-						<a href="#/queries/{{def.child}}">{{name}}</a>
-					</div>
-					<div ng-show="def.type != 'child'">
-						{{name}}
-					</div>
-				
-				</td>
-				<td>
-					<span ng-repeat="type in def.type">
+		<form role="form" class="form-horizontal">
+			<div class="form-group">
+				<div class="col-sm-3">
+				</div>
+				<div class="col-sm-5">
+					<span class="label label-default">{{nRows}}</span>
+					<span class="label label-default">{{profiling.database}}</span>
+					<span class="label label-default">{{profiling.query}}</span>
+					<span class="label label-default">{{profiling._total}}</span>
+				</div>
+				<div class="col-sm-4">
+					<span class="label  label-info">{{status}}</span>
+				</div>
+			</div>			
+
+			<div class="form-group">
+				<label class="col-sm-2 control-label" for="input-query-term">query term</label>
+				<div class="col-sm-4">
+					<input  id="input-query-term" type="text" class="form-control" ng-model="queryTerm" required >
+				</div>
+				<div class="col-sm-6">
+					<button ng-click="run()" type="submit" class="btn btn-default">
+						<span class="glyphicon glyphicon-play-circle"></span>
+						Run query
+					</button>
+					<button ng-click="updateParams()" type="submit" class="btn">
+						Update Params
+					</button>
+				</div>
+			</div>			
+			
+			<div ng-repeat="(paramID, param) in query.params" class="form-group">
+				<label class="col-sm-2 control-label" for="input-{{paramID}}">{{paramID}}</label>
+				<div class="col-sm-4">
+					<input  id="input-{{paramID}}" type="text" class="form-control" ng-model="query.params[paramID].value" placeholder="Enter value for this parameter" required >
+				</div>
+				<div class="col-sm-6">
+					<span ng-class="{label: true, 'label-info': param.expose=='public', 'label-primary': param.expose=='private'}">{{param.expose}}</span> 
+					<span ng-repeat="type in param.type">
 						<span class="label label-{{type}}">{{type}}</span>
 					</span>
-				</td>
-				<td>
-					<!--
-					<div ng-repeat="(namesub, defsub) in def.fields">
-						{{namesub}}
-					</div>
-					-->
-					
-				</td>
-			</tr>
-		</tbody>
-	</table>
+				</div>
+			</div>
+		</form>
+		
+		<pre>{{ output | json }}</pre>		
+	
 	</div>
 	
+	<div ng-show="tab=='doc'">
+	
+		<p class="doc">
+			<div class="line" ng-repeat="line in query.doc">{{line}}</div>
+		</p>
+
+		<h3>Parameters</h3>
+		
+		<table class="table table-striped table-condensed">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Type</th>
+					<th>Default</th>
+					<th>Details</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr ng-repeat="(name, def) in query.params">
+					<td>{{name}}</td>
+					<td>
+						<span ng-repeat="type in def.type">
+							<span class="label label-{{type}}">{{type}}</span>
+						</span>
+					</td>
+					<td>{{def.default_str}}</td>
+					<td>{{def.doc}}</td>
+				</tr>
+			</tbody>
+		</table>
+				
+		<h3>Output</h3>
+		
+		<div ng-show="query.output.rows == 'first' && query.output.columns == 'first'">
+			<p>
+				<span ng-repeat="(name, def) in query.output.fields">
+					<span class="label label-{{def.type[0]}}">{{def.type[0]}}</span>
+				</span>
+			</p>
+			
+			<p>The query will return a single value.</p>
+		</div>
+		<div ng-show="query.output.rows == 'first' && query.output.columns == 'all'">
+			<p><span class="label label-object">object</span> <code>{ .. }</code></p>
+			<p>The query will return an object containing the fields as described below.</p>
+		</div>
+		<div ng-show="query.output.rows == 'all' && query.output.columns == 'first'">
+			<p><span class="label label-array">array</span> <code>[ .., .., .. ]</code></p>
+			<p>The query will return an array.</p>
+		</div>
+		<div ng-show="query.output.rows == 'all' && query.output.columns == 'all'">
+			<p><span class="label label-array">array</span> <code>[ { .. }, { .. }, { .. } ]</code></p>
+			<p>The query will return an array of objects. Each object contains the fields as described below.</p>
+		</div>
+		
+		<div ng-show="query.output.rows != 'first' || query.output.columns != 'first'">
+		<table class="table table-striped table-condensed">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Type</th>
+					<th>Details</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr ng-repeat="(name, def) in query.output.fields">
+					<td>
+						<div ng-show="def.type == 'child'">
+							<a href="#/queries/{{def.child}}">{{name}}</a>
+						</div>
+						<div ng-show="def.type != 'child'">
+							{{name}}
+						</div>
+					
+					</td>
+					<td>
+						<span ng-repeat="type in def.type">
+							<span class="label label-{{type}}">{{type}}</span>
+						</span>
+					</td>
+					<td>
+						<!--
+						<div ng-repeat="(namesub, defsub) in def.fields">
+							{{namesub}}
+						</div>
+						-->
+						
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		</div>
+	
+	</div>
 	
 			
 </div>

@@ -38,6 +38,13 @@
           <ul class="nav navbar-nav">
            <!-- <li ng-class="{active: nav=='queries'}"><a ng-click="nav='queries'" href="#queries">Queries</a></li> -->
           </ul>
+		  <form class="navbar-form navbar-left">
+			<button ng-click="compile()" type="button" class="btn btn-default">
+				<span class="glyphicon glyphicon-fire"></span>
+				Compile
+			</button>
+		  </form>
+		  <p class="navbar-text"><span class="glyphicon glyphicon-thumbs-up" ng-show="compileStatusCode==0"></span> {{compileStatus}}</p>
         </div>
       </div>
     </div>

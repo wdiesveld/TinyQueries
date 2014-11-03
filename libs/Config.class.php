@@ -64,8 +64,8 @@ class Config
 		$this->compiler->api_key	= (string) $config->compiler['api_key'];
 		$this->compiler->input 		= (string) $config->compiler['input'];
 		$this->compiler->output		= (string) $config->compiler['output'];
-		$this->compiler->server		= ($config['server']) 	? (string) $config->compiler['server'] : self::DEFAULT_COMPILER;
-		$this->compiler->version	= ($config['version']) 	? (string) $config->compiler['version'] : null;
+		$this->compiler->server		= ($config->compiler['server']) 	? (string) $config->compiler['server'] : self::DEFAULT_COMPILER;
+		$this->compiler->version	= ($config->compiler['version']) 	? (string) $config->compiler['version'] : null;
 		$this->compiler->logfile	= null;
 		
 		// Logfile needs special treatment 

@@ -19,7 +19,7 @@ class Api extends HttpTools
 	protected $apiCallID;
 	protected $query;
 	protected $debugMode;
-	protected $dbConfigFile;
+	protected $configFile;
 	protected $addProfilingInfo;
 	protected $doTransaction;
 	protected $request;
@@ -30,15 +30,15 @@ class Api extends HttpTools
 	/**
 	 * Constructor
 	 *
-	 * @param {string} $dbConfigFile (optional) Path to DB settings file
+	 * @param {string} $configFile (optional) Path to DB settings file
 	 * @param {boolean} $debugMode (optional) Sets debug mode
 	 * @param {boolean} $addProfilingInfo (optional) Adds profiling info to api response
 	 */
-	public function __construct($dbConfigFile = null, $debugMode = false, $addProfilingInfo = false)
+	public function __construct($configFile = null, $debugMode = false, $addProfilingInfo = false)
 	{
 		$this->server 	 		= self::getServerVar('SERVER_NAME');
 		$this->debugMode 		= $debugMode;
-		$this->dbConfigFile 	= $dbConfigFile;
+		$this->configFile 		= $configFile;
 		$this->addProfilingInfo = $addProfilingInfo;
 		$this->doTransaction	= true;
 		$this->request			= array();
@@ -64,7 +64,7 @@ class Api extends HttpTools
 		if ($this->db)
 			return;
 		
-		$this->db = new QueryDB( null, $this->dbConfigFile );
+		$this->db = new QueryDB( null, $this->configFile );
 		
 		// Pass the profiler to the DB, so that each query can be profiled separately (not yet implemented)
 		$this->db->profiler = $this->profiler;
@@ -222,6 +222,9 @@ class Api extends HttpTools
 
 		if (!$term) 
 			throw new \Exception('query-param is empty'); 
+			
+		if (!$this->db)
+			throw new \Exception('Database is not initialized');
 			
 		$this->query = $this->db->query($term);
 		

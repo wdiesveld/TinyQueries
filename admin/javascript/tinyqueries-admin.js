@@ -35,19 +35,53 @@ admin.factory('$api', ['$http', function($http)
 	 * Returns the interface for the api object
 	 */
 	return {
-		getProject:	getProject,
-		getQuery:	getQuery
+	
+		compile: function()
+		{
+			return $http.get('api/?method=compile');
+		},
+	
+		getProject:	function()
+		{
+			return $http.get('api/?method=getProject');
+		},
+		
+		getQuery: function(queryID)
+		{
+			return $http.get('api/?method=getInterface&query=' + queryID);
+		},
+		
+		runQuery: function(term, params)
+		{
+			var apiParams = 
+			{
+				query: term,
+				_profiling: 1
+			};
+			
+			for (var id in params)
+			{
+				var p = params[ id ];
+				
+				var isArray = $.isArray( p.type )
+							? ($.inArray('array', p.type) != -1)
+							: (p.type == 'array');
+				
+				// Add [] for array parameters
+				var name = (isArray)
+								? 'param_' + id + '[]'
+								: 'param_' + id;
+				
+				// Convert CSV to arrays
+				apiParams[ name ] = (isArray)
+					? ( (p.value) ? p.value.toString().split(',') : '')
+					: ( (p.value || p.value===0) ? p.value : '');
+			}
+			
+			return $http.get('api/', { params: apiParams }); 
+		}
+		
 	};
-	
-	function getProject()
-	{
-		return $http.get('api/?method=getProject');
-	}
-	
-	function getQuery(queryID)
-	{
-		return $http.get('api/?method=getInterface&query=' + queryID);
-	}
 }]);
 
  
@@ -57,12 +91,21 @@ admin.factory('$api', ['$http', function($http)
 admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $cookies)
 {
 	// Set scope vars
-	$scope.nav 		= 'queries';
-	$scope.queries 	= {};
-	$scope.globals 	= {};
-	$scope.error	= null;
-	$scope.config	= null;
+	$scope.nav 					= 'queries';
+	$scope.queries 				= {};
+	$scope.globals 				= {};
+	$scope.error				= null;
+	$scope.compileStatusCode 	= -1;
+	$scope.compileStatus		= '';
 
+	$scope.$watch('compileStatusCode', function(value)
+	{
+		if (value != 0)
+			return;
+		
+		$scope.refresh();
+	});
+	
 	// Initialize queries var
 	$scope.refresh = function() 
 	{
@@ -77,6 +120,22 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 			$scope.error = data.error;
 		});
 	};
+	
+	$scope.compile = function()
+	{
+		$scope.compileStatusCode = 1;
+		$scope.compileStatus = 'Compiler is being called...';
+		$api.compile().success(function(data)
+		{
+			$scope.compileStatusCode = 0;
+			$scope.compileStatus = data.message;
+			$scope.refresh();
+		}).error(function(data)
+		{
+			$scope.compileStatusCode = 2;
+			$scope.compileStatus = data.error;
+		});
+	}
 	
 	$scope.refresh();
 }]);
@@ -140,8 +199,47 @@ function reformatQueryDef( query )
  */
 admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', function($scope, $api, $cookies, $routeParams)
 {
-	$scope.query = {};
+	$scope.query 		= {};
+	$scope.tab			= 'run';
+	$scope.queryTerm	= null;
+	$scope.output		= '';
 
+	$scope.$watch('compileStatusCode', function(value)
+	{
+		if (value != 0)
+			return;
+			
+		$scope.refresh();
+	});
+	
+	$scope.run = function()
+	{
+		$scope.status = "Query is running...";
+		
+//		$scope.saveParams();
+		
+		$api.runQuery( $scope.queryTerm, $scope.query.params ).success( function(data)
+		{
+			$scope.error 	= null;
+			$scope.output 	= data.rows;
+			$scope.nRows 	= (data.rows && data.rows.length) ? data.rows.length + ' rows' : '';
+			
+			if (data.profiling)
+				for (var pv in data.profiling)
+					$scope.profiling[ pv ] = pv + ': ' + new String( data.profiling[pv] ).substr(0,6) + ' sec';
+					
+		}).error( function(data)
+		{
+			$scope.error 	= data.error;
+			$scope.output 	= data;
+			$scope.nRows 	= null;
+			$scope.profiling = {};
+		}).finally( function()
+		{
+			$scope.status 	= null;
+		});
+	};
+	
 	$scope.refresh = function()
 	{
 		var queryID = $routeParams.queryID;
@@ -152,7 +250,9 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		{
 			$scope.query 	= reformatQueryDef( data );
 			$scope.query.id = queryID;
-				
+			
+			if ($scope.query && !$scope.queryTerm)
+				$scope.queryTerm = $scope.query.id;
 		}).error( function(data)
 		{
 			$scope.error = data.error;

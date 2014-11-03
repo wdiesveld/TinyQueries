@@ -136,7 +136,7 @@ class Compiler
 		$postBody = 
 			"api_key=" . urlencode( $this->apiKey ) 	. "&" .
 			"version=" . urlencode( $this->version )	. "&" ;
-		
+
 		// Read project files and add them to the postBody
 		foreach ($this->inputFiles() as $file)
 		{

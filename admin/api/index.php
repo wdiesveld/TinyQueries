@@ -33,6 +33,8 @@ class AdminApi extends TinyQueries\Api
 	 */
 	public function init()
 	{
+		parent:: init();
+		
 		// Initialize compiler
 		$this->compiler = new TinyQueries\Compiler();
 	}
@@ -52,10 +54,10 @@ class AdminApi extends TinyQueries\Api
 		switch ($method)
 		{
 			case 'compile': 		return $this->compile();
+			case 'getInterface':	return $this->getInterface();
 			case 'getParams': 		return $this->getQueryParams();
 			case 'getProject':		return $this->getProject();
 			case 'getProjectInfo': 	return $this->getProjectInfo();
-			case 'getInterface':	return $this->getInterface();
 		}
 		
 		throw new Exception('Unknown method');
@@ -67,7 +69,7 @@ class AdminApi extends TinyQueries\Api
 	 */
 	public function compile()
 	{
-		$this->compiler->compile();
+		$this->compiler->compile( true );
 		
 		return array
 		(
@@ -138,5 +140,6 @@ class AdminApi extends TinyQueries\Api
 // All API handling is done by creating the object
 $api = new AdminApi();
 
+$api->init();
 $api->sendResponse();
 
