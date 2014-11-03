@@ -2,10 +2,22 @@
 <!--
 
 	TinyQueries config file
+	
+	Fill in fields below and save this file as config.xml
 
 -->
 <config>
 
+	<!--
+	
+		Database credentials
+		
+		REQUIRED FIELDS:
+		name		- Name of your database
+		user		- Database user
+		password	- User's password
+		
+	-->
 	<database
 		host 		= "localhost"
 		name		= ""
@@ -13,6 +25,16 @@
 		password	= ""
 	/>
 
+	<!--
+		
+		Compiler settings
+		
+		REQUIRED FIELDS:
+		api_key 	- Your TinyQueries api key
+		input		- Folder of your source files
+		output		- Folder where the compiled SQL files should be put
+		
+	-->	
 	<compiler
 		api_key 	= ""
 		input		= ""
@@ -22,6 +44,14 @@
 		logfile		= ""
 	/>
 	
+	<!--
+	
+		Post processor settings
+		
+		REQUIRED FIELDS:
+		none
+		
+	-->
 	<postprocessor
 		nest_fields	= "true"
 	/>
