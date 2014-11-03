@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+	TinyQueries config file
+
+-->
+<config>
+
+	<database
+		host 		= "localhost"
+		name		= ""
+		user		= ""
+		password	= ""
+	/>
+
+	<compiler
+		api_key 	= ""
+		input		= ""
+		output		= ""
+		server		= ""
+		version 	= ""
+		logfile		= ""
+	/>
+	
+	<postprocessor
+		nest_fields	= "true"
+	/>
+
+</config>

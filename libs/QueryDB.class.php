@@ -1,6 +1,7 @@
 <?php
 namespace TinyQueries;
 
+require_once('Config.class.php');
 require_once('Term.class.php');
 require_once('QuerySet.class.php');
 
@@ -14,8 +15,6 @@ require_once('QuerySet.class.php');
  */
 class QueryDB
 {
-	const DEFAULT_CONFIG = '../config/QueryDB.xml';
-	
 	public $dbh;	// PDO database handle
 	public $nested; // Default setting whether or not query output should be nested - more info see Query::nested(.)
 	public $queries;
@@ -31,8 +30,6 @@ class QueryDB
 	private $globalQueryParams;
 	private $primaryKey;
 	
-	protected $configFile;
-	
 	/**
 	 * Constructor
 	 *
@@ -41,21 +38,23 @@ class QueryDB
 	 * If you specify a $pdoHandle, this method should not be called.
 	 *
 	 * @param {PDO} $pdoHandle (optional) Use this if you already have a PDO database connection.
-	 * @param {string} $configFile (optional) Use this to specify your custom XML-configfile containing DB-info like username/password
+	 * @param {string} $configFile (optional) Use this to specify your custom XML-configfile
 	 */
 	public function __construct( $pdoHandle = null, $configFile = null )
 	{
-		$this->globals		= array();
-		$this->nested 		= true;
+		$config = new Config( $configFile );
 		
-		$this->configFile = ($configFile)
-			? $configFile
-			: dirname(__FILE__) . "/" . self::DEFAULT_CONFIG;
+		// Import settings
+		$this->host			= $config->database->host;
+		$this->dbname		= $config->database->name;
+		$this->user			= $config->database->user;
+		$this->pw 			= $config->database->password;
+		$this->nested		= $config->postprocessor->nest_fields;
+		$this->queries 		= new QuerySet( $config->compiler->output );
 		
-		// Default primary key name
-		$this->primaryKey = 'id'; 
+		$this->globals 		= array();
+		$this->primaryKey 	= 'id'; 
 		
-		$this->readConfig();	
 		$this->resetTotalQueryTime();
 		
 		if ($pdoHandle)
@@ -82,7 +81,7 @@ class QueryDB
 	}
 	
 	/**
-	 * Reads the configfile and sets up the database connection
+	 * Sets up the database connection
 	 *
 	 */
 	public function connect()
@@ -426,38 +425,6 @@ class QueryDB
 		foreach ($rows as $row)
 			$firsts[] = $row[0];
 		return $firsts;
-	}
-	
-	/**
-	 * Reads the XML config-file
-	 *
-	 */
-	private function readConfig()
-	{
-		$config = @simplexml_load_file( $this->configFile );
-		
-		if (!$config) 		throw new \Exception("Cannot read db configfile " . $this->configFile);
-		if (!$config->db)	throw new \Exception("No db-tag found in configfile " . $this->configFile);
-		
-		// Read DB credentials
-		$this->host		= (string) $config->db->host;
-		$this->dbname	= (string) $config->db->dbname;
-		$this->user		= (string) $config->db->username;
-		$this->pw 		= (string) $config->db->password;
-		
-		// Read query output settings
-		if ($output = $config->query_output)
-		{
-			if ($output->nested)
-			{
-				if ($output->nested['value'] == 'true')		$this->nested = true;
-				if ($output->nested['value'] == 'false') 	$this->nested = false;
-			}
-		}
-
-		// Read path for SQL queries
-		if ($config->queries)
-			$this->queries = new QuerySet( (string) $config->queries );
 	}
 	
 	/**

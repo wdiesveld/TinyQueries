@@ -1,6 +1,7 @@
 <?php
 namespace TinyQueries;
 
+require_once("Config.class.php");
 require_once("QuerySet.class.php");
 
 /**
@@ -15,19 +16,15 @@ require_once("QuerySet.class.php");
  */
 class Compiler
 {
-	const DEFAULT_SERVER 	= 'https://compiler1.tinyqueries.com';
-	const DEFAULT_CONFIG	= '../config/Compiler.xml';
-
-	private $server;
 	private $apiKey;
-	private $version;
 	private $folderInput;
 	private $folderOutput;
+	private $server;
+	private $version;
 	private $logfile;
-	private $curlOutput;
-	private $configFile;
 	private $querySet;
 	private $verbose;
+	private $curlOutput;
 	
 	/**
 	 * Constructor
@@ -36,11 +33,17 @@ class Compiler
 	 */
 	public function __construct($configFile = null)
 	{
-		$this->configFile = ($configFile)
-			? $configFile
-			: dirname(__FILE__) . "/" . self::DEFAULT_CONFIG;
-								
-		$this->readConfig();			
+		$config = new Config( $configFile );
+		
+		// Import settings
+		$this->apiKey		= $config->compiler->api_key;
+		$this->folderInput 	= $config->compiler->input;
+		$this->folderOutput	= $config->compiler->output;
+		$this->server		= $config->compiler->server;
+		$this->version		= $config->compiler->version;
+		$this->logfile		= $config->compiler->logfile;
+		$this->querySet 	= new QuerySet( $this->folderOutput );
+		$this->verbose		= true;
 	}
 	
 	/**
@@ -95,47 +98,6 @@ class Compiler
 		}
 
 		return ($qplChanged > $sqlChanged);
-	}
-
-	/**
-	 * Reads the XML config for the compiler
-	 *
-	 */
-	private function readConfig()
-	{
-		// Load XML file
-		$config = @simplexml_load_file( $this->configFile );
-		
-		// Check required fields
-		if (!$config)				throw new \Exception("Cannot read configfile " . $this->configFile);
-		if (!$config['api_key'])	throw new \Exception("Field 'api_key' not found in " . $this->configFile);
-		if (!$config['input'])		throw new \Exception("Field 'input' not found in " . $this->configFile);
-		if (!$config['output'])		throw new \Exception("Field 'output' not found in " . $this->configFile);
-
-		// Init settings
-		$this->apiKey		= (string) $config['api_key'];
-		$this->folderInput 	= (string) $config['input'];
-		$this->folderOutput	= (string) $config['output'];
-		$this->server		= ($config['server']) 	? (string) $config['server'] : self::DEFAULT_SERVER;
-		$this->version		= ($config['version']) 	? (string) $config['version'] : null;
-		$this->querySet 	= new QuerySet( $this->folderOutput );
-		$this->verbose		= true;
-
-		// Logfile needs special treatment 
-		if ($config['logfile']) 
-		{
-			$path 	= pathinfo( (string) $config['logfile'] );
-			$dir 	= realpath( $path['dirname'] );
-			
-			if (!$dir)
-				throw new \Exception("Configfile " . $this->configFile . ": Path of logfile does not exist");
-			
-			$filename = (array_key_exists('filename', $path))
-							? $path['filename'] . "." . $path['extension']
-							: 'compiler.log';
-
-			$this->logfile	= $dir . "/" . $filename;
-		}
 	}
 	
 	/**
