@@ -33,7 +33,7 @@ class AdminApi extends TinyQueries\Api
 	 */
 	public function init()
 	{
-		parent:: init();
+		parent::init();
 		
 		// Initialize compiler
 		$this->compiler = new TinyQueries\Compiler();
@@ -55,9 +55,9 @@ class AdminApi extends TinyQueries\Api
 		{
 			case 'compile': 		return $this->compile();
 			case 'getInterface':	return $this->getInterface();
-			case 'getParams': 		return $this->getQueryParams();
 			case 'getProject':		return $this->getProject();
 			case 'getProjectInfo': 	return $this->getProjectInfo();
+			case 'getTermParams': 	return $this->getTermParams();
 		}
 		
 		throw new Exception('Unknown method');
@@ -83,7 +83,14 @@ class AdminApi extends TinyQueries\Api
 	 */
 	public function getProject()
 	{
-		return $this->compiler->querySet->project();
+		$config = new TinyQueries\Config();
+		$project = $this->compiler->querySet->project();
+		
+		// Add compiler info to project
+		$project->compiler = $config->compiler;
+		$project->compiler->compileNeeded = $this->compiler->codeChanged();
+		
+		return $project;
 	}
 
 	/**
@@ -101,7 +108,7 @@ class AdminApi extends TinyQueries\Api
 	 * Returns the parameters of the query-term passed by URL param 'query'
 	 *
 	 */
-	private function getQueryParams()
+	private function getTermParams()
 	{
 		$term = self::getRequestVar("query");
 		
@@ -110,29 +117,6 @@ class AdminApi extends TinyQueries\Api
 		return array
 		(
 			'params' => $query->params
-		);
-	}
-	
-	/**
-	 * Returns some basic project info | TODO is deze method nog nodig nu je ook project() hebt ?
-	 *
-	 * @param {string} $projectID
-	 */
-	public function getProjectInfo($projectID)
-	{
-		$project = $this->compiler->project($projectID);
-		
-		return array
-		(
-			'name'				=> $project->projectName,
-			'queriesfolder'		=> $project->querySet->path(),
-			'php'				=> $project->pathCompiledPHP,
-			'modelFile'			=> $project->fileQPLmodel,
-			'queriesFile'		=> $project->fileQPLqueries,
-			'queryApi'			=> $project->queryApi,
-			'compiler'			=> $this->compiler->qplServer,
-			'compileNeeded'		=> $this->compiler->qplCodeChanged(),
-			'compilerVersion'	=> $project->compilerVersion
 		);
 	}
 };

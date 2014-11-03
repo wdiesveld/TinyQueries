@@ -79,6 +79,11 @@ admin.factory('$api', ['$http', function($http)
 			}
 			
 			return $http.get('api/', { params: apiParams }); 
+		},
+		
+		getTermParams: function(term)
+		{
+			return $http.get('api/?method=getTermParams&query=' + term);
 		}
 		
 	};
@@ -92,8 +97,7 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 {
 	// Set scope vars
 	$scope.nav 					= 'queries';
-	$scope.queries 				= {};
-	$scope.globals 				= {};
+	$scope.project				= {};
 	$scope.error				= null;
 	$scope.compileStatusCode 	= -1;
 	$scope.compileStatus		= '';
@@ -111,9 +115,7 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 	{
 		$api.getProject().success( function(data)
 		{
-			$scope.project	= data.id;
-			$scope.globals 	= data.globals;
-			$scope.queries 	= data.queries;
+			$scope.project = data;
 				
 		}).error( function(data)
 		{
@@ -200,9 +202,11 @@ function reformatQueryDef( query )
 admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', function($scope, $api, $cookies, $routeParams)
 {
 	$scope.query 		= {};
+	$scope.params		= {};
 	$scope.tab			= 'run';
 	$scope.queryTerm	= null;
 	$scope.output		= '';
+	$scope.profiling	= {};
 
 	$scope.$watch('compileStatusCode', function(value)
 	{
@@ -212,13 +216,45 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		$scope.refresh();
 	});
 	
+	$scope.importParams = function( params )
+	{
+		for (var p in params)
+			if (params[p].expose == 'public')
+				$scope.params[ p ] = 
+				{
+					value: 	($cookies[p]) ? $cookies[p] : params[p]['default'],
+					type: 	params[p]['type'],
+					expose:	params[p]['expose']
+				};
+	};
+	
+	$scope.saveParams = function()
+	{
+		// Copy params to cookies
+		for (var p in $scope.params)
+			$cookies[p] = $scope.params[p].value;
+		
+	};
+	
+	$scope.updateParams = function()
+	{
+		$api.getTermParams( $scope.queryTerm ).success( function(data)
+		{
+			$scope.params 	= {};
+			
+			// Set the parameters
+			$scope.importParams( $scope.project.globals );
+			$scope.importParams( data.params );
+		});
+	}
+	
 	$scope.run = function()
 	{
 		$scope.status = "Query is running...";
 		
-//		$scope.saveParams();
+		$scope.saveParams();
 		
-		$api.runQuery( $scope.queryTerm, $scope.query.params ).success( function(data)
+		$api.runQuery( $scope.queryTerm, $scope.params ).success( function(data)
 		{
 			$scope.error 	= null;
 			$scope.output 	= data.rows;
@@ -226,7 +262,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 			
 			if (data.profiling)
 				for (var pv in data.profiling)
-					$scope.profiling[ pv ] = pv + ': ' + new String( data.profiling[pv] ).substr(0,6) + ' sec';
+					$scope.profiling[ pv ] = pv + ': ' + new String( data.profiling[pv] ).substr(0,5) + ' sec';
 					
 		}).error( function(data)
 		{
@@ -253,6 +289,11 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 			
 			if ($scope.query && !$scope.queryTerm)
 				$scope.queryTerm = $scope.query.id;
+				
+			// Set the parameters
+			$scope.importParams( $scope.project.globals );
+			$scope.importParams( $scope.query.params );
+				
 		}).error( function(data)
 		{
 			$scope.error = data.error;

@@ -1,11 +1,37 @@
 <h3>
-TinyQueries Admintool for {{project}}
+TinyQueries Admin
 </h3>
+
+<div class="panel panel-default">
+	<div class="panel-heading">
+		<h3 class="panel-title">Project</h3>
+	</div>
+	<div class="panel-body">
+		<dl class="dl-horizontal">
+			<dt>Project ID</dt>
+			<dd>{{project.id}}</dd>
+			<dt>Compiler</dt>
+			<dd>{{project.compiler.server}}</dd>
+			<dt>Version</dt>
+			<dd>{{project.compiler.version}}</dd>
+			<dt>Input Folder</dt>
+			<dd>{{project.compiler.input}}</dd>
+			<dt>Output Folder</dt>
+			<dd>{{project.compiler.output}}</dd>
+			<dt>Compile needed</dt>
+			<dd>{{project.compiler.compileNeeded}}</dd>
+			<dt>Compile status</dt>
+			<dd>{{compileStatus}}</dd>
+		</dl>
+	</div>
+</div>
+
+
 
 <p>
 To the left you can see the list of queries which are created for the project. Click on a query for details.
 </p>
 
 <p>
-<small>The TinyQueries Admintool is copyright &copy; <a href="http://www.querytechnology.com" target="_blank"> Query Technology</a> 2012 - 2014</small>
+<small>TinyQueries Admin is copyright &copy; <a href="http://www.querytechnology.com" target="_blank"> Query Technology</a> 2012 - 2014</small>
 </p>
