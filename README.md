@@ -14,6 +14,7 @@ For this you write two queries **users** and **messages**. To nest the data you 
 
 * Currently TinyQueries is only available for PHP. You need at least PHP 5.3.
 * PHP's PDO database layer should be installed.
+* PHP's cURL lib should be enabled.
 * A SQL database.
 
 ## Install
