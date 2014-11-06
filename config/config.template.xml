@@ -30,9 +30,14 @@
 		Compiler settings
 		
 		REQUIRED FIELDS:
+		output		- Folder where the compiled SQL files should be put
+		
+		OPTIONAL:
 		api_key 	- Your TinyQueries api key
 		input		- Folder of your source files
-		output		- Folder where the compiled SQL files should be put
+		server		- The compiler server
+		version		- Version of the compiler
+		logfile		- Path to a logfile
 		
 	-->	
 	<compiler
