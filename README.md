@@ -19,12 +19,18 @@ For this you write two queries **users** and **messages**. To nest the data you 
 ## Install
 
 * Copy the folder **TinyQueries** into your php lib folder.
-* Use the file **QueryDB.template.xml** to set the database credentials and save it as **QueryDB.xml** in the same folder as the PHP libs.
-* Create a folder **queries** and specify its path in **QueryDB.xml**.
-* Include **QueryDB.class.php** in your project.
-* Create the database object by:
+* Use the file **config/config.template.xml** to set the database credentials and save it as **config.xml**.
+* Create a folder **queries** in your project folder. This folder will be used to store compiled SQL queries. In **config.xml** you should specify the path to this folder in <compiler output=".." />
+* Include **QueryDB.class.php** in your project: 
 
+	// Include lib
+	require_once("[path-to-libs]/TinyQueries/libs/QueryDB.class.php");
+			
+	// Create database object
 	$db = new TinyQueries\QueryDB();
+				
+	// Connect to database
+	$db->connect();
 
 ## Hello World
 
