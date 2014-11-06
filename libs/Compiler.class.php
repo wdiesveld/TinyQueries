@@ -54,7 +54,7 @@ class Compiler
 	 */
 	public function compile($force = false)
 	{
-		if (!$force && !$this->codeChanged())
+		if (!$force && !$this->compileNeeded())
 			return;
 		
 		try
@@ -75,11 +75,29 @@ class Compiler
 	 * Checks whether there are changes made in either the model or the queries file
 	 *
 	 */
-	public function codeChanged()
+	public function compileNeeded()
 	{
-		$sqlPath	= $this->querySet->path() . QuerySet::PATH_SQL;
+		// If there is no input folder specified we cannot know
+		if (!$this->folderInput)
+			return null;
+		
+		$project	= null;
 		$qplChanged = 0;
 		$sqlChanged = 0;
+		
+		try
+		{
+			$project = $this->querySet->project();
+		}
+		catch (Exception $e)
+		{
+			// If there is no compiled project file, a compile is needed
+			return true;
+		}
+		
+		// If versions differ a compile is needed
+		if ($project->compiledWith && $this->version && $project->compiledWith != $this->version)
+			return true;
 		
 		// Get max time of all project files
 		foreach ($this->inputFiles() as $file)
@@ -89,6 +107,8 @@ class Compiler
 				$qplChanged = $mtime;
 		}
 
+		$sqlPath = $this->querySet->path() . QuerySet::PATH_SQL;
+		
 		// Get max time of all sql files
 		foreach (scandir($sqlPath) as $file)
 		if (preg_match('/\.sql$/', $file))

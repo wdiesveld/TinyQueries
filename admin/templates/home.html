@@ -13,15 +13,21 @@ TinyQueries Admin
 			<dt>Compiler</dt>
 			<dd>{{project.compiler.server}}</dd>
 			<dt>Version</dt>
-			<dd>{{project.compiler.version}}</dd>
+			<dd>Compile with {{project.compiler.version || 'latest version'}}</dd>
 			<dt>Input Folder</dt>
 			<dd>{{project.compiler.input}}</dd>
 			<dt>Output Folder</dt>
 			<dd>{{project.compiler.output}}</dd>
-			<dt>Compile needed</dt>
-			<dd>{{project.compiler.compileNeeded}}</dd>
 			<dt>Compile status</dt>
 			<dd>{{compileStatus}}</dd>
+			<dt>Compiled with</dt>
+			<dd>Current SQL files are compiled with {{project.compiledWith}}</dd>
+			<dt>Compile needed</dt>
+			<dd>
+				<span ng-if="project.compiler.compileNeeded==true">Yes</span>
+				<span ng-if="project.compiler.compileNeeded==false">No</span>
+				<span ng-if="project.compiler.compileNeeded==null">Don't know - no source files found</span>
+			</dd>
 		</dl>
 	</div>
 </div>

@@ -89,10 +89,7 @@ class AdminApi extends TinyQueries\Api
 		// Add compiler info to project
 		$project->compiler = $config->compiler;
 		
-		// Only check for code change if there is code
-		$project->compiler->compileNeeded = ($config->compiler->input) 
-			? $this->compiler->codeChanged()
-			: "don't know - no source files found";
+		$project->compiler->compileNeeded = $this->compiler->compileNeeded();
 		
 		return $project;
 	}
