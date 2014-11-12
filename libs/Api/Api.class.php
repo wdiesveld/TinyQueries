@@ -216,9 +216,10 @@ class Api extends HttpTools
 	 */
 	protected function processRequest()
 	{
-		$term		= self::getRequestVar('query', '/^[\w\.\:\-\,\(\)\|\+\s]+$/'); 
-		$params  	= array();
-		$response 	= null; 
+		$term			= self::getRequestVar('query', '/^[\w\.\:\-\,\(\)\|\+\s]+$/'); 
+		$singleParam 	= self::getRequestVar('param');
+		$params  		= array();
+		$response 		= null; 
 
 		if (!$term) 
 			throw new \Exception('query-param is empty'); 
@@ -255,7 +256,7 @@ class Api extends HttpTools
 		if ($this->addProfilingInfo)	
 			$this->profiler->begin('query');
 		
-		$this->query->params($params);
+		$this->query->params( ($singleParam) ? $singleParam : $params );
 			
 		$response = ($this->addProfilingInfo)
 			? array
