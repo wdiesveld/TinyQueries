@@ -36,7 +36,9 @@
 					<input  id="input-{{paramID}}" type="text" class="form-control" ng-model="params[paramID].value" placeholder="Enter value for this parameter" required >
 				</div>
 				<div class="col-sm-6">
+					<!--
 					<span ng-class="{label: true, 'label-info': param.expose=='public', 'label-primary': param.expose=='private'}">{{param.expose}}</span> 
+					-->
 					<span ng-repeat="type in param.type">
 						<span class="label label-{{type}}">{{type}}</span>
 					</span>

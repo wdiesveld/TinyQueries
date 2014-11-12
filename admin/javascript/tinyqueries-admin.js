@@ -220,12 +220,16 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 	{
 		for (var p in params)
 			if (params[p].expose == 'public')
-				$scope.params[ p ] = 
-				{
-					value: 	($cookies[p]) ? $cookies[p] : params[p]['default'],
-					type: 	params[p]['type'],
-					expose:	params[p]['expose']
-				};
+			{
+				$scope.params[ p ] = params[p];
+				$scope.params[ p ].value = ($cookies[p]) 
+					? $cookies[p] 
+					: ( 
+						(params[p]['default'] === null) 
+							? 'null' 
+							: params[p]['default'] 
+						);
+			}
 	};
 	
 	$scope.saveParams = function()
