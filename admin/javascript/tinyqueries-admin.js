@@ -98,6 +98,7 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 	// Set scope vars
 	$scope.nav 					= 'queries';
 	$scope.project				= {};
+	$scope.globals				= {};
 	$scope.error				= null;
 	$scope.compileStatusCode 	= -1;
 	$scope.compileStatus		= '';
@@ -116,6 +117,8 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 		$api.getProject().success( function(data)
 		{
 			$scope.project = data;
+			
+			$scope.globals = setValues( data.globals, $cookies );
 				
 		}).error( function(data)
 		{
@@ -147,6 +150,121 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 admin.controller('message', ['$scope', function($scope)
 {
 	$scope.content = '';
+}]);
+
+
+/**
+ * Controller for query info
+ */
+admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', function($scope, $api, $cookies, $routeParams)
+{
+	$scope.query 		= {};
+	$scope.params		= {};
+	$scope.tab			= 'run';
+	$scope.queryTerm	= null;
+	$scope.output		= '';
+	$scope.profiling	= {};
+
+	$scope.$watch('compileStatusCode', function(value)
+	{
+		if (value != 0)
+			return;
+			
+		$scope.refresh();
+	});
+	
+	// deprecated 
+	$scope.importParams = function( params )
+	{
+		for (var p in params)
+			if (params[p].expose == 'public')
+			{
+				$scope.params[ p ] = params[p];
+				$scope.params[ p ].value = ($cookies[p]) 
+					? $cookies[p] 
+					: ( 
+						(params[p]['default'] === null) 
+							? 'null' 
+							: params[p]['default'] 
+						);
+			}
+	};
+	
+	$scope.saveParams = function()
+	{
+		// Copy params to cookies
+		for (var p in $scope.params)
+			$cookies[p] = $scope.params[p].value;
+		
+	};
+	
+	$scope.updateParams = function()
+	{
+		$api.getTermParams( $scope.queryTerm ).success( function(data)
+		{
+			$scope.params = setValues( data.params, $cookies );
+			
+			// Set the parameters
+			//$scope.importParams( $scope.project.globals );
+			//$scope.importParams( data.params );
+		});
+	}
+	
+	$scope.run = function()
+	{
+		$scope.status = "Query is running...";
+		
+		$scope.saveParams();
+		
+		$api.runQuery( $scope.queryTerm, $scope.params ).success( function(data)
+		{
+			$scope.error 	= null;
+			$scope.output 	= data.rows;
+			$scope.nRows 	= (data.rows && data.rows.length) ? data.rows.length + ' rows' : '';
+			
+			if (data.profiling)
+				for (var pv in data.profiling)
+					$scope.profiling[ pv ] = pv + ': ' + new String( data.profiling[pv] ).substr(0,5) + ' sec';
+					
+		}).error( function(data)
+		{
+			$scope.error 	= data.error;
+			$scope.output 	= data;
+			$scope.nRows 	= null;
+			$scope.profiling = {};
+		}).finally( function()
+		{
+			$scope.status 	= null;
+		});
+	};
+	
+	$scope.refresh = function()
+	{
+		var queryID = $routeParams.queryID;
+
+		$scope.query.id = queryID;
+		
+		$api.getQuery( queryID ).success( function(data)
+		{
+			$scope.query 	= reformatQueryDef( data );
+			$scope.query.id = queryID;
+			
+			if ($scope.query && !$scope.queryTerm)
+				$scope.queryTerm = $scope.query.id;
+				
+			// Set the parameters
+			$scope.params = setValues( $scope.query.params, $cookies );
+			
+			//$scope.importParams( $scope.project.globals );
+			//$scope.importParams( $scope.query.params );
+				
+		}).error( function(data)
+		{
+			$scope.error = data.error;
+		});
+	};
+	
+	$scope.refresh();
 }]);
 
 
@@ -197,113 +315,27 @@ function reformatQueryDef( query )
 }
 
 /**
- * Controller for query info
+ * Set the values of the params (either by using the cookie or by default which is set for the param)
+ *
  */
-admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', function($scope, $api, $cookies, $routeParams)
+function setValues( params, cookies )
 {
-	$scope.query 		= {};
-	$scope.params		= {};
-	$scope.tab			= 'run';
-	$scope.queryTerm	= null;
-	$scope.output		= '';
-	$scope.profiling	= {};
-
-	$scope.$watch('compileStatusCode', function(value)
-	{
-		if (value != 0)
-			return;
-			
-		$scope.refresh();
-	});
+	var params1 = {};
 	
-	$scope.importParams = function( params )
-	{
-		for (var p in params)
-			if (params[p].expose == 'public')
-			{
-				$scope.params[ p ] = params[p];
-				$scope.params[ p ].value = ($cookies[p]) 
-					? $cookies[p] 
-					: ( 
-						(params[p]['default'] === null) 
-							? 'null' 
-							: params[p]['default'] 
-						);
-			}
-	};
-	
-	$scope.saveParams = function()
-	{
-		// Copy params to cookies
-		for (var p in $scope.params)
-			$cookies[p] = $scope.params[p].value;
+	for (var p in params)
+		if (params[p].expose == 'public')
+		{
+			params1[ p ] = params[p];
+			params1[ p ].value = (cookies[p]) 
+				? cookies[p] 
+				: ( 
+					(params[p]['default'] === null) 
+						? 'null' 
+						: params[p]['default'] 
+					);
+		}
 		
-	};
+	return params1;
+}
 	
-	$scope.updateParams = function()
-	{
-		$api.getTermParams( $scope.queryTerm ).success( function(data)
-		{
-			$scope.params 	= {};
-			
-			// Set the parameters
-			$scope.importParams( $scope.project.globals );
-			$scope.importParams( data.params );
-		});
-	}
-	
-	$scope.run = function()
-	{
-		$scope.status = "Query is running...";
-		
-		$scope.saveParams();
-		
-		$api.runQuery( $scope.queryTerm, $scope.params ).success( function(data)
-		{
-			$scope.error 	= null;
-			$scope.output 	= data.rows;
-			$scope.nRows 	= (data.rows && data.rows.length) ? data.rows.length + ' rows' : '';
-			
-			if (data.profiling)
-				for (var pv in data.profiling)
-					$scope.profiling[ pv ] = pv + ': ' + new String( data.profiling[pv] ).substr(0,5) + ' sec';
-					
-		}).error( function(data)
-		{
-			$scope.error 	= data.error;
-			$scope.output 	= data;
-			$scope.nRows 	= null;
-			$scope.profiling = {};
-		}).finally( function()
-		{
-			$scope.status 	= null;
-		});
-	};
-	
-	$scope.refresh = function()
-	{
-		var queryID = $routeParams.queryID;
-
-		$scope.query.id = queryID;
-		
-		$api.getQuery( queryID ).success( function(data)
-		{
-			$scope.query 	= reformatQueryDef( data );
-			$scope.query.id = queryID;
-			
-			if ($scope.query && !$scope.queryTerm)
-				$scope.queryTerm = $scope.query.id;
-				
-			// Set the parameters
-			$scope.importParams( $scope.project.globals );
-			$scope.importParams( $scope.query.params );
-				
-		}).error( function(data)
-		{
-			$scope.error = data.error;
-		});
-	};
-	
-	$scope.refresh();
-}]);
 
