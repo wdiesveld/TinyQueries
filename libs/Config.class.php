@@ -11,6 +11,7 @@ class Config
 {
 	const DEFAULT_CONFIGFILE 	= '../config/config.xml';
 	const DEFAULT_COMPILER 		= 'https://compiler1.tinyqueries.com';
+	const VERSION_LIBS			= '{version}';
 
 	public $compiler;
 	public $database;

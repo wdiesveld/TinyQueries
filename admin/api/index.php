@@ -56,7 +56,6 @@ class AdminApi extends TinyQueries\Api
 			case 'compile': 		return $this->compile();
 			case 'getInterface':	return $this->getInterface();
 			case 'getProject':		return $this->getProject();
-			case 'getProjectInfo': 	return $this->getProjectInfo();
 			case 'getTermParams': 	return $this->getTermParams();
 		}
 		
@@ -90,6 +89,8 @@ class AdminApi extends TinyQueries\Api
 		$project->compiler = $config->compiler;
 		
 		$project->compiler->compileNeeded = $this->compiler->compileNeeded();
+		
+		$project->version_libs = TinyQueries\Config::VERSION_LIBS;
 		
 		return $project;
 	}
