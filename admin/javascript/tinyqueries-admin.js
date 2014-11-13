@@ -118,7 +118,7 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 		{
 			$scope.project = data;
 			
-			$scope.globals = setValues( data.globals, $cookies );
+			$scope.globals = setValues( reformatParams(data.globals), $cookies );
 				
 		}).error( function(data)
 		{
@@ -173,23 +173,6 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		$scope.refresh();
 	});
 	
-	// deprecated 
-	$scope.importParams = function( params )
-	{
-		for (var p in params)
-			if (params[p].expose == 'public')
-			{
-				$scope.params[ p ] = params[p];
-				$scope.params[ p ].value = ($cookies[p]) 
-					? $cookies[p] 
-					: ( 
-						(params[p]['default'] === null) 
-							? 'null' 
-							: params[p]['default'] 
-						);
-			}
-	};
-	
 	$scope.saveParams = function()
 	{
 		// Copy params to cookies
@@ -203,10 +186,6 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		$api.getTermParams( $scope.queryTerm ).success( function(data)
 		{
 			$scope.params = setValues( data.params, $cookies );
-			
-			// Set the parameters
-			//$scope.importParams( $scope.project.globals );
-			//$scope.importParams( data.params );
 		});
 	}
 	
@@ -216,7 +195,15 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		
 		$scope.saveParams();
 		
-		$api.runQuery( $scope.queryTerm, $scope.params ).success( function(data)
+		var params = {}; 
+		
+		// Merge params & globals
+		for (var name in $scope.params)
+			params[ name ] = $scope.params[ name ];
+		for (var name in $scope.globals)
+			params[ name ] = $scope.globals[ name ];
+		
+		$api.runQuery( $scope.queryTerm, params ).success( function(data)
 		{
 			$scope.error 	= null;
 			$scope.output 	= data.rows;
@@ -254,9 +241,6 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 				
 			// Set the parameters
 			$scope.params = setValues( $scope.query.params, $cookies );
-			
-			//$scope.importParams( $scope.project.globals );
-			//$scope.importParams( $scope.query.params );
 				
 		}).error( function(data)
 		{
@@ -269,6 +253,30 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 
 
 /**
+ * Does some changes to the params structure for the view template
+ *
+ */
+function reformatParams( params )
+{
+	for (var p in params)
+	{
+		params[ p ].default_str =
+			(params[ p ]['default'] === null)
+			 ? 'null'
+			 : params[ p ]['default'];
+			
+			
+		if (!$.isArray( params[ p ].type ))
+			params[ p ].type = [ params[ p ].type ];
+			
+		if (params[ p ].expose != 'public')
+			delete params[ p ];
+	}
+	
+	return params;
+}
+
+/**
  * Does some changes to the query json structure for the view template
  *
  */
@@ -277,22 +285,8 @@ function reformatQueryDef( query )
 	if (query.doc)
 		query.doc = query.doc.split("\n");
 	
-	for (var p in query.params)
-	{
-		query.params[ p ].default_str =
-			(query.params[ p ]['default'] === null)
-			 ? 'null'
-			 : query.params[ p ]['default'];
-			
-			
-		if (!$.isArray( query.params[ p ].type ))
-			query.params[ p ].type = [ query.params[ p ].type ];
-			
-		if (query.params[ p ].expose != 'public')
-			delete query.params[ p ];
-			
-	}
-	
+	query.params = reformatParams( query.params );
+
 	for (var f in query.output.fields)
 	{
 		if (!$.isPlainObject( query.output.fields[f] ))

@@ -37,10 +37,6 @@
 	</div>
 	<div class="panel-body">
 	
-		<p>
-			Global query parameters are sent as parameter to each query; they can be used for variables which you need in many cases like the ID of the user which is logged in.
-		</p>
-
 		<form role="form" class="form-horizontal">
 	
 			<div ng-repeat="(paramID, param) in globals" class="form-group">
@@ -48,11 +44,12 @@
 				<div class="col-sm-4">
 					<input  id="input-{{paramID}}" type="text" class="form-control" ng-model="globals[paramID].value" placeholder="Enter value for this parameter" required >
 				</div>
-				<div class="col-sm-6">
+				<div class="col-sm-1">
 					<span ng-repeat="type in param.type">
 						<span class="label label-{{type}}">{{type}}</span>
 					</span>
 				</div>
+				<div class="col-sm-5">{{param.doc}}</div>
 			</div>
 			
 		</form>
