@@ -224,6 +224,9 @@ class Api extends HttpTools
 		if (!$term) 
 			throw new \Exception('query-param is empty'); 
 			
+		// Convert space to + (since in URL's + is converted to space, while + is the attach operator and should be preserved)
+		$term = str_replace(" ", "+", $term);
+			
 		if (!$this->db)
 			throw new \Exception('Database is not initialized');
 			
