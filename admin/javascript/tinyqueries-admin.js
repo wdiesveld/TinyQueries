@@ -173,6 +173,15 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		$scope.refresh();
 	});
 	
+	$scope.numberOfParams = function()
+	{
+		var n=0;
+		for (var p in $scope.params)
+			n++;
+			
+		return n;
+	};
+	
 	$scope.saveParams = function()
 	{
 		// Copy params to cookies

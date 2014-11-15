@@ -74,7 +74,11 @@
 
 		<h3>Parameters</h3>
 		
-		<table class="table table-striped table-condensed">
+		<p ng-show="numberOfParams() == 0">
+			This query has no parameters
+		</p>
+		
+		<table class="table table-striped table-condensed" ng-show="numberOfParams() > 0">
 			<thead>
 				<tr>
 					<th>Name</th>
