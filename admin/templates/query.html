@@ -17,7 +17,7 @@
 			<div class="form-group">
 				<label class="col-sm-2 control-label" for="input-query-term">query term</label>
 				<div class="col-sm-4">
-					<input  id="input-query-term" type="text" class="form-control" ng-model="queryTerm" ng-blur="updateParams()" >
+					<input  id="input-query-term" type="text" class="form-control" ng-model="queryTerm" ng-blur="updateParams()" required >
 				</div>
 				<div class="col-sm-6">
 					<button ng-click="run()" type="submit" class="btn btn-default">
@@ -33,7 +33,7 @@
 			<div ng-repeat="(paramID, param) in params" class="form-group">
 				<label class="col-sm-2 control-label" for="input-{{paramID}}">{{paramID}}</label>
 				<div class="col-sm-4">
-					<input  id="input-{{paramID}}" type="text" class="form-control" ng-model="params[paramID].value" placeholder="Enter value for this parameter" required >
+					<input  id="input-{{paramID}}" type="text" class="form-control" ng-model="params[paramID].value" placeholder="Enter value for this parameter"  >
 				</div>
 				<div class="col-sm-6">
 					<!--
@@ -61,6 +61,8 @@
 			</div>			
 
 		</form>
+		
+		<div ng-show="error" class="alert alert-danger">{{error}}</div>
 		
 		<pre>{{ output | json }}</pre>		
 	

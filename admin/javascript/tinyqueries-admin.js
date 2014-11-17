@@ -159,6 +159,7 @@ admin.controller('message', ['$scope', function($scope)
 admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', function($scope, $api, $cookies, $routeParams)
 {
 	$scope.query 		= {};
+	$scope.error		= null;
 	$scope.params		= {};
 	$scope.tab			= 'run';
 	$scope.queryTerm	= null;
@@ -194,7 +195,11 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 	{
 		$api.getTermParams( $scope.queryTerm ).success( function(data)
 		{
+			$scope.error = null;
 			$scope.params = setValues( data.params, $cookies );
+		}).error(function(data)
+		{
+			$scope.error = data.error;
 		});
 	}
 	
@@ -242,6 +247,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		
 		$api.getQuery( queryID ).success( function(data)
 		{
+			$scope.error 	= null;
 			$scope.query 	= reformatQueryDef( data );
 			$scope.query.id = queryID;
 			
