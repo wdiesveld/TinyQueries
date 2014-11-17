@@ -17,7 +17,7 @@
 			<div class="form-group">
 				<label class="col-sm-2 control-label" for="input-query-term">query term</label>
 				<div class="col-sm-4">
-					<input  id="input-query-term" type="text" class="form-control" ng-model="queryTerm" required >
+					<input  id="input-query-term" type="text" class="form-control" ng-model="queryTerm" ng-blur="updateParams()" >
 				</div>
 				<div class="col-sm-6">
 					<button ng-click="run()" type="submit" class="btn btn-default">
