@@ -41,6 +41,10 @@ class QueryTree extends Query
 		
 		$terms = Term::convertAliases( $terms, $aliases );
 		
+		// Add $id as filter to each child
+		for ($i=0;$i<count($terms);$i++)
+			$terms[$i] = "(" . $terms[$i] . "):" . $id;
+		
 		// Create a child query for each term
 		$this->linkList( $terms, false );
 	}
@@ -165,55 +169,29 @@ class QueryTree extends Query
 		if ($this->output->rows == 'first')
 			$rows = array( $rows );
 			
-		// Get the child definitions
-		$children = array();
-		foreach ($this->output->fields as $name => $type)
-			if (property_exists($type, 'child'))
-			{
-				 $childDef = $type;
-				 $childDef->fieldName = $name;
-				 $children[] = $childDef;
-			}				
-		
-		// Merge the child queries with this query
-		foreach ($children as $child)
+		foreach ($this->children as $child)
 			$this->bindChild($rows, $child);
-			
+		
 		if ($this->output->rows == 'first')
 			$rows = $rows[ 0 ];
 	}
 
 	/**
-	 * Creates the child query based on the given child definition, executes it and ties 
-	 * the result to the output of the parent query
+	 * Executes the child query and ties the result to the output of the parent query
 	 *
 	 * @param {array} $parentRows Query output of the parent query
-	 * @param {object} $childDef Definition of the child query. This object has the following fields:
-	 *					{string} $child ID of the child query
-	 *					{string} $childKey Fieldname which is present in the child query, which matched the:
-	 *					{string} $parentKey Fieldname which is present in the parent query
+	 * @param {object} $child
 	 */
-	private function bindChild(&$parentRows, $childDef)
+	private function bindChild(&$parentRows, &$child)
 	{
-		$child = null;
-
-		// Check if the child is in the list of children which are set by the query term
-		foreach ($this->children as $c)
-			if ($c->name() == $childDef->child)
-			{
-				$child = $c;
-				break;
-			}
-				
-		// If no child is found we are ready
-		if (!$child)
-			return;
-			
-		$params 	= $this->paramValues; // Take root parameters as default params for child
-		$childKey 	= $childDef->childKey;
-		$parentKey 	= $childDef->parentKey;
-
-		// Check types
+		$commonKey = $this->match($child);
+		
+		if (!$commonKey)
+			throw new \Exception("Cannot nest queries " . $this->name() . " and " . $child->name() . " - no common key found");
+		
+		$childKey 	= $child->keys->$commonKey;
+		$parentKey 	= $this->keys->$commonKey;
+		
 		if (!is_array($parentRows))
 			throw new \Exception('bindChild: illegal function call - parentRows should be an array of associative arrays');
 
@@ -222,30 +200,36 @@ class QueryTree extends Query
 		
 		if (count($parentRows)>0 && !array_key_exists($parentKey, $parentRows[0]))
 			throw new \Exception('bindChild: illegal function call - parentRows should consist of associative arrays containing the field '.$parentKey);
-		
-		// Select the childQuery parameter values from the parent query output
-		foreach ($childDef->params as $name => $parentColumn)
-		{
-			$values = array();
 			
-			foreach ($parentRows as $row)
-				if (!in_array( $row[ $parentColumn ], $values))
-					$values[] = $row[ $parentColumn ];
+		if (!property_exists($child->params, $childKey))
+			throw new \Exception('bindChild: child ' . $child->name() . ' does not have a parameter corresponding to the key ' . $childKey);
+		
+		// Take root parameters as default params for child
+		$params	= $this->paramValues; 
+		
+		// Select the child param values from the parent query output
+		$values = array();
+			
+		foreach ($parentRows as $row)
+			if (!in_array( $row[ $parentKey ], $values))
+				$values[] = $row[ $parentKey ];
 				
-			$params[ $name ] = $values;
-		}
+		$params[ $childKey ] = $values;
 
 		// Execute child query and group results; cleanUp can also be done at this point
 		$childRows = $child->group()->select( $params, $childKey, true );
+		
+		$childFieldName = $child->name();
 		
 		// Combine child rows with parent rows
 		for ($i=0;$i<count($parentRows);$i++)
 		{
 			$keyValue = $parentRows[$i][$parentKey];
 					 
-			$parentRows[$i][ $childDef->fieldName ] = (array_key_exists($keyValue, $childRows)) 
+			$parentRows[$i][ $childFieldName ] = (array_key_exists($keyValue, $childRows)) 
 				? $childRows[ $keyValue ]
 				: array();
 		}
+		
 	}
 }
