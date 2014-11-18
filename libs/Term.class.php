@@ -82,6 +82,7 @@ class Term
 	/**
 	 * Parses a merge term, like a|b|c
 	 *
+	 * @param {QueryDB} $db
 	 * @param {string} $term 
 	 */
 	private static function parseMerge($db, $term = null, $prefix = null)
@@ -102,6 +103,7 @@ class Term
 	/**
 	 * Parses a attach term, like a+b+c
 	 *
+	 * @param {QueryDB} $db
 	 * @param {string} $term
 	 */
 	private static function parseAttach($db, $term)
@@ -118,6 +120,7 @@ class Term
 	/**
 	 * Parses a filter term, like a:b:c
 	 *
+	 * @param {QueryDB} $db
 	 * @param {string} $term
 	 */
 	private static function parseChain($db, $term)
@@ -134,6 +137,7 @@ class Term
 	/**
 	 * Parses a ID tree structure and sets the ID of this query and creates child queries
 	 *
+	 * @param {QueryDB} $db
 	 * @param {string} $term
 	 */
 	private static function parseTree($db, $term)
@@ -148,19 +152,7 @@ class Term
 		
 		// If there are no children, we are at the 'leaves', e.g. the atomic queries (either JSON or SQL)
 		if (!$children)
-		{
-			// Try to load the SQL variant first
-			try
-			{
-				return new QuerySQL($db, $id);
-			}
-			catch (\Exception $e)
-			{
-			}
-
-			// If that fails load it as JSON
-			return new QueryJSON($db, $id);
-		}
+			return self::atomic($db, $id);
 			
 		$list = self::split($children, ',');
 		
@@ -190,6 +182,41 @@ class Term
 			: null;
 			
 		return array( $id, trim( $match[2] ) );
+	}
+	
+	/**
+	 * Checks which type of query corresponds with $id and returns a new instance of the corresponding query object
+	 *
+	 * @param {QueryDB} $db
+	 * @param {string} $id
+	 */
+	private static function atomic($db, $id)
+	{
+		// Try to load the compiled variant first
+		try
+		{
+			$interface = $db->queries->getInterface( $id );
+			
+			// Query is an alias
+			if (property_exists($interface, 'term'))
+				return self::parse($db, $interface->term);
+				
+			return new QuerySQL($db, $id);
+		}
+		catch (\Exception $e)
+		{
+		}
+
+		// If that fails load it as not compiled query
+		try
+		{
+			return new QueryJSON($db, $id);
+		}
+		catch (\Exception $e)
+		{
+		}
+		
+		throw new \Exception("Cannot load query '" . $id . "'");
 	}
 	
 	/**
