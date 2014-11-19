@@ -68,10 +68,14 @@ class Config
 		$this->compiler->logfile	= null;
 		
 		// Logfile needs special treatment 
-		if ($config->compiler['logfile']) 
+		if ((string) $config->compiler['logfile']) 
 		{
-			$path 	= pathinfo( (string) $config->compiler['logfile'] );
-			$dir 	= realpath( $path['dirname'] );
+			$path = pathinfo( (string) $config->compiler['logfile'] );
+			
+			if (!$path || !array_key_exists('dirname', $path))
+				throw new \Exception("Configfile " . $this->configFile . ": Path of logfile does not exist");
+			
+			$dir = realpath( $path['dirname'] );
 			
 			if (!$dir)
 				throw new \Exception("Configfile " . $this->configFile . ": Path of logfile does not exist");
