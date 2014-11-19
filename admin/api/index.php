@@ -103,7 +103,17 @@ class AdminApi extends TinyQueries\Api
 	{
 		$queryID = self::getRequestVar("query");
 		
-		return $this->compiler->querySet->getInterface($queryID);
+		$interface = $this->compiler->querySet->getInterface($queryID);
+		
+		// Add parameters for aliases
+		if (property_exists($interface, 'term'))
+		{
+			$response = $this->getTermParams();
+		
+			$interface->params = $response['params'];
+		}
+		
+		return $interface;
 	}
 	
 	/**

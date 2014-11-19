@@ -192,19 +192,24 @@ class Term
 	 */
 	private static function atomic($db, $id)
 	{
+		$interface = null;
+		
 		// Try to load the compiled variant first
 		try
 		{
 			$interface = $db->queries->getInterface( $id );
-			
-			// Query is an alias
-			if (property_exists($interface, 'term'))
-				return self::parse($db, $interface->term);
-				
-			return new QuerySQL($db, $id);
 		}
 		catch (\Exception $e)
 		{
+		}
+		
+		if ($interface)
+		{
+			// Check if query is an alias
+			if (property_exists($interface, 'term'))
+				return self::parse($db, $interface->term);
+					
+			return new QuerySQL($db, $id);
 		}
 
 		// If that fails load it as not compiled query

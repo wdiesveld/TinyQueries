@@ -299,6 +299,12 @@ function reformatQueryDef( query )
 {
 	if (query.doc)
 		query.doc = query.doc.split("\n");
+		
+	if (!query.params)
+		query.params = {};
+	
+	if (!query.output)
+		query.output = {};
 	
 	query.params = reformatParams( query.params );
 

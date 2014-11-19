@@ -237,8 +237,10 @@ class Compiler
 		{
 			$queryID = $queryIDs->query[$i]->attributes()->id;
 			
-			$this->writeSQLfile( $queryID, $queryCode->query[$i]->sql );
 			$this->writeInterface( $queryID, $queryCode->query[$i]->{'interface'} );
+			
+			if (property_exists($queryCode->query[$i], 'sql'))
+				$this->writeSQLfile( $queryID, $queryCode->query[$i]->sql );
 		}
 		
 		if ($queryCode->{'interface'})

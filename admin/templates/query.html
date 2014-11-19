@@ -73,6 +73,16 @@
 		<p class="doc">
 			<div class="line" ng-repeat="line in query.doc">{{line}}</div>
 		</p>
+		
+		<div ng-show="query.term">
+			
+			<h3>Alias</h3>
+			
+			<p>This query is an alias for</p>
+			
+			<code>{{query.term}}</code>
+			
+		</div>
 
 		<h3>Parameters</h3>
 		
