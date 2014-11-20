@@ -205,8 +205,8 @@ class QueryTree extends Query
 		if (count($parentRows)>0 && !array_key_exists($parentKey, $parentRows[0]))
 			throw new \Exception('bindChild: illegal function call - parentRows should consist of associative arrays containing the field '.$parentKey);
 			
-		if (!property_exists($child->params, $childKey))
-			throw new \Exception('bindChild: child ' . $child->name() . ' does not have a parameter corresponding to the key ' . $childKey);
+		if (!property_exists($child->params, $commonKey))
+			throw new \Exception('bindChild: child ' . $child->name() . ' does not have a parameter corresponding to the key ' . $commonKey);
 		
 		// Take root parameters as default params for child
 		$params	= $this->paramValues; 
@@ -218,7 +218,7 @@ class QueryTree extends Query
 			if (!in_array( $row[ $parentKey ], $values))
 				$values[] = $row[ $parentKey ];
 				
-		$params[ $childKey ] = $values;
+		$params[ $commonKey ] = $values;
 
 		// Execute child query and group results; cleanUp can also be done at this point
 		$childRows = $child->group()->select( $params, $childKey, true );
