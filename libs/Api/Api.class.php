@@ -212,21 +212,32 @@ class Api extends HttpTools
 	}
 	
 	/**
-	 * Processes the api request, e.g. executes the query/queries and returns the output
+	 * Returns the requested query term
+	 *
 	 */
-	protected function processRequest()
+	protected function queryTerm()
 	{
-		$term			= self::getRequestVar('query', '/^[\w\.\:\-\,\(\)\|\+\s]+$/'); 
-		$singleParam 	= self::getRequestVar('param');
-		$params  		= array();
-		$response 		= null; 
-
+		$term = self::getRequestVar('query', '/^[\w\.\:\-\,\(\)\|\+\s]+$/'); 
+		
 		if (!$term) 
 			throw new \Exception('query-param is empty'); 
 			
 		// Convert space to + (since in URL's + is converted to space, while + is the attach operator and should be preserved)
 		$term = str_replace(" ", "+", $term);
-			
+		
+		return $term;
+	}
+	
+	/**
+	 * Processes the api request, e.g. executes the query/queries and returns the output
+	 */
+	protected function processRequest()
+	{
+		$term			= self::queryTerm();
+		$singleParam 	= self::getRequestVar('param');
+		$params  		= array();
+		$response 		= null; 
+
 		if (!$this->db)
 			throw new \Exception('Database is not initialized');
 			
