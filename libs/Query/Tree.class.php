@@ -41,9 +41,13 @@ class QueryTree extends Query
 		
 		$terms = Term::convertAliases( $terms, $aliases );
 		
-		// Add $id as filter to each child
+		// Add root or id as filter to each child
+		$linkID = ($this->base->root)
+			? $this->base->root
+			: $id;
+			
 		for ($i=0;$i<count($terms);$i++)
-			$terms[$i] = "(" . $terms[$i] . "):" . $id;
+			$terms[$i] = "(" . $terms[$i] . "):" . $linkID; 
 		
 		// Create a child query for each term
 		$this->linkList( $terms, false );
