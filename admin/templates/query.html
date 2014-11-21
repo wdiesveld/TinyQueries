@@ -1,6 +1,6 @@
 <div ng-controller="query">
 		
-	<h1>{{query.id}}</h1>
+	<h1>{{query.id}} <span class="query-type" title="The query type is '{{query.type}}'">[{{query.type}}]</span></h1>
 	
 	<ul class="nav nav-tabs">
 		<li ng-class="{active: tab=='run'}"><a ng-click="tab='run'">Execute</a></li>
@@ -112,6 +112,16 @@
 				</tr>
 			</tbody>
 		</table>
+		
+		<h3>Child queries</h3>
+		
+		<p ng-show="query.children.length==0">
+			This query has no child queries
+		</p>
+		
+		<ul>
+			<li ng-repeat="child in query.children"><a href="#/queries/{{child}}">{{child}}</a></li>
+		</ul>
 				
 		<h3>Output</h3>
 		
@@ -148,15 +158,7 @@
 			</thead>
 			<tbody>
 				<tr ng-repeat="(name, def) in query.output.fields">
-					<td>
-						<div ng-show="def.type == 'child'">
-							<a href="#/queries/{{def.child}}">{{name}}</a>
-						</div>
-						<div ng-show="def.type != 'child'">
-							{{name}}
-						</div>
-					
-					</td>
+					<td>{{name}}</td>
 					<td>
 						<span ng-repeat="type in def.type">
 							<span class="label label-{{type}}">{{type}}</span>

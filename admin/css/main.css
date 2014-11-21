@@ -35,3 +35,8 @@ body {
 	height: calc(100% - 50px);
 	padding: 20px 0 20px 0;
 }
+
+.query-type
+{
+	color: #ddd;
+}
