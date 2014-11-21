@@ -188,26 +188,40 @@ class QueryTree extends Query
 	 */
 	private function bindChild(&$parentRows, &$child)
 	{
-		$commonKey = $this->match($child);
+		$generalErrorMessage = "Cannot nest queries " . $this->name() . " and " . $child->name() . " - ";
 		
-		if (!$commonKey)
-			throw new \Exception("Cannot nest queries " . $this->name() . " and " . $child->name() . " - no common key found");
+		// This error should never occur, since the parser constructs the two childs automatically
+		if (!$child->children || count($child->children) != 2)
+			throw new \Exception($generalErrorMessage . "child does not have 2 children");
+	
+		// Get parameters of second (last) child of $child. 
+		// Suppose you have "a(b)". This corresponds to parent = "a" and child = "b:a"
+		// "b:a" has two childs: "b" and "b.a"
+		// We should get the param of the link-query "b.a" which is the second child of $child
+		$paramIDs = array_keys( get_object_vars( $child->children[1]->params ) );
 		
-		$childKey 	= $child->keys->$commonKey;
-		$parentKey 	= $this->keys->$commonKey;
+		// There should be exactly 1 parameter
+		if (count($paramIDs) != 1)
+			throw new \Exception($generalErrorMessage . "link-query " . $child->children[1]->name() . " should have exactly one parameter");
 
+		// Get the parent key which should be matched with the childs parameter
+		$keyIDs = array_keys( get_object_vars( $this->keys ) );
+		
+		if (count($keyIDs) != 1)
+			throw new \Exception($generalErrorMessage . "parent should have exactly one key");
+		
+		$paramID 	= $paramIDs[0];	
+		$parentKey 	= $this->keys->{$keyIDs[0]};	
+		
 		if (!is_array($parentRows))
-			throw new \Exception('bindChild: illegal function call - parentRows should be an array of associative arrays');
+			throw new \Exception($generalErrorMessage . "parentRows should be an array of associative arrays");
 
 		if (count($parentRows)>0 && !is_array($parentRows[0]))
-			throw new \Exception('bindChild: illegal function call - parentRows should be an array of associative arrays');
+			throw new \Exception($generalErrorMessage . "parentRows should be an array of associative arrays");
 		
 		if (count($parentRows)>0 && !array_key_exists($parentKey, $parentRows[0]))
-			throw new \Exception('bindChild: illegal function call - parentRows should consist of associative arrays containing the field '.$parentKey);
+			throw new \Exception($generalErrorMessage . "parentRows should consist of associative arrays containing the field '".$parentKey."'");
 			
-		if (!property_exists($child->params, $commonKey))
-			throw new \Exception('bindChild: child ' . $child->name() . ' does not have a parameter corresponding to the key ' . $commonKey);
-		
 		// Take root parameters as default params for child
 		$params	= $this->paramValues; 
 		
@@ -218,10 +232,10 @@ class QueryTree extends Query
 			if (!in_array( $row[ $parentKey ], $values))
 				$values[] = $row[ $parentKey ];
 				
-		$params[ $commonKey ] = $values;
+		$params[ $paramID ] = $values;
 
 		// Execute child query and group results; cleanUp can also be done at this point
-		$childRows = $child->group()->select( $params, $commonKey, true );
+		$childRows = $child->group()->select( $params, $paramID, true );
 		
 		$childFieldName = $child->name();
 		
