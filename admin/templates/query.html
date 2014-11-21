@@ -74,6 +74,18 @@
 			<div class="line" ng-repeat="line in query.doc">{{line}}</div>
 		</p>
 		
+		<p class="doc" ng-show="query.type=='nest'">
+			This query is used as helper query for nesting one query into another.
+		</p>
+
+		<p class="doc" ng-show="query.type=='filter'">
+			This query is meant to be used as filter using the colon notation <code>a:b</code>
+		</p>
+		
+		<p class="doc" ng-show="query.type=='attach'">
+			This query is meant to be used to attach extra data to another query using the plus notation <code>a+b</code>
+		</p>
+		
 		<div ng-show="query.term">
 			
 			<h3>Alias</h3>
