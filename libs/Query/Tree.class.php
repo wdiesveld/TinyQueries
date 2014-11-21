@@ -195,7 +195,7 @@ class QueryTree extends Query
 		
 		$childKey 	= $child->keys->$commonKey;
 		$parentKey 	= $this->keys->$commonKey;
-		
+
 		if (!is_array($parentRows))
 			throw new \Exception('bindChild: illegal function call - parentRows should be an array of associative arrays');
 
@@ -221,7 +221,7 @@ class QueryTree extends Query
 		$params[ $commonKey ] = $values;
 
 		// Execute child query and group results; cleanUp can also be done at this point
-		$childRows = $child->group()->select( $params, $childKey, true );
+		$childRows = $child->group()->select( $params, $commonKey, true );
 		
 		$childFieldName = $child->name();
 		
