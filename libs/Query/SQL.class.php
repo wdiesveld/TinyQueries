@@ -125,7 +125,7 @@ class QuerySQL extends Query
 	public function selectAllAssoc($queryParams = null)
 	{
 		list($sql, $pdoParams) = $this->getSql( $queryParams );
-		
+	
 		$rows = $this->db->selectAllAssoc( $sql, $pdoParams );
 		
 		$this->postProcess( $rows );
@@ -195,10 +195,10 @@ class QuerySQL extends Query
 		// If array consists of numerical arrays, we are ready (child queries only make sense for associative arrays)
 		if (!Arrays::isAssoc($rows[0]))
 			return;
-		
+
 		// Apply nesting
 		$this->nestDottedFields($rows);
-		
+	
 		// Apply typing
 		$this->applyTyping($rows);
 					
@@ -288,20 +288,26 @@ class QuerySQL extends Query
 		foreach ($keys as $key)
 		{
 			$map = explode('.', $key);
-			$mapping[ $key ] = (count($map)>1)
-									? $map
-									: null;
+			if (count($map) > 1)
+				$mapping[ $key ] = $map;
 		}
 		
 		// Apply nesting for each row
-		for ($i=0; $i<count($rows); $i++)
-			foreach ($keys as $key)
-			if ($mapping[$key])
+		foreach ($mapping as $key => $map)
+			for ($i=0; $i<count($rows); $i++)
 			{
-				$this->nestField( $rows[$i], $mapping[$key], $rows[$i][$key] );
+				// These are some shortcuts for faster processing (nestField does the same but is slower)
+				switch (count($map))
+				{
+					case 2: $rows[$i][$map[0]][$map[1]] = $rows[$i][$key]; break;
+					case 3: $rows[$i][$map[0]][$map[1]][$map[2]] = $rows[$i][$key]; break;
+					case 4: $rows[$i][$map[0]][$map[1]][$map[2]][$map[3]] = $rows[$i][$key]; break;
+					case 5: $this->nestField( $rows[$i], $map, $rows[$i][$key] ); break;
+				}
+				
 				unset( $rows[$i][$key] );
 			}
-		
+			
 		// Check for null objects, which are caused by 'empty' left joins
 		$nestedFields = array();
 		foreach ($rows[0] as $key => $value)
@@ -322,9 +328,6 @@ class QuerySQL extends Query
 	 */
 	private function nestField(&$row, $fieldComponents, $value)
 	{
-		if (!$fieldComponents || count($fieldComponents)==0)
-			return;
-			
 		$head = array_shift( $fieldComponents );
 		
 		// If last field component
@@ -334,10 +337,6 @@ class QuerySQL extends Query
 			return;
 		}
 		
-		// Initialize array if not yet present
-		if (!array_key_exists( $head, $row ))
-			$row[ $head ] = array();
-			
 		// Recursive call
 		$this->nestField($row[ $head ], $fieldComponents, $value);
 	}

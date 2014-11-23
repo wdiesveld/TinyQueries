@@ -46,7 +46,7 @@ class Api extends HttpTools
 		// Overrule profiling setting if param _profiling is send
 		if (array_key_exists('_profiling', $_REQUEST))
 			$this->addProfilingInfo	= self::getRequestVar('_profiling', '/^\d+$/'); 
-		
+
 		// Create Profiler object
 		if ($this->addProfilingInfo)
 		{
