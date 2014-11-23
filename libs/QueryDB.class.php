@@ -4,6 +4,7 @@ namespace TinyQueries;
 require_once('Config.class.php');
 require_once('Term.class.php');
 require_once('QuerySet.class.php');
+require_once('Profiler.class.php');
 
 /**
  * QueryDB
@@ -21,8 +22,6 @@ class QueryDB
 	public $profiler;
 	public $globals;
 	
-	private $lastQueryExecTime;
-	private $totalQueryExecTime;
 	private $host;
 	private $dbname;
 	private $user;
@@ -39,9 +38,15 @@ class QueryDB
 	 *
 	 * @param {PDO} $pdoHandle (optional) Use this if you already have a PDO database connection.
 	 * @param {string} $configFile (optional) Use this to specify your custom XML-configfile
+	 * @param {Profiler} $profiler (optional)
 	 */
-	public function __construct( $pdoHandle = null, $configFile = null )
+	public function __construct( $pdoHandle = null, $configFile = null, $profiler = null )
 	{
+		// Initialize profiler object
+		$this->profiler = ($profiler)
+			? $profiler
+			: new Profiler( false );
+	
 		$config = new Config( $configFile );
 		
 		// Import settings
@@ -54,8 +59,6 @@ class QueryDB
 		
 		$this->globals 		= array();
 		$this->primaryKey 	= 'id'; 
-		
-		$this->resetTotalQueryTime();
 		
 		if ($pdoHandle)
 			$this->dbh = $pdoHandle;
@@ -283,7 +286,7 @@ class QueryDB
 	 */
 	public function execute($query, $params = array())
 	{
-		$before = microtime(true);
+		$this->profiler->begin('db::execute');
 		
 		$sth = $this->dbh->prepare($query);
 
@@ -293,10 +296,7 @@ class QueryDB
 		
 		$r = $sth->execute();
 
-		$after = microtime(true);
-		
-		$this->lastQueryExecTime 	= $after - $before;
-		$this->totalQueryExecTime  += $this->lastQueryExecTime;
+		$this->profiler->end();
 		
 		if (!$r) 
 		{
@@ -449,22 +449,6 @@ class QueryDB
 	
 		return implode( $glue, $list );
 	}
-	
-	public function getTotalQueryTime()
-	{
-		return $this->totalQueryExecTime;
-	}
-
-	public function getLastQueryTime()
-	{
-		return $this->lastQueryExecTime;
-	}
-	
-	public function resetTotalQueryTime()
-	{
-		$this->lastQueryExecTime  = 0;
-		$this->totalQueryExecTime = 0;
-	}	
 } 
 
 ?>

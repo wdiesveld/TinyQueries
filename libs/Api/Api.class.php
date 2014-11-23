@@ -48,11 +48,7 @@ class Api extends HttpTools
 			$this->addProfilingInfo	= self::getRequestVar('_profiling', '/^\d+$/'); 
 
 		// Create Profiler object
-		if ($this->addProfilingInfo)
-		{
-			require_once( dirname(__FILE__) . '/../Profiler.class.php' );
-			$this->profiler	= new Profiler();
-		}
+		$this->profiler	= new Profiler( $this->addProfilingInfo );
 	}
 	
 	/**
@@ -64,10 +60,7 @@ class Api extends HttpTools
 		if ($this->db)
 			return;
 		
-		$this->db = new QueryDB( null, $this->configFile );
-		
-		// Pass the profiler to the DB, so that each query can be profiled separately (not yet implemented)
-		$this->db->profiler = $this->profiler;
+		$this->db = new QueryDB( null, $this->configFile, $this->profiler );
 		
 		$this->db->connect();
 	}
@@ -136,9 +129,6 @@ class Api extends HttpTools
 			
 			if ($this->addProfilingInfo)
 				$response['profiling'] = $this->profiler->results();
-				
-			if ($this->addProfilingInfo && $dbConnectedModus)
-				$response['profiling']['database'] = $this->db->getTotalQueryTime(); 
 			
 		}
 		catch (\Exception $e)
@@ -267,8 +257,7 @@ class Api extends HttpTools
 				}
 			}
 			
-		if ($this->addProfilingInfo)	
-			$this->profiler->begin('query');
+		$this->profiler->begin('query');
 		
 		$this->query->params( ($singleParam) ? $singleParam : $params );
 			
@@ -282,8 +271,7 @@ class Api extends HttpTools
 				)
 			: $this->query->select();
 
-		if ($this->addProfilingInfo)	
-			$this->profiler->end();
+		$this->profiler->end();
 		
 		$this->postProcessResponse( $response );
 		

@@ -12,14 +12,24 @@ class Profiler
 	private $start;
 	private $nodes;
 	private $current;
+	private $running;
+	private $counter;
 	
 	/**
 	 * Constructor
+	 *
+	 * @param {boolean} $run Do profiling or not
 	 */
-	public function __construct()
+	public function __construct($run)
 	{
+		$this->running = $run;
+		
+		if (!$this->running)
+			return;
+		
 		$this->start 	= microtime(true);
 		$this->nodes	= array();
+		$this->counter	= 0;
 		$this->current	= &$this->nodes;
 	}
 	
@@ -30,13 +40,20 @@ class Profiler
 	 */
 	public function begin($node)
 	{
-		$this->current[ $node ] = array
+		if (!$this->running)
+			return;
+		
+		$this->counter++;
+			
+		$label = $this->counter . ":" . $node;	
+			
+		$this->current[ $label ] = array
 		(
 			"_start" 	=> microtime(true),
 			"_parent"	=> &$this->current
 		);
 		
-		$this->current = &$this->current[ $node ];
+		$this->current = &$this->current[ $label ];
 	}
 
 	/**
@@ -44,6 +61,9 @@ class Profiler
 	 */
 	public function end()
 	{
+		if (!$this->running)
+			return;
+			
 		if (!$this->current)
 			return;
 			
@@ -70,6 +90,9 @@ class Profiler
 	 */
 	public function results()
 	{
+		if (!$this->running)
+			return null;
+			
 		$results = $this->nodes;
 			
 		$results['_total'] = microtime(true) - $this->start;

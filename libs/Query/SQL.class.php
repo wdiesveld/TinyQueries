@@ -195,6 +195,8 @@ class QuerySQL extends Query
 		// If array consists of numerical arrays, we are ready (child queries only make sense for associative arrays)
 		if (!Arrays::isAssoc($rows[0]))
 			return;
+			
+		$this->db->profiler->begin('query::postprocess');	
 
 		// Apply nesting
 		$this->nestDottedFields($rows);
@@ -205,6 +207,8 @@ class QuerySQL extends Query
 		// Do custom callback
 		if ($callback = $this->db->queries->callback($this->id))
 			$callback( $rows );
+			
+		$this->db->profiler->end();	
 	}
 	
 	/**
