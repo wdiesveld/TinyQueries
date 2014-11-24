@@ -55,7 +55,7 @@ admin.factory('$api', ['$http', function($http)
 		{
 			var apiParams = 
 			{
-				query: term,
+				query: removeWhitespace(term),
 				_profiling: 1
 			};
 			
@@ -83,7 +83,7 @@ admin.factory('$api', ['$http', function($http)
 		
 		getTermParams: function(term)
 		{
-			return $http.get('api/?method=getTermParams&query=' + term);
+			return $http.get('api/?method=getTermParams&query=' + removeWhitespace(term));
 		}
 		
 	};
@@ -351,6 +351,15 @@ function setValues( params, cookies )
 		}
 		
 	return params1;
+}
+
+/**
+ * Removes all whitespace from the string
+ */
+function removeWhitespace(string)
+{
+	var s = new String(string);
+	return s.replace(/\s+/g, '');
 }
 	
 
