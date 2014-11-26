@@ -213,24 +213,27 @@ class Api extends HttpTools
 		// Remove last slash if there is nothing after it
 		if (preg_match("/^(.*)\/$/", $path, $match))
 			$path = $match[1];
+			
+		if (!$path)
+			return array(null, null);
 		
-		$steps	= explode('/', $path);
-		$n 		= count($steps);
+		$terms	= explode('/', $path);
+		$n 		= count($terms);
 		
-		foreach ($steps as $step)
-			if (!preg_match( Term::CHARS, $step ))
+		foreach ($terms as $term)
+			if (!preg_match( Term::CHARS, $term ))
 				throw new \Exception("Path contains invalid characters");
 		
+		// "/a"  --> $db->get("a");
 		if ($n==1)
 			return array( $path, null );
 			
-		if ($n==2)
-			return $steps;
-			
+		// "../../a/:param"  --> $db->get("a", :param);
 		if ($n%2==0)
-			return array($steps[ $n-2 ], $steps[ $n-1 ]);
+			return array($terms[ $n-2 ], $terms[ $n-1 ]);
 			
-		return array( $steps[ $n-1 ] . ":" . $steps[ $n-3 ], $steps[ $n-2 ] );	
+		// "../a/:param/b" --> $db->get("(b):a", :param);	
+		return array( "(" . $terms[ $n-1 ] . "):" . $terms[ $n-3 ], $terms[ $n-2 ] );	
 	}
 	
 	/**
