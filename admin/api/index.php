@@ -101,7 +101,7 @@ class AdminApi extends TinyQueries\Api
 	 */
 	public function getInterface()
 	{
-		$queryID = self::queryTerm();
+		list($queryID, $dummy) = self::requestedQuery();
 		
 		$interface = $this->compiler->querySet->getInterface($queryID);
 		
@@ -122,7 +122,7 @@ class AdminApi extends TinyQueries\Api
 	 */
 	private function getTermParams()
 	{
-		$term = self::queryTerm();
+		list($term, $dummy) = self::requestedQuery();
 		
 		$query = $this->db->query($term);
 		

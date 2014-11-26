@@ -202,42 +202,44 @@ class Api extends HttpTools
 	}
 	
 	/**
-	 * Returns the requested query term
+	 * Converts a URI-path to a term
 	 *
+	 * @param {$string} $path
 	 */
-	protected function queryTerm()
+	private function pathToTerm($path)
 	{
-		$term = self::getRequestVar('query', '/^[\w\.\:\-\,\(\)\|\+\s]+$/'); 
+		$match = null;
 		
-		if (!$term) 
-			throw new \Exception('query-param is empty'); 
+		// Remove last slash if there is nothing after it
+		if (preg_match("/^(.*)\/$/", $path, $match))
+			$path = $match[1];
+		
+		$steps	= explode('/', $path);
+		$n 		= count($steps);
+		
+		foreach ($steps as $step)
+			if (!preg_match( Term::CHARS, $step ))
+				throw new \Exception("Path contains invalid characters");
+		
+		if ($n==1)
+			return array( $path, null );
 			
-		// Convert space to + (since in URL's + is converted to space, while + is the attach operator and should be preserved)
-		$term = str_replace(" ", "+", $term);
-		
-		return $term;
+		if ($n==2)
+			return $steps;
+			
+		if ($n%2==0)
+			return array($steps[ $n-2 ], $steps[ $n-1 ]);
+			
+		return array( $steps[ $n-1 ] . ":" . $steps[ $n-3 ], $steps[ $n-2 ] );	
 	}
 	
 	/**
-	 * Processes the api request, e.g. executes the query/queries and returns the output
+	 * Returns the request parameter values
+	 *
 	 */
-	protected function processRequest()
+	private function getQueryParams()
 	{
-		$term			= self::queryTerm();
-		$singleParam 	= self::getRequestVar('param');
-		$params  		= array();
-		$response 		= null; 
-
-		if (!$this->db)
-			throw new \Exception('Database is not initialized');
-			
-		$this->query = $this->db->query($term);
-		
-		$this->request['query']		= $term;	
-		$this->request['queryID'] 	= property_exists($this->query, 'id') ? $this->query->id : null;
-	
-		if (!$this->checkRequestPermissions())
-			throw new UserFeedback( 'You have no permission to do this request' );
+		$params = array();
 		
 		// read the query-parameters
 		foreach (array_keys($_GET) as $getkey)
@@ -256,19 +258,68 @@ class Api extends HttpTools
 					$params[ $paramname ] = self::getRequestVar($getkey);
 				}
 			}
+		
+		return $params;
+	}
+	
+	/**
+	 * Returns the requested query term + its parameter values
+	 *
+	 */
+	protected function requestedQuery()
+	{
+		$term 	= self::getRequestVar('query', Term::CHARS ); 
+		$path 	= self::getRequestVar('path');
+		$param	= self::getRequestVar('param');
+		
+		if (!$term && !$path) 
+			throw new \Exception('query-param is empty'); 
+			
+		if (!$term && $path)
+			list($term, $param) = $this->pathToTerm($path);
+			
+		// Convert space to + (since in URL's + is converted to space, while + is the attach operator and should be preserved)
+		$term = str_replace(" ", "+", $term);
+		
+		$params = ($param)
+			? $param
+			: $this->getQueryParams();
+		
+		return array( $term, $params );
+	}
+	
+	/**
+	 * Processes the api request, e.g. executes the query/queries and returns the output
+	 */
+	protected function processRequest()
+	{
+		list($term, $params) = self::requestedQuery();
+		
+		$response = null; 
+
+		if (!$this->db)
+			throw new \Exception('Database is not initialized');
+			
+		$this->query = $this->db->query($term);
+		
+		$this->request['query']		= $term;	
+		$this->request['queryID'] 	= property_exists($this->query, 'id') ? $this->query->id : null;
+	
+		if (!$this->checkRequestPermissions())
+			throw new UserFeedback( 'You have no permission to do this request' );
 			
 		$this->profiler->begin('query');
 		
-		$this->query->params( ($singleParam) ? $singleParam : $params );
+		$this->query->params( $params );
 			
 		$response = ($this->addProfilingInfo)
 			? array
-				(
-					"query"			=> $term,
-					"params"		=> $params,
-					"apicall_id"	=> $this->apiCallID,
-					"rows"			=> $this->query->select()
-				)
+			(
+				"query"			=> $term,
+				"params"		=> $params,
+				"apicall_id"	=> $this->apiCallID,
+				"rows"			=> $this->query->select()
+			)
 			: $this->query->select();
 
 		$this->profiler->end();

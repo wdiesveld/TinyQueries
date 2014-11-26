@@ -18,6 +18,9 @@ require_once('Query/Tree.class.php');
  */
 class Term
 {
+	// A term string should match the following reg exp
+	const CHARS = '/^[\w\.\:\-\,\(\)\|\+\s]+$/';
+	
 	/**
 	 * Parses a query term and returns an object of type Query (or extended class)
 	 *
