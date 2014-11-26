@@ -63,18 +63,31 @@ class Query
 			return $this;
 		}
 
+		// First try to find a param which has no default value
 		$n = 0;
-		foreach ($this->params as $name => $dummy)
-		{
-			$n++;
-			$paramName = $name;
-		}
+		foreach ($this->params as $name => $def)
+			if (!property_exists($def, 'default'))
+			{
+				$n++;
+				$paramName = $name;
+			}
 		
+		if ($n > 1)
+			throw new \Exception("Cannot call query with one parameter value; query has $n parameters without default value");
+
+		// If none was found, also take into account params having default values	
+		if ($n == 0)
+			foreach ($this->params as $name => $def)
+			{
+				$n++;
+				$paramName = $name;
+			}
+			
 		if ($n == 0)
 			return $this;
 		
 		if ($n > 1)
-			throw new \Exception("Cannot call query with one parameter value; query has $n parameters");
+			throw new \Exception("Cannot call query with one parameter value; query has $n parameters which have a default value");
 
 		$this->paramValues[ $paramName ] = $paramValues;
 		
