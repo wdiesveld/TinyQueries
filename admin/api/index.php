@@ -44,7 +44,7 @@ class AdminApi extends TinyQueries\Api
 	 */
 	protected function processRequest()
 	{
-		$method	= self::getRequestVar('method', '/^[\w\.]+$/');
+		$method	= self::getRequestVar('_method', '/^[\w\.]+$/');
 		
 		// If no method is send, just do the default request handler for queries
 		if (!$method)

@@ -38,17 +38,17 @@ admin.factory('$api', ['$http', function($http)
 	
 		compile: function()
 		{
-			return $http.get('api/?method=compile');
+			return $http.get('api/?_method=compile');
 		},
 	
 		getProject:	function()
 		{
-			return $http.get('api/?method=getProject');
+			return $http.get('api/?_method=getProject');
 		},
 		
 		getQuery: function(queryID)
 		{
-			return $http.get('api/?method=getInterface&query=' + queryID);
+			return $http.get('api/?_method=getInterface&query=' + queryID);
 		},
 		
 		runQuery: function(term, params)
@@ -69,8 +69,8 @@ admin.factory('$api', ['$http', function($http)
 				
 				// Add [] for array parameters
 				var name = (isArray)
-								? 'param_' + id + '[]'
-								: 'param_' + id;
+					? id + '[]'
+					: id;
 				
 				// Convert CSV to arrays
 				apiParams[ name ] = (isArray)
@@ -83,7 +83,7 @@ admin.factory('$api', ['$http', function($http)
 		
 		getTermParams: function(term)
 		{
-			return $http.get('api/?method=getTermParams&query=' + removeWhitespace(term));
+			return $http.get('api/?_method=getTermParams&query=' + removeWhitespace(term));
 		}
 		
 	};
@@ -220,8 +220,8 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		$api.runQuery( $scope.queryTerm, params ).success( function(data)
 		{
 			$scope.error 	= null;
-			$scope.output 	= data.rows;
-			$scope.nRows 	= (data.rows && data.rows.length) ? data.rows.length + ' rows' : '';
+			$scope.output 	= data.result;
+			$scope.nRows 	= (data.result && data.result.length) ? data.result.length + ' rows' : '';
 			
 			if (data.profiling)
 				for (var pv in data.profiling)

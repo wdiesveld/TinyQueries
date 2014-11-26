@@ -217,11 +217,12 @@ class Api extends HttpTools
 		if (!$path)
 			return array(null, null);
 		
-		$terms	= explode('/', $path);
-		$n 		= count($terms);
+		$words 	= explode('/', $path);
+		$n 		= count($words);
 		
-		foreach ($terms as $term)
-			if (!preg_match( Term::CHARS, $term ))
+		// Check even words for term-chars
+		foreach ($words as $i => $word)
+			if ($i%2==0 && !preg_match( Term::CHARS, $word ))
 				throw new \Exception("Path contains invalid characters");
 		
 		// "/a"  --> $db->get("a");
@@ -230,10 +231,10 @@ class Api extends HttpTools
 			
 		// "../../a/:param"  --> $db->get("a", :param);
 		if ($n%2==0)
-			return array($terms[ $n-2 ], $terms[ $n-1 ]);
+			return array($words[ $n-2 ], $words[ $n-1 ]);
 			
 		// "../a/:param/b" --> $db->get("(b):a", :param);	
-		return array( "(" . $terms[ $n-1 ] . "):" . $terms[ $n-3 ], $terms[ $n-2 ] );	
+		return array( "(" . $words[ $n-1 ] . "):" . $words[ $n-3 ], $words[ $n-2 ] );	
 	}
 	
 	/**
@@ -243,13 +244,12 @@ class Api extends HttpTools
 	private function getQueryParams()
 	{
 		$params = array();
+		$reserved = array('query', 'param', '_profiling', '_path');
 		
 		// read the query-parameters
-		foreach (array_keys($_GET) as $getkey)
-			if (preg_match("/^param\_/", $getkey))
+		foreach (array_keys($_REQUEST) as $paramname)
+			if (!in_array($paramname, $reserved))
 			{
-				$paramname = substr($getkey, 6);
-				
 				// Try/catch is needed to prevent global parameters to be overwritten by api users
 				try
 				{
@@ -258,7 +258,7 @@ class Api extends HttpTools
 				}
 				catch (\Exception $e) 
 				{
-					$params[ $paramname ] = self::getRequestVar($getkey);
+					$params[ $paramname ] = self::getRequestVar($paramname);
 				}
 			}
 		
@@ -272,7 +272,7 @@ class Api extends HttpTools
 	protected function requestedQuery()
 	{
 		$term 	= self::getRequestVar('query', Term::CHARS ); 
-		$path 	= self::getRequestVar('path');
+		$path 	= self::getRequestVar('_path');
 		$param	= self::getRequestVar('param');
 		
 		if (!$term && !$path) 
@@ -296,13 +296,13 @@ class Api extends HttpTools
 	 */
 	protected function processRequest()
 	{
-		list($term, $params) = self::requestedQuery();
-		
-		$response = null; 
-
 		if (!$this->db)
 			throw new \Exception('Database is not initialized');
 			
+		list($term, $params) = self::requestedQuery();
+		
+		$response = null; 
+		
 		$this->query = $this->db->query($term);
 		
 		$this->request['query']		= $term;	
@@ -315,19 +315,28 @@ class Api extends HttpTools
 		
 		$this->query->params( $params );
 			
-		$response = ($this->addProfilingInfo)
-			? array
+		switch ($_SERVER['REQUEST_METHOD'])
+		{
+			case 'GET': 	$response = $this->query->select(); break;
+			case 'POST': 	$response = $this->db->save($term, $params); break;
+			case 'PUT': 	$response = $this->db->update($term, $params); break;
+			case 'DELETE': 	$response = $this->db->delete($term, $params); break;
+			default: throw new \Exception("Unsupported method");
+		}
+
+		$this->postProcessResponse( $response );
+		
+		$this->profiler->end();
+		
+		// Wrap response in array if profiling is added
+		if ($this->addProfilingInfo)
+			$response = array
 			(
 				"query"			=> $term,
 				"params"		=> $params,
 				"apicall_id"	=> $this->apiCallID,
-				"rows"			=> $this->query->select()
-			)
-			: $this->query->select();
-
-		$this->profiler->end();
-		
-		$this->postProcessResponse( $response );
+				"result"		=> $response
+			);
 		
 		return $response;
 	}
