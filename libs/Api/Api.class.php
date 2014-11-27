@@ -325,9 +325,11 @@ class Api extends HttpTools
 		switch ($this->request['method'])
 		{
 			case 'GET': 	$response = $this->query->$selectMethod(); break;
+			/*
 			case 'POST': 	$response = $this->db->insert($term, $_POST); break; 
 			case 'PUT': 	$response = $this->db->update($term, $params, $_POST); break;
 			case 'DELETE': 	$response = $this->db->delete($term, $params); break;
+			*/
 			default: 		throw new \Exception("Unsupported method");
 		}
 
