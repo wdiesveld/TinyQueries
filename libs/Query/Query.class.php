@@ -291,6 +291,22 @@ class Query
 	}
 	
 	/**
+	 * Generic select function; selects the first row
+	 *
+	 * @param {mixed} $paramValues
+	 * @param {string} $key (optional) Key field which can be used to group the output
+	 * @param {boolean} $cleanUp Do clean up of columns in query output
+	 */
+	public function select1($paramValues = null, $key = null, $cleanUp = true)
+	{
+		$output = $this->select($paramValues, $key, $cleanUp);
+		
+		return ($this->output->rows == 'first')
+			? $output
+			: $output[0];
+	}
+	
+	/**
 	 * Executes the query and attaches the fields to the given object
 	 *
 	 * @param {object} $object

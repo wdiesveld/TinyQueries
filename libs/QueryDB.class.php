@@ -148,6 +148,17 @@ class QueryDB
 	}
 	
 	/**
+	 * Creates a query based on $term, executes it and returns the first row of the query output
+	 *
+	 * @param {string} $term
+	 * @param {mixed} $paramValues
+	 */
+	public function get1($term, $paramValues = null)
+	{
+		return $this->query($term)->select1($paramValues);
+	}
+	
+	/**
 	 * Selects a record from the given table
 	 *
 	 * @param {string} $table
