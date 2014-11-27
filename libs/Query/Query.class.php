@@ -62,7 +62,7 @@ class Query
 			$this->paramValues = $paramValues;
 			return $this;
 		}
-
+		
 		// First try to find a param which has no default value
 		$n = 0;
 		foreach ($this->params as $name => $def)

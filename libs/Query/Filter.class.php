@@ -34,6 +34,37 @@ class QueryFilter extends Query
 	}
 
 	/**
+	 * Sets the query parameter values
+	 *
+	 * @param {mixed} $paramValues
+	 *
+	 * @return {Query}
+	 */
+	public function params( $paramValues )
+	{
+		// If paramValues is already an assoc, just copy it
+		if (Arrays::isAssoc($paramValues) || is_null($paramValues))
+		{
+			$this->paramValues = $paramValues;
+			return $this;
+		}
+		
+		$lastChild = $this->children[ count($this->children) - 1 ];
+		
+		// Pass the single param to the last child
+		// This is needed to prevent that the param cannot be matched because there are more than 1 candidates
+		// This is typical for a path like "a/1/b" which is translated to $db->get("b:a", 1)
+		// Normally the query "a:b" has two non-default params, while "a.b" has one.
+		$lastChild->params( $paramValues );
+		
+		// Copy the values from the last child back to this
+		foreach ($lastChild->paramValues as $key => $value)
+			$this->paramValues[ $key ] = $value;
+	
+		return $this;
+	}
+	
+	/**
 	 * Filters the output of the child queries
 	 *
 	 * @param {assoc} $paramValues
