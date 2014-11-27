@@ -202,7 +202,7 @@ class Api extends HttpTools
 	}
 	
 	/**
-	 * Converts a URI-path to a term
+	 * Converts a URI-path to a term + paramvalue + [output should be single row] true/false
 	 *
 	 * @param {$string} $path
 	 */
@@ -215,7 +215,7 @@ class Api extends HttpTools
 			$path = $match[1];
 			
 		if (!$path)
-			return array(null, null);
+			return array(null, null, false);
 		
 		$words 	= explode('/', $path);
 		$n 		= count($words);
@@ -227,14 +227,14 @@ class Api extends HttpTools
 		
 		// "/a"  --> $db->get("a");
 		if ($n==1)
-			return array( $path, null );
+			return array( $path, null, false );
 			
 		// "../../a/:param"  --> $db->get("a", :param);
 		if ($n%2==0)
-			return array($words[ $n-2 ], $words[ $n-1 ]);
+			return array($words[ $n-2 ], $words[ $n-1 ], true);
 			
 		// "../a/:param/b" --> $db->get("(b):a", :param);	
-		return array( "(" . $words[ $n-1 ] . "):" . $words[ $n-3 ], $words[ $n-2 ] );	
+		return array( "(" . $words[ $n-1 ] . "):" . $words[ $n-3 ], $words[ $n-2 ], false );	
 	}
 	
 	/**
@@ -247,7 +247,7 @@ class Api extends HttpTools
 		$reserved = array('query', 'param', '_profiling', '_path');
 		
 		// read the query-parameters
-		foreach (array_keys($_REQUEST) as $paramname)
+		foreach (array_keys($_GET) as $paramname)
 			if (!in_array($paramname, $reserved))
 			{
 				// Try/catch is needed to prevent global parameters to be overwritten by api users
@@ -275,11 +275,13 @@ class Api extends HttpTools
 		$path 	= self::getRequestVar('_path');
 		$param	= self::getRequestVar('param');
 		
+		$singleRow = false;
+		
 		if (!$term && !$path) 
 			throw new \Exception('query-param is empty'); 
 			
 		if (!$term && $path)
-			list($term, $param) = $this->pathToTerm($path);
+			list($term, $param, $singleRow) = $this->pathToTerm($path);
 			
 		// Convert space to + (since in URL's + is converted to space, while + is the attach operator and should be preserved)
 		$term = str_replace(" ", "+", $term);
@@ -288,7 +290,7 @@ class Api extends HttpTools
 			? $param
 			: $this->getQueryParams();
 		
-		return array( $term, $params );
+		return array( $term, $params, $singleRow );
 	}
 	
 	/**
@@ -299,12 +301,12 @@ class Api extends HttpTools
 		if (!$this->db)
 			throw new \Exception('Database is not initialized');
 			
-		list($term, $params) = self::requestedQuery();
-		
+		list($term, $params, $singleRow) = self::requestedQuery();
 		$response = null; 
 		
 		$this->query = $this->db->query($term);
 		
+		$this->request['method']	= $_SERVER['REQUEST_METHOD'];
 		$this->request['query']		= $term;	
 		$this->request['queryID'] 	= property_exists($this->query, 'id') ? $this->query->id : null;
 	
@@ -314,14 +316,19 @@ class Api extends HttpTools
 		$this->profiler->begin('query');
 		
 		$this->query->params( $params );
+		
+		// If there is only a single param-value, then return only the first row
+		$selectMethod = ($singleRow)
+			? "select1"
+			: "select";
 			
-		switch ($_SERVER['REQUEST_METHOD'])
+		switch ($this->request['method'])
 		{
-			case 'GET': 	$response = $this->query->select(); break;
-			case 'POST': 	$response = $this->db->save($term, $params); break;
-			case 'PUT': 	$response = $this->db->update($term, $params); break;
+			case 'GET': 	$response = $this->query->$selectMethod(); break;
+			case 'POST': 	$response = $this->db->insert($term, $_POST); break; 
+			case 'PUT': 	$response = $this->db->update($term, $params, $_POST); break;
 			case 'DELETE': 	$response = $this->db->delete($term, $params); break;
-			default: throw new \Exception("Unsupported method");
+			default: 		throw new \Exception("Unsupported method");
 		}
 
 		$this->postProcessResponse( $response );
