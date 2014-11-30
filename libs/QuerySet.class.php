@@ -74,17 +74,7 @@ class QuerySet
 	public function path($path = null)
 	{
 		if ($path)
-		{
-			// Check if $path is a relative or absolute path
-			$pathAbs = (preg_match('/^\./', $path))
-							? realpath( dirname(__FILE__) . "/" . $path )
-							: realpath( $path );
-				
-			if (!$pathAbs)
-				throw new \Exception("QuerySet::path: cannot find path '" . $path . "'");
-			
-			$this->pathQueries = $pathAbs;	
-		}
+			$this->pathQueries = $path;	
 	
 		return 
 			$this->pathQueries .

@@ -34,6 +34,24 @@ class Config
 	}
 	
 	/**
+	 * Returns the absolute path 
+	 *
+	 * @param {string} $path
+	 */
+	public static function pathAbs($path)
+	{
+		// Check if $path is a relative or absolute path
+		$pathAbs = ($path && preg_match('/^\./', $path))
+			? realpath( dirname(__FILE__) . "/" . $path )
+			: realpath( $path );
+			
+		if (!$pathAbs)
+			throw new \Exception("Cannot find path '" . $path . "'");
+			
+		return $pathAbs;
+	}
+	
+	/**
 	 * Loads the config file
 	 *
 	 */
@@ -61,8 +79,8 @@ class Config
 		// Import compiler fields
 		$this->compiler = new \StdClass();
 		$this->compiler->api_key	= (string) $config->compiler['api_key'];
-		$this->compiler->input 		= (string) $config->compiler['input'];
-		$this->compiler->output		= (string) $config->compiler['output'];
+		$this->compiler->input 		= ($config->compiler['input']) ? self::pathAbs( $config->compiler['input'] ) : null;
+		$this->compiler->output		= self::pathAbs( (string) $config->compiler['output'] );
 		$this->compiler->server		= ($config->compiler['server']) 	? (string) $config->compiler['server'] : self::DEFAULT_COMPILER;
 		$this->compiler->version	= ($config->compiler['version']) 	? (string) $config->compiler['version'] : null;
 		$this->compiler->logfile	= null;

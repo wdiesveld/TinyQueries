@@ -193,6 +193,12 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 	
 	$scope.updateParams = function()
 	{
+		if (!$scope.queryTerm)
+		{
+			$scope.params = {};
+			return;
+		}
+		
 		$api.getTermParams( $scope.queryTerm ).success( function(data)
 		{
 			$scope.error = null;
