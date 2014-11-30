@@ -133,9 +133,8 @@ class AdminApi extends TinyQueries\Api
 	}
 };
 
-// All API handling is done by creating the object
+// Handle request
 $api = new AdminApi();
 
-$api->init();
 $api->sendResponse();
 
