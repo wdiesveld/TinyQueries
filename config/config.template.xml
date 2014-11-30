@@ -44,9 +44,6 @@
 		api_key 	= ""
 		input		= ""
 		output		= ""
-		server		= ""
-		version 	= ""
-		logfile		= ""
 	/>
 	
 	<!--
