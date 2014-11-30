@@ -18,7 +18,7 @@ require_once( $pathLibs . '/Compiler.class.php' );
 class AdminApi extends TinyQueries\Api
 {
 	private $compiler;
-	private $initError;
+	private $dbError;
 	
 	/**
 	 * Constructor 
@@ -43,7 +43,7 @@ class AdminApi extends TinyQueries\Api
 			// If initializing fails, there is no DB connection
 			// A DB connection is not required for the admin tool (except that some functions are not available)
 			// So no exception must be thrown, only the message must be saved
-			$this->initError = $e->getMessage();
+			$this->dbError = $e->getMessage();
 		}
 		
 		// Initialize compiler
@@ -93,15 +93,25 @@ class AdminApi extends TinyQueries\Api
 	 */
 	public function getProject()
 	{
-		$config = new TinyQueries\Config();
-		$project = $this->compiler->querySet->project();
+		$config 	= new TinyQueries\Config();
+		$project 	= null;
+
+		try
+		{
+			$project = $this->compiler->querySet->project();
+		}
+		catch (Exception $e)
+		{
+			$project = new StdClass();
+			$project->loadError = $e->getMessage();
+		}
 		
 		// Add compiler info to project
 		$project->compiler = $config->compiler;
 		
 		$project->compiler->compileNeeded 	= $this->compiler->compileNeeded();
 		$project->version_libs 				= TinyQueries\Config::VERSION_LIBS;
-		$project->initError 				= $this->initError;
+		$project->dbError 					= $this->dbError;
 		
 		return $project;
 	}

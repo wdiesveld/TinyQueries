@@ -20,7 +20,10 @@
 			<dt>Compile status</dt>
 			<dd>{{compileStatus}}</dd>
 			<dt>Compiled with</dt>
-			<dd>Current SQL files are compiled with {{project.compiledWith}}</dd>
+			<dd>
+				<span ng-show="project.compiledWith">Current SQL files are compiled with {{project.compiledWith}}</span>
+				<span ng-show="!project.compiledWith">Project is not compiled</span>
+			</dd>
 			<dt>Version client libs</dt>
 			<dd>v{{project.version_libs}}</dd>
 			<dt>Compile needed</dt>
@@ -31,8 +34,8 @@
 			</dd>
 			<dt>Database connection</dt>
 			<dd>
-				<p class="text-warning" ng-show="project.initError">{{project.initError}}</p>
-				<span ng-show="!project.initError">OK</span>
+				<p class="text-warning" ng-show="project.dbError">{{project.dbError}}</p>
+				<span ng-show="project.id && !project.dbError">OK</span>
 			</dd>
 		</dl>
 		

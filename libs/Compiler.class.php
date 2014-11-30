@@ -61,7 +61,7 @@ class Compiler
 		{
 			$this->callCompiler();
 		}
-		catch (Exception $e)
+		catch (\Exception $e)
 		{
 			$this->log( $e->getMessage() );
 			if ($this->curlOutput)
@@ -89,7 +89,7 @@ class Compiler
 		{
 			$project = $this->querySet->project();
 		}
-		catch (Exception $e)
+		catch (\Exception $e)
 		{
 			// If there is no compiled project file, a compile is needed
 			return true;
