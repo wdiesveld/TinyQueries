@@ -300,6 +300,9 @@ class Api extends HttpTools
 	{
 		if (!$this->db)
 			throw new \Exception('Database is not initialized');
+
+		if (!$this->db->connected())
+			throw new \Exception('There is no database connection');
 			
 		list($term, $params, $singleRow) = self::requestedQuery();
 		$response = null; 

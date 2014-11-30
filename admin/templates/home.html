@@ -29,7 +29,13 @@
 				<span ng-if="project.compiler.compileNeeded==false">No</span>
 				<span ng-if="project.compiler.compileNeeded==null">Don't know - no source files found</span>
 			</dd>
+			<dt>Database connection</dt>
+			<dd>
+				<p class="text-warning" ng-show="project.initError">{{project.initError}}</p>
+				<span ng-show="!project.initError">OK</span>
+			</dd>
 		</dl>
+		
 	</div>
 </div>
 
