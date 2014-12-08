@@ -303,7 +303,10 @@ class Query
 		
 		return ($this->output->rows == 'first')
 			? $output
-			: $output[0];
+			: ((is_array($output) && count($output)>0) 
+				? $output[0] 
+				: null
+			);
 	}
 	
 	/**
