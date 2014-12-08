@@ -71,7 +71,7 @@ class Config
 		
 		// Import database fields
 		$this->database = new \StdClass();
-		$this->database->host		= ($config['host']) ? (string) $config->database['host'] : 'localhost';
+		$this->database->host		= ($config->database['host']) ? (string) $config->database['host'] : 'localhost';
 		$this->database->name		= (string) $config->database['name'];
 		$this->database->user		= (string) $config->database['user'];
 		$this->database->password	= (string) $config->database['password'];
