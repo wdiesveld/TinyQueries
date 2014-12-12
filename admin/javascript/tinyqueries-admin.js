@@ -261,6 +261,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 			$scope.query 	= reformatQueryDef( data );
 			$scope.query.id = queryID;
 			$scope.query.path = getPath( $scope.query, queryID );
+			$scope.query.method = getMethod( $scope.query );
 			
 			if ($scope.query && !$scope.queryTerm)
 				$scope.queryTerm = $scope.query.id;
@@ -382,10 +383,24 @@ function setRestPaths(project)
 	{
 		var path = getPath( project.queries[id], id );
 		
+		project.queries[id].method = getMethod( project.queries[id] ); 
 		project.paths[ path ] = {
 			queryID: id
 		};
 	}
+}
+
+function getMethod(query)
+{
+	switch (query.operation)
+	{
+		case 'read': 	return 'GET';
+		case 'write': 	return 'UPDATE';
+		case 'create': 	return 'POST';
+		case 'delete': 	return 'DELETE';
+	}
+	
+	return null;
 }
 
 function getPath(query, id)
