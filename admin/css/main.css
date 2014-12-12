@@ -29,7 +29,7 @@ body {
 .query-list
 {
 	position: fixed; 
-	width: 15%; 
+	width: 20%; 
 	overflow-x: hidden; 
 	overflow-y: scroll; 
 	height: calc(100% - 50px);
@@ -39,4 +39,10 @@ body {
 .query-type
 {
 	color: #ddd;
+}
+
+.rest-method
+{
+	color: #aaa;
+	font-size: 0.7em;
 }

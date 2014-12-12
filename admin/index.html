@@ -39,6 +39,17 @@
            <!-- <li ng-class="{active: nav=='queries'}"><a ng-click="nav='queries'" href="#queries">Queries</a></li> -->
           </ul>
 		  <form class="navbar-form navbar-left">
+		  
+			
+			<div class="btn-group" data-toggle="buttons">
+			  <label class="btn btn-default active" ng-click="view='queries';"> 
+				<input type="radio" ng-model="view" value="queries"> Query view
+			  </label>
+			  <label class="btn btn-default" ng-click="view='rest';" > 
+				<input type="radio" ng-model="view" value="rest"> REST view
+			  </label>
+			</div>		
+		  
 			<button ng-click="compile()" type="button" class="btn btn-default">
 				<span class="glyphicon glyphicon-fire"></span>
 				Compile
@@ -54,17 +65,22 @@
  		<div class="spinner" ng-show="loading">loading...</div>
 		<div ng-show="error" class="alert alert-danger">{{error}}</div>
 		
-		<div class="col-sm-3">	
+		<div class="col-sm-4">	
 
 			<div class="container query-list">
-				<div ng-repeat="queryID in project.queries">
-					<a ng-if="query.col==c" href="#/queries/{{queryID}}" >{{queryID}}</a>
+
+				<div ng-repeat="(queryID,spec) in project.queries" ng-show="view=='queries'">
+					<a href="#/queries/{{queryID}}" >{{queryID}}</a>
+				</div>
+				<div ng-repeat="(path,spec) in project.paths" ng-show="view=='rest'">
+					<span class="rest-method">{{project.queries[spec.queryID].method}}</span>
+					<a href="#/queries/{{spec.queryID}}" >{{path}}</a>
 				</div>
 				<p>&nbsp;</p>
 			</div>
 			
 		</div>	
-		<div class="col-sm-9">	
+		<div class="col-sm-8">	
 
 			<div ng-view></div>
 		

@@ -1,6 +1,7 @@
 <div ng-controller="query">
 		
-	<h1>{{query.id}} <span class="query-type" title="The query type is '{{query.type}}'">[{{query.type}}]</span></h1>
+	<h1 ng-show="view=='queries'">{{query.id}} <span class="query-type" title="The query type is '{{query.type}}'">[{{query.type}}]</span></h1>
+	<h1 ng-show="view=='rest'"><span class="rest-method">{{query.method}}</span> {{query.path}}</h1>
 	
 	<ul class="nav nav-tabs">
 		<li ng-class="{active: tab=='run'}"><a ng-click="tab='run'">Execute</a></li>
@@ -15,14 +16,18 @@
 			</div>
 			
 			<div class="form-group">
-				<label class="col-sm-2 control-label" for="input-query-term">query term</label>
-				<div class="col-sm-4">
-					<input  id="input-query-term" type="text" class="form-control" ng-model="queryTerm" ng-blur="updateParams()" required >
+				<label ng-show="view=='queries'" class="col-sm-2 control-label" for="input-query-term">query term</label>
+				<label ng-show="view=='rest'"    class="col-sm-2 control-label" for="input-query-path">query path</label>
+				<div ng-show="view=='queries'" class="col-sm-6">
+					<input id="input-query-term" type="text" class="form-control" ng-model="queryTerm" ng-blur="updateParams()" required >
 				</div>
-				<div class="col-sm-6">
+				<div ng-show="view=='rest'" class="col-sm-6">
+					<input id="input-query-path" type="text" class="form-control" ng-model="query.path" ng-blur="updateParams()" required >
+				</div>
+				<div class="col-sm-4">
 					<button ng-click="run()" type="submit" class="btn btn-default">
 						<span class="glyphicon glyphicon-play-circle"></span>
-						Run query
+						Run
 					</button>
 					<button ng-click="updateParams()" type="submit" class="btn">
 						Update Params
@@ -31,6 +36,7 @@
 			</div>			
 			
 			<div ng-repeat="(paramID, param) in params" class="form-group">
+				<div ng-show="view!='rest' || paramID!=query.defaultParam">
 				<label class="col-sm-2 control-label" for="input-{{paramID}}">{{paramID}}</label>
 				<div class="col-sm-4">
 					<input  id="input-{{paramID}}" type="text" class="form-control" ng-model="params[paramID].value" placeholder="Enter value for this parameter"  >
@@ -42,6 +48,7 @@
 					<span ng-repeat="type in param.type">
 						<span class="label label-{{type}}">{{type}}</span>
 					</span>
+				</div>
 				</div>
 			</div>
 			

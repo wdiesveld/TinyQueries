@@ -96,6 +96,7 @@ admin.factory('$api', ['$http', function($http)
 admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $cookies)
 {
 	// Set scope vars
+	$scope.view					= 'queries';
 	$scope.nav 					= 'queries';
 	$scope.project				= {};
 	$scope.globals				= {};
@@ -117,6 +118,9 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 		$api.getProject().success( function(data)
 		{
 			$scope.project = data;
+			
+			// update query path
+			setRestPaths( $scope.project );
 			
 			$scope.globals = setValues( reformatParams(data.globals), $cookies );
 				
@@ -256,6 +260,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 			$scope.error 	= null;
 			$scope.query 	= reformatQueryDef( data );
 			$scope.query.id = queryID;
+			$scope.query.path = getPath( $scope.query, queryID );
 			
 			if ($scope.query && !$scope.queryTerm)
 				$scope.queryTerm = $scope.query.id;
@@ -368,4 +373,44 @@ function removeWhitespace(string)
 	return s.replace(/\s+/g, '');
 }
 	
+function setRestPaths(project)
+{
+	project.paths = {};
+	
+	for (var id in project.queries)
+	if (project.queries[id].expose == 'public')
+	{
+		var path = getPath( project.queries[id], id );
+		
+		project.paths[ path ] = {
+			queryID: id
+		};
+	}
+}
+
+function getPath(query, id)
+{
+	var parts = id.split(".");
+		
+	switch (query.type)
+	{
+		case 'nest':	
+			path = "/" + parts[1] + "/:" + query.defaultParam + "/" + parts[0];	
+			break;
+		case 'filter':	
+			path = "/" + parts[0] + "/" + parts[1];		
+			break;
+		case 'attach':	
+			path = "/" + parts[0] + "+" + parts[1];		
+			break;
+		default:
+			path = "/" + id;
+			break;
+	}
+		
+	if (query.defaultParam && query.type != 'nest')
+		path += "/:" + query.defaultParam;
+	
+	return path;
+}
 
