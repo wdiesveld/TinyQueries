@@ -210,6 +210,10 @@ class Api extends HttpTools
 	{
 		$match = null;
 		
+		// Remove first slash if there is nothing before it
+		if (preg_match("/^\/(.*)$/", $path, $match))
+			$path = $match[1];
+			
 		// Remove last slash if there is nothing after it
 		if (preg_match("/^(.*)\/$/", $path, $match))
 			$path = $match[1];
