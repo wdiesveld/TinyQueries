@@ -51,13 +51,15 @@ admin.factory('$api', ['$http', function($http)
 			return $http.get('api/?_method=getInterface&query=' + queryID);
 		},
 		
-		runQuery: function(term, params)
+		runQuery: function(call, params)
 		{
 			var apiParams = 
 			{
-				query: removeWhitespace(term),
 				_profiling: 1
 			};
+
+			for (p in call)
+				apiParams[ p ] = removeWhitespace( call[p] );
 			
 			for (var id in params)
 			{
@@ -220,14 +222,19 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		$scope.saveParams();
 		
 		var params = {}; 
-		
 		// Merge params & globals
 		for (var name in $scope.params)
-			params[ name ] = $scope.params[ name ];
+			// Leaf out defaultParam for REST, since this param is already sent through the URL
+			if ($scope.view != 'rest' && name != $scope.defaultParam)
+				params[ name ] = $scope.params[ name ];
 		for (var name in $scope.globals)
 			params[ name ] = $scope.globals[ name ];
+			
+		var call = ($scope.view == 'rest')
+			? { _path: $scope.query.path }
+			: { query: $scope.queryTerm };
 		
-		$api.runQuery( $scope.queryTerm, params ).success( function(data)
+		$api.runQuery( call, params ).success( function(data)
 		{
 			$scope.error 	= null;
 			$scope.output 	= data.result;

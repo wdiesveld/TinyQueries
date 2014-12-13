@@ -290,11 +290,9 @@ class Api extends HttpTools
 		// Convert space to + (since in URL's + is converted to space, while + is the attach operator and should be preserved)
 		$term = str_replace(" ", "+", $term);
 		
-		$params = ($param)
-			? $param
-			: $this->getQueryParams();
-		
-		return array( $term, $params, $singleRow );
+		$params = $this->getQueryParams();
+
+		return array( $term, $params, $param, $singleRow );
 	}
 	
 	/**
@@ -308,7 +306,7 @@ class Api extends HttpTools
 		if (!$this->db->connected())
 			throw new \Exception('There is no database connection');
 			
-		list($term, $params, $singleRow) = self::requestedQuery();
+		list($term, $params, $param, $singleRow) = self::requestedQuery();
 		$response = null; 
 		
 		$this->query = $this->db->query($term);
@@ -321,6 +319,11 @@ class Api extends HttpTools
 			throw new UserFeedback( 'You have no permission to do this request' );
 			
 		$this->profiler->begin('query');
+		
+		if ($param && !$this->query->defaultParam)
+			throw new \Exception("Single parameter value passed, but query does not have a default parameter");
+		
+		$params[ $this->query->defaultParam ] = $param;
 		
 		$this->query->params( $params );
 		

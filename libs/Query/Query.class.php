@@ -14,6 +14,7 @@ require_once( dirname(__FILE__) . '/../QueryDB.class.php' );
 class Query 
 {
 	public $params;
+	public $defaultParam;
 	public $children;
 	
 	protected $db;
@@ -60,6 +61,13 @@ class Query
 		if (Arrays::isAssoc($paramValues) || is_null($paramValues))
 		{
 			$this->paramValues = $paramValues;
+			return $this;
+		}
+		
+		// Check if there is a default param
+		if ($this->defaultParam)
+		{
+			$this->paramValues[ $this->defaultParam ] = $this->paramValues;
 			return $this;
 		}
 		
@@ -344,10 +352,11 @@ class Query
 	 */
 	public function import($query)
 	{
-		if (property_exists($query, 'root'))		$this->root 		= $query->root;
-		if (property_exists($query, 'keys'))		$this->keys 		= $query->keys;
-		if (property_exists($query, 'params'))		$this->params 		= $query->params;
-		if (property_exists($query, 'maxResults')) 	$this->maxResults 	= $query->maxResults;
+		if (property_exists($query, 'root'))			$this->root 		= $query->root;
+		if (property_exists($query, 'keys'))			$this->keys 		= $query->keys;
+		if (property_exists($query, 'params'))			$this->params 		= $query->params;
+		if (property_exists($query, 'defaultParam'))	$this->defaultParam	= $query->defaultParam;
+		if (property_exists($query, 'maxResults')) 		$this->maxResults 	= $query->maxResults;
 		
 		if (property_exists($query, 'output'))
 		{
