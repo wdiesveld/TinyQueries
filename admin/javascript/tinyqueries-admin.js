@@ -374,6 +374,9 @@ function removeWhitespace(string)
 	return s.replace(/\s+/g, '');
 }
 	
+/**
+ * Derives the REST path & method for each query
+ */
 function setRestPaths(project)
 {
 	project.paths = {};
@@ -390,6 +393,9 @@ function setRestPaths(project)
 	}
 }
 
+/**
+ * Gets the HTTP method corresponding to the query oparation
+ */
 function getMethod(query)
 {
 	switch (query.operation)
@@ -403,6 +409,9 @@ function getMethod(query)
 	return null;
 }
 
+/**
+ * Transforms a queryID into a REST path
+ */
 function getPath(query, id)
 {
 	var parts = id.split(".");
