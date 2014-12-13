@@ -127,8 +127,9 @@ class QueryAttach extends Query
 				$this->keys->$key = $field;
 		
 		// Copy other fields from first child
-		$this->root 	= $this->children[ 0 ]->root;
-		$this->output	= clone $this->children[ 0 ]->output;
+		$this->root 		= $this->children[ 0 ]->root;
+		$this->defaultParam	= $this->children[ 0 ]->defaultParam;
+		$this->output		= clone $this->children[ 0 ]->output;
 	}
 }
 

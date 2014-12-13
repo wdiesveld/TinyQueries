@@ -157,8 +157,12 @@ class QueryFilter extends Query
 			foreach ($child->keys as $key => $field)
 				$this->keys->$key = $field;
 		
-		// Copy other fields from first child
+		// Copy root from first child
 		$this->root = $this->children[ 0 ]->root;
+		
+		// Copy defaultParam from last child
+		$lastChild = $this->children[ count($this->children) - 1 ];
+		$this->defaultParam = $lastChild->defaultParam;
 	}
 }
 
