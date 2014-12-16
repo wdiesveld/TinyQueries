@@ -328,9 +328,11 @@ class Api extends HttpTools
 		$this->query->params( $params );
 		
 		// If there is only a single param-value, then return only the first row
-		$selectMethod = ($singleRow)
+/*		$selectMethod = ($singleRow)
 			? "select1"
-			: "select";
+			: "select"; */
+			
+		$selectMethod = "select";
 			
 		switch ($this->request['method'])
 		{
