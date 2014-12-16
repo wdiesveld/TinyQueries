@@ -471,29 +471,33 @@ class Query
 	 */
 	protected function linkList($terms, $firstAsRoot)
 	{
-		$root = null;
+		$prefix = null;
 		
 		if ($firstAsRoot)
 		{
 			$term = array_shift($terms);
 			
-			// Link first query to get root/name
+			// Link first query to get prefix
 			$first = $this->link( $term );
 			
 			$first->update();
 			
-			$root = ($first->root)
-				? $first->root
-				: $first->name();
+			$prefix = $first->root;
+			
+			if (!$prefix)
+			{
+				$name = explode(".", $first->name());
+				$prefix = $name[0];
+			}
 				
-			if (!$root)
-				throw new \Exception("root not known for " . $list[0]);
+			if (!$prefix)
+				throw new \Exception("prefix not known for " . $list[0]);
 		}
 	
 		foreach ($terms as $term)
 		{
-			if ($root)
-				$term = $root . "." . $term;
+			if ($prefix)
+				$term = $prefix . "." . $term;
 				
 			$this->link( $term );
 		}
