@@ -323,7 +323,9 @@ class Api extends HttpTools
 		if ($param && !$this->query->defaultParam)
 			throw new \Exception("Single parameter value passed, but query does not have a default parameter");
 		
-		$params[ $this->query->defaultParam ] = $param;
+		// Only overwrite if $param is not null
+		if (!is_null($param) || !array_key_exists($this->query->defaultParam, $params))
+			$params[ $this->query->defaultParam ] = $param;
 		
 		$this->query->params( $params );
 		
