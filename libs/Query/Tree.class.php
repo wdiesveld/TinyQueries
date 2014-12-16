@@ -194,23 +194,30 @@ class QueryTree extends Query
 		if (!$child->children || count($child->children) != 2)
 			throw new \Exception($generalErrorMessage . "child does not have 2 children");
 	
-		// Get parameters of second (last) child of $child. 
-		// Suppose you have "a(b)". This corresponds to parent = "a" and child = "b:a"
-		// "b:a" has two childs: "b" and "b.a"
-		// We should get the param of the link-query "b.a" which is the second child of $child
-		$paramIDs = array_keys( get_object_vars( $child->children[1]->params ) );
+		$paramID = $this->defaultParam;
 		
-		// There should be exactly 1 parameter
-		if (count($paramIDs) != 1)
-			throw new \Exception($generalErrorMessage . "link-query " . $child->children[1]->name() . " should have exactly one parameter");
+		// Fall back in case there is no default param (should not occur anymore)
+		if (!$paramID)
+		{
+			// Get parameters of second (last) child of $child. 
+			// Suppose you have "a(b)". This corresponds to parent = "a" and child = "b:a"
+			// "b:a" has two childs: "b" and "b.a"
+			// We should get the param of the link-query "b.a" which is the second child of $child
+			$paramIDs = array_keys( get_object_vars( $child->children[1]->params ) );
+			
+			// There should be exactly 1 parameter
+			if (count($paramIDs) != 1)
+				throw new \Exception($generalErrorMessage . "link-query " . $child->children[1]->name() . " should have exactly one parameter");
 
+			$paramID = $paramIDs[0];	
+		}
+		
 		// Get the parent key which should be matched with the childs parameter
 		$keyIDs = array_keys( get_object_vars( $this->keys ) );
 		
 		if (count($keyIDs) != 1)
 			throw new \Exception($generalErrorMessage . "parent should have exactly one key");
 		
-		$paramID 	= $paramIDs[0];	
 		$parentKey 	= $this->keys->{$keyIDs[0]};	
 		
 		if (!is_array($parentRows))
