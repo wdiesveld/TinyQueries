@@ -420,24 +420,39 @@ function getMethod(query)
 function getPath(query, id)
 {
 	var parts = id.split(".");
-		
-	switch (query.type)
+	var defaultParamSet = false;
+	
+	switch (query.operation)
 	{
-		case 'nest':	
-			path = "/" + parts[1] + "/:" + query.defaultParam + "/" + parts[0];	
+		case 'read':
+			switch (query.type)
+			{
+				case 'nest':	
+					path = "/" + parts[1] + "/:" + query.defaultParam + "/" + parts[0];	
+					defaultParamSet = true;
+					break;
+				case 'filter':	
+					path = "/" + parts[0] + "/" + parts[1];		
+					break;
+				case 'attach':	
+					path = "/" + parts[0] + "+" + parts[1];		
+					break;
+				default:
+					path = "/" + id;
+					break;
+			}
 			break;
-		case 'filter':	
-			path = "/" + parts[0] + "/" + parts[1];		
-			break;
-		case 'attach':	
-			path = "/" + parts[0] + "+" + parts[1];		
-			break;
+			
 		default:
-			path = "/" + id;
+			if (parts.length == 1)
+				path = "/" + id;
+			else
+				path = "/" + parts[0] + "/:" + query.defaultParam + "/" + parts[1];	
+				defaultParamSet = true;
 			break;
 	}
 		
-	if (query.defaultParam && query.type != 'nest')
+	if (query.defaultParam && !defaultParamSet)
 		path += "/:" + query.defaultParam;
 	
 	return path;
