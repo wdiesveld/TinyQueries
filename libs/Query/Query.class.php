@@ -67,7 +67,7 @@ class Query
 		// Check if there is a default param
 		if ($this->defaultParam)
 		{
-			$this->paramValues[ $this->defaultParam ] = $this->paramValues;
+			$this->paramValues[ $this->defaultParam ] = $paramValues;
 			return $this;
 		}
 		
