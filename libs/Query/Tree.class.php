@@ -149,7 +149,7 @@ class QueryTree extends Query
 		$this->base->update();
 		
 		// Copy fields from parent (base)
-		$fields = array('root', 'params', 'output', 'keys', 'defaultParam');
+		$fields = array('root', 'params', 'output', 'keys', 'defaultParam', 'operation');
 		foreach ($fields as $field)
 			$this->$field = is_object($this->base->$field)
 				? clone $this->base->$field

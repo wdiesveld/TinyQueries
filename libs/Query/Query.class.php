@@ -13,9 +13,15 @@ require_once( dirname(__FILE__) . '/../QueryDB.class.php' );
  */
 class Query 
 {
+	const CREATE 	= 'create';
+	const READ 		= 'read';
+	const UPDATE 	= 'update';
+	const DELETE	= 'delete';
+	
 	public $params;
 	public $defaultParam;
 	public $children;
+	public $operation;
 	
 	protected $db;
 	protected $keys;
@@ -241,6 +247,26 @@ class Query
 	}
 	
 	/**
+	 * Generic run function 
+	 *
+	 * @param {assoc} $paramValues
+	 */
+	public function run($paramValues = null)
+	{
+		if ($this->operation == self::READ)
+			return $this->select($paramValues);
+			
+		$this->execute($paramValues);
+		
+		switch ($this->operation)
+		{
+			case self::CREATE: return "Created item";
+			case self::UPDATE: return "Updated item";
+			case self::DELETE: return "Deleted item";
+		}
+	}
+	
+	/**
 	 * Executes the query and returns the result
 	 *
 	 * @param {assoc} $paramValues
@@ -356,6 +382,7 @@ class Query
 		if (property_exists($query, 'keys'))			$this->keys 		= $query->keys;
 		if (property_exists($query, 'params'))			$this->params 		= $query->params;
 		if (property_exists($query, 'defaultParam'))	$this->defaultParam	= $query->defaultParam;
+		if (property_exists($query, 'operation')) 		$this->operation 	= $query->operation;
 		if (property_exists($query, 'maxResults')) 		$this->maxResults 	= $query->maxResults;
 		
 		if (property_exists($query, 'output'))
@@ -369,7 +396,7 @@ class Query
 			}
 			else
 				// This means, the query is an insert, update or delete
-				$query->output = false;
+				$this->output = false;
 		}
 			
 		return $this;
@@ -470,6 +497,9 @@ class Query
 		foreach ($this->children as $child)
 			foreach ($child->params as $name => $spec)
 				$this->params->$name = $spec;
+				
+		// Copy operation from first child
+		$this->operation = $this->children[0]->operation;
 	}
 	
 	/**

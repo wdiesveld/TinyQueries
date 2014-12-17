@@ -327,25 +327,7 @@ class Api extends HttpTools
 		if (!is_null($param) || !array_key_exists($this->query->defaultParam, $params))
 			$params[ $this->query->defaultParam ] = $param;
 		
-		$this->query->params( $params );
-		
-		// If there is only a single param-value, then return only the first row
-/*		$selectMethod = ($singleRow)
-			? "select1"
-			: "select"; */
-			
-		$selectMethod = "select";
-			
-		switch ($this->request['method'])
-		{
-			case 'GET': 	$response = $this->query->$selectMethod(); break;
-			/*
-			case 'POST': 	$response = $this->db->insert($term, $_POST); break; 
-			case 'PUT': 	$response = $this->db->update($term, $params, $_POST); break;
-			case 'DELETE': 	$response = $this->db->delete($term, $params); break;
-			*/
-			default: 		throw new \Exception("Unsupported method");
-		}
+		$response = $this->query->params( $params )->run(); 
 
 		$this->postProcessResponse( $response );
 		

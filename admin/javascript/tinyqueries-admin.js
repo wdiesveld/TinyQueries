@@ -407,7 +407,7 @@ function getMethod(query)
 	{
 		case 'create': 	return 'POST';
 		case 'read': 	return 'GET';
-		case 'update': 	return 'UPDATE';
+		case 'update': 	return 'PUT';
 		case 'delete': 	return 'DELETE';
 	}
 	
