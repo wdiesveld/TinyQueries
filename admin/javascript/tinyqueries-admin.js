@@ -322,28 +322,26 @@ function reformatQueryDef( query )
 	if (!query.params)
 		query.params = {};
 	
-	if (!query.output)
-		query.output = {};
-	
 	query.params = reformatParams( query.params );
 
-	for (var f in query.output.fields)
-	{
-		if (!$.isPlainObject( query.output.fields[f] ))
+	if (query.output)
+		for (var f in query.output.fields)
 		{
-			// substitute 'json' for 'array' 
-			if (query.output.fields[f] == 'json')
-				query.output.fields[f] = 'array';
-				
-			query.output.fields[f] = 
+			if (!$.isPlainObject( query.output.fields[f] ))
 			{
-				type: query.output.fields[f]
-			};
+				// substitute 'json' for 'array' 
+				if (query.output.fields[f] == 'json')
+					query.output.fields[f] = 'array';
+					
+				query.output.fields[f] = 
+				{
+					type: query.output.fields[f]
+				};
+			}
+			
+			if (!$.isArray( query.output.fields[ f ].type ))
+				query.output.fields[ f ].type = [ query.output.fields[ f ].type ];
 		}
-		
-		if (!$.isArray( query.output.fields[ f ].type ))
-			query.output.fields[ f ].type = [ query.output.fields[ f ].type ];
-	}
 	
 	return query;
 }

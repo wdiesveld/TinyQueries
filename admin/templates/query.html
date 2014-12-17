@@ -146,6 +146,10 @@
 				
 		<h3>Output</h3>
 		
+		<p ng-show="query.output == false">
+			This query has no output
+		</p>
+		
 		<div ng-show="query.output.rows == 'first' && query.output.columns == 'first'">
 			<p>
 				<span ng-repeat="(name, def) in query.output.fields">
@@ -168,7 +172,7 @@
 			<p>The query will return an array of objects. Each object contains the fields as described below.</p>
 		</div>
 		
-		<div ng-show="query.output.rows != 'first' || query.output.columns != 'first'">
+		<div ng-show="query.output && (query.output.rows != 'first' || query.output.columns != 'first')">
 		<table class="table table-striped table-condensed">
 			<thead>
 				<tr>
