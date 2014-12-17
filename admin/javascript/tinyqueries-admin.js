@@ -405,9 +405,9 @@ function getMethod(query)
 {
 	switch (query.operation)
 	{
-		case 'read': 	return 'GET';
-		case 'write': 	return 'UPDATE';
 		case 'create': 	return 'POST';
+		case 'read': 	return 'GET';
+		case 'update': 	return 'UPDATE';
 		case 'delete': 	return 'DELETE';
 	}
 	
