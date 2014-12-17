@@ -194,7 +194,7 @@ class QueryTree extends Query
 		if (!$child->children || count($child->children) != 2)
 			throw new \Exception($generalErrorMessage . "child does not have 2 children");
 	
-		$paramID = $this->defaultParam;
+		$paramID = $child->defaultParam;
 		
 		// Fall back in case there is no default param (should not occur anymore)
 		if (!$paramID)
