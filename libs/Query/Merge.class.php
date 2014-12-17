@@ -137,6 +137,16 @@ class QueryMerge extends Query
 		foreach ($this->children as $child)
 			foreach ($child->keys as $key => $field)
 				$this->keys->$key = $field;
+				
+		// Copy default param only if every child has the same default param
+		$defaultParam = $this->children[0]->defaultParam;
+		$diff = false;
+		foreach ($this->children as $child)
+			if ($child->defaultParam != $defaultParam)
+				$diff = true;
+		
+		if (!$diff)
+			$this->defaultParam = $defaultParam;
 	}
 }
 
