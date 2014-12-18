@@ -194,6 +194,8 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		// Copy params to cookies
 		for (var p in $scope.params)
 			$cookies[p] = $scope.params[p].value;
+		for (var p in $scope.globals)
+			$cookies[p] = $scope.globals[p].value;
 		
 	};
 	
