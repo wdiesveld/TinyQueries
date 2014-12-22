@@ -424,33 +424,20 @@ function getPath(query, id)
 	var parts = id.split(".");
 	var defaultParamSet = false;
 	
-	switch (query.operation)
+	switch (query.type)
 	{
-		case 'read':
-			switch (query.type)
-			{
-				case 'nest':	
-					path = "/" + parts[1] + "/:" + query.defaultParam + "/" + parts[0];	
-					defaultParamSet = true;
-					break;
-				case 'filter':	
-					path = "/" + parts[0] + "/" + parts[1];		
-					break;
-				case 'attach':	
-					path = "/" + parts[0] + "+" + parts[1];		
-					break;
-				default:
-					path = "/" + id;
-					break;
-			}
+		case 'nest':	
+			path = "/" + parts[1] + "/:" + query.defaultParam + "/" + parts[0];	
+			defaultParamSet = true;
 			break;
-			
+		case 'filter':	
+			path = "/" + parts[0] + "/" + parts[1];		
+			break;
+		case 'attach':	
+			path = "/" + parts[0] + "+" + parts[1];		
+			break;
 		default:
-			if (parts.length == 1)
-				path = "/" + id;
-			else
-				path = "/" + parts[0] + "/:" + query.defaultParam + "/" + parts[1];	
-				defaultParamSet = true;
+			path = "/" + id;
 			break;
 	}
 		
