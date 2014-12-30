@@ -112,6 +112,7 @@ class AdminApi extends TinyQueries\Api
 		$project->compiler->compileNeeded 	= $this->compiler->compileNeeded();
 		$project->version_libs 				= TinyQueries\Config::VERSION_LIBS;
 		$project->dbError 					= $this->dbError;
+		$project->dbStatus					= ($this->db && $this->db->connected()) ? 'Connected' : 'Not connected';
 		
 		return $project;
 	}
