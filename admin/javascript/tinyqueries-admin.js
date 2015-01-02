@@ -313,6 +313,30 @@ function reformatParams( params )
 }
 
 /**
+ * Reformats the output fields for easier parsing in the template
+ */
+function reformatOutputFields(fields)
+{
+	for (var f in fields)
+	{
+		if (!$.isPlainObject( fields[f] ))
+		{
+			// substitute 'json' for 'array' 
+			if (fields[f] == 'json')
+				fields[f] = 'array';
+				
+			fields[f] = 
+			{
+				type: fields[f]
+			};
+		}
+			
+		if (!$.isArray( fields[ f ].type ))
+			fields[ f ].type = [ fields[ f ].type ];
+	}
+}
+
+/**
  * Does some changes to the query json structure for the view template
  *
  */
@@ -327,23 +351,7 @@ function reformatQueryDef( query )
 	query.params = reformatParams( query.params );
 
 	if (query.output)
-		for (var f in query.output.fields)
-		{
-			if (!$.isPlainObject( query.output.fields[f] ))
-			{
-				// substitute 'json' for 'array' 
-				if (query.output.fields[f] == 'json')
-					query.output.fields[f] = 'array';
-					
-				query.output.fields[f] = 
-				{
-					type: query.output.fields[f]
-				};
-			}
-			
-			if (!$.isArray( query.output.fields[ f ].type ))
-				query.output.fields[ f ].type = [ query.output.fields[ f ].type ];
-		}
+		reformatOutputFields( query.output.fields );
 	
 	return query;
 }
