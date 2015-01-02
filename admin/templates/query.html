@@ -173,34 +173,39 @@
 		</div>
 		
 		<div ng-show="query.output && (query.output.rows != 'first' || query.output.columns != 'first')">
-		<table class="table table-striped table-condensed">
+		
+		<script type="text/ng-template" id="output-fields.html">
+		
+		<table class="table table-striped table-condensed fields">
+			<!--
 			<thead>
 				<tr>
 					<th>Name</th>
 					<th>Type</th>
-					<th>Details</th>
 				</tr>
 			</thead>
+			-->
 			<tbody>
-				<tr ng-repeat="(name, def) in query.output.fields">
-					<td>{{name}}</td>
-					<td>
-						<span ng-repeat="type in def.type">
+				<tr ng-repeat="field in fields">
+					<td ng-show="field.fields" colspan="2">
+						<a ng-click="field.showsub = !field.showsub" title="Show subfields">{{field.label}}</a>
+						<div ng-show="field.showsub" class="subfields" ng-repeat="fields in [ field.fields ]" ng-include="'output-fields.html'"></div>
+					</td>
+					<td ng-show="!field.fields">
+						{{field.label}}
+					</td>
+					<td ng-show="!field.fields" class="type">
+						<span ng-repeat="type in field.type">
 							<span class="label label-{{type}}">{{type}}</span>
 						</span>
-					</td>
-					<td>
-						<!--
-						<div ng-repeat="(namesub, defsub) in def.fields">
-							{{namesub}}
-						</div>
-						-->
-						
 					</td>
 				</tr>
 			</tbody>
 		</table>
-		</div>
+		
+		</script>		
+		
+		<div ng-repeat="fields in [ query.output.fields ]" ng-include="'output-fields.html'"></div>
 	
 	</div>
 	

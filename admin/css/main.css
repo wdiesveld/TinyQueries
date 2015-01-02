@@ -47,3 +47,32 @@ body {
 	font-size: 0.7em;
 }
 
+.table.fields
+{
+	margin-bottom: 0;
+	padding-bottom: 0;
+}
+
+.table.fields td
+{
+	padding-right: 0;
+	margin-right: 0;
+}
+
+.table.fields td.type
+{
+	width: 200px;
+}
+
+.table.fields .subfields
+{
+	margin-left: 20px;
+	margin-top: 3px;
+}
+
+.table.fields a
+{
+	cursor: pointer;
+}
+
+

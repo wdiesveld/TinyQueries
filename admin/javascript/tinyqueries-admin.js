@@ -315,10 +315,11 @@ function reformatParams( params )
 /**
  * Reformats the output fields for easier parsing in the template
  */
-function reformatOutputFields(fields)
+function reformatOutputFields(fields, level, parent)
 {
 	for (var f in fields)
 	{
+		// Convert to object if not yet object
 		if (!$.isPlainObject( fields[f] ))
 		{
 			// substitute 'json' for 'array' 
@@ -330,9 +331,18 @@ function reformatOutputFields(fields)
 				type: fields[f]
 			};
 		}
-			
+		
+		fields[ f ].label 	= f;
+		fields[ f ].level 	= level;
+		fields[ f ].parent 	= parent;
+		fields[ f ].showsub	= false;
+		
 		if (!$.isArray( fields[ f ].type ))
 			fields[ f ].type = [ fields[ f ].type ];
+		
+		// Add subfields
+		if (fields[ f ].fields)
+			reformatOutputFields( fields[ f ].fields, level + 1, f );
 	}
 }
 
@@ -351,7 +361,7 @@ function reformatQueryDef( query )
 	query.params = reformatParams( query.params );
 
 	if (query.output)
-		reformatOutputFields( query.output.fields );
+		reformatOutputFields( query.output.fields, 0, null );
 	
 	return query;
 }
