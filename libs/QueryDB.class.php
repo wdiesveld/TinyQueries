@@ -198,6 +198,9 @@ class QueryDB
 	 */
 	public function insert($table, $record, $updateOnDuplicateKey = false)
 	{
+		if (!is_array($record) || count($record)==0)
+			throw new \Exception("QueryDB::insert - record is empty");
+	
 		$keys 	= array_keys($record);
 		$values	= array_values($record);
 		
@@ -261,6 +264,9 @@ class QueryDB
 	 */
 	public function update($table, $IDfields, $record)
 	{
+		if (!is_array($record) || count($record)==0)
+			throw new \Exception("QueryDB::update - record is empty");
+	
 		// Convert to primary key selection
 		if (!is_array($IDfields))
 			$IDfields = array( $this->primaryKey => $IDfields );
