@@ -236,6 +236,25 @@ class Query
 	}
 	
 	/**
+	 * Returns the prefix of the query (first part before the dot)
+	 *
+	 */
+	protected function prefix()
+	{
+		if ($this->root)
+			return $this->root;
+			
+		$name = $this->name();
+		
+		if (!$name)
+			return null;
+			
+		$parts = explode(".", $name);
+		
+		return $parts[0];
+	}
+	
+	/**
 	 * Adds a parameter binding to the query
 	 *
 	 * @param {string} $paramName
@@ -521,16 +540,10 @@ class Query
 			
 			$first->update();
 			
-			$prefix = $first->root;
-			
-			if (!$prefix)
-			{
-				$name = explode(".", $first->name());
-				$prefix = $name[0];
-			}
+			$prefix = $first->prefix();
 				
 			if (!$prefix)
-				throw new \Exception("prefix not known for " . $list[0]);
+				throw new \Exception("prefix not known for " . $term);
 		}
 	
 		foreach ($terms as $term)

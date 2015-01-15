@@ -42,9 +42,10 @@ class QueryTree extends Query
 		$terms = Term::convertAliases( $terms, $aliases );
 		
 		// Add root or id as filter to each child
-		$linkID = ($this->base->root)
-			? $this->base->root
-			: $id;
+		$linkID = $this->prefix();
+		
+		if (!$linkID)
+			throw new \Exception("Query '$id' has no prefix");
 			
 		for ($i=0;$i<count($terms);$i++)
 			$terms[$i] = "(" . $terms[$i] . "):" . $linkID; 
@@ -85,7 +86,7 @@ class QueryTree extends Query
 	{
 		parent::execute($paramValues);
 
-		$data = $this->base->execute( $this->paramValues );
+		$data = $this->base->select( $this->paramValues );
 		
 		$this->bindChildren($data);
 		
@@ -149,11 +150,18 @@ class QueryTree extends Query
 		$this->base->update();
 		
 		// Copy fields from parent (base)
-		$fields = array('root', 'params', 'output', 'keys', 'defaultParam', 'operation');
+		$fields = array('root', 'params', 'keys', 'defaultParam', 'operation');
 		foreach ($fields as $field)
 			$this->$field = is_object($this->base->$field)
 				? clone $this->base->$field
 				: $this->base->$field;
+		
+		// Output fields need special care - not all fields should be copied
+		$outputToCopy = array('rows', 'columns', 'fields');
+		foreach ($outputToCopy as $field)
+			$this->output->$field = is_object($this->base->output->$field)
+				? clone $this->base->output->$field
+				: $this->base->output->$field;
 	}
 	
 	/**
@@ -243,7 +251,7 @@ class QueryTree extends Query
 
 		// Execute child query and group results; cleanUp can also be done at this point
 		$childRows = $child->group()->select( $params, $paramID, true );
-		
+
 		$childFieldName = $child->name();
 		
 		// Combine child rows with parent rows
