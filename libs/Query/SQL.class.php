@@ -318,8 +318,8 @@ class QuerySQL extends Query
 			if (Arrays::isAssoc($value) && count($value)>0)
 				$nestedFields[] = $key;
 		
-		for ($i=0; $i<count($rows); $i++)
-			foreach ($nestedFields as $field)
+		foreach ($nestedFields as $field)
+			for ($i=0; $i<count($rows); $i++)
 				Arrays::reduceNulls( $rows[$i][$field] );
 	}
 	
