@@ -43,9 +43,10 @@ class QueryDB
 	public function __construct( $pdoHandle = null, $configFile = null, $profiler = null )
 	{
 		// Initialize profiler object
-		$this->profiler = is_object($profiler)
-			? &$profiler
-			: new Profiler( $profiler );
+		if (is_object($profiler))
+			$this->profiler = &$profiler;
+		else
+			$this->profiler = new Profiler( ($profiler) ? true : false );
 	
 		$config = new Config( $configFile );
 		
