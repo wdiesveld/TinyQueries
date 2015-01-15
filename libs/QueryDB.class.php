@@ -38,14 +38,14 @@ class QueryDB
 	 *
 	 * @param {PDO} $pdoHandle (optional) Use this if you already have a PDO database connection.
 	 * @param {string} $configFile (optional) Use this to specify your custom XML-configfile
-	 * @param {Profiler} $profiler (optional)
+	 * @param {Profiler|boolean} $profiler (optional) If 'true' then a Profiler object is created and run is called; if 'false' the object is also created but not initialized
 	 */
 	public function __construct( $pdoHandle = null, $configFile = null, $profiler = null )
 	{
 		// Initialize profiler object
-		$this->profiler = ($profiler)
-			? $profiler
-			: new Profiler( false );
+		$this->profiler = is_object($profiler)
+			? &$profiler
+			: new Profiler( $profiler );
 	
 		$config = new Config( $configFile );
 		

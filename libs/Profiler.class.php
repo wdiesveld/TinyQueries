@@ -20,13 +20,21 @@ class Profiler
 	 *
 	 * @param {boolean} $run Do profiling or not
 	 */
-	public function __construct($run)
+	public function __construct($run = true)
 	{
 		$this->running = $run;
 		
-		if (!$this->running)
-			return;
-		
+		if ($run)
+			$this->run();
+	}
+	
+	/**
+	 * Initializes the Profiler and sets start time
+	 *
+	 */
+	public function run()
+	{
+		$this->running 	= true;
 		$this->start 	= microtime(true);
 		$this->nodes	= array();
 		$this->counter	= 0;
