@@ -167,9 +167,14 @@
 			<p><span class="label label-array">array</span> <code>[ .., .., .. ]</code></p>
 			<p>The query will return an array.</p>
 		</div>
-		<div ng-show="query.output.rows == 'all' && query.output.columns == 'all'">
+		<div ng-show="query.output.rows == 'all' && query.output.columns == 'all' && !query.output.key">
 			<p><span class="label label-array">array</span> <code>[ { .. }, { .. }, { .. } ]</code></p>
 			<p>The query will return an array of objects. Each object contains the fields as described below.</p>
+		</div>
+		<div ng-show="query.output.rows == 'all' && query.output.columns == 'all' && query.output.key">
+			<p><span class="label label-object">object</span> <code>{ [{{query.output.key}}]: { .. }, [{{query.output.key}}]: { .. }, .. }</code></p>
+			<p>The query will return an object of objects. The key will be the value of <code>{{query.output.key}}</code>.
+			Each object contains the fields as described below.</p>
 		</div>
 		
 		<div ng-show="query.output && (query.output.rows != 'first' || query.output.columns != 'first')">
