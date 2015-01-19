@@ -3,7 +3,7 @@ namespace TinyQueries;
 
 require_once( 'HttpTools.class.php' );
 require_once( 'UserFeedback.class.php' );
-require_once( dirname(__FILE__) . '/../QueryDB.class.php' );
+require_once( dirname(__FILE__) . '/../QueryDB.class.php' ); 
 
 /**
  * Api
@@ -204,9 +204,10 @@ class Api extends HttpTools
 	/**
 	 * Converts a URI-path to a term + paramvalue + [output should be single row] true/false
 	 *
-	 * @param {$string} $path
+	 * @param {$string} $path The resource path
+	 * @param {string} $method The HTTP method
 	 */
-	private function pathToTerm($path)
+	private function pathToTerm($path, $method)
 	{
 		$match = null;
 		
@@ -228,17 +229,27 @@ class Api extends HttpTools
 		foreach ($words as $i => $word)
 			if ($i%2==0 && !preg_match( Term::CHARS, $word ))
 				throw new \Exception("Path contains invalid characters");
+				
+		// Determine queryID postfix		
+		switch ($method)
+		{
+			case 'PUT':
+			case 'PATCH': 	$postfix = ".update"; break;
+			case 'POST': 	$postfix = ".create"; break;
+			case 'DELETE': 	$postfix = ".delete"; break;
+			default:		$postfix = ""; break;
+		}		
 		
-		// "/a"  --> $db->get("a");
+		// path = "/a"  --> term = "a"
 		if ($n==1)
-			return array( $path, null, false );
+			return array( $path . $postfix, null, false );
 			
-		// "../../a/:param"  --> $db->get("a", :param);
+		// path = "../../a/:param"  --> term = "a" using parameter :param
 		if ($n%2==0)
-			return array($words[ $n-2 ], $words[ $n-1 ], true);
+			return array($words[ $n-2 ] . $postfix, $words[ $n-1 ], true);
 			
-		// "../a/:param/b" --> $db->get("(b):a", :param);	
-		return array( "(" . $words[ $n-1 ] . "):" . $words[ $n-3 ], $words[ $n-2 ], false );	
+		// path = "../a/:param/b" --> term = "(b):a" using parameter :param
+		return array( "(" . $words[ $n-1 ] . $postfix . "):" . $words[ $n-3 ], $words[ $n-2 ], false );	
 	}
 	
 	/**
@@ -278,6 +289,7 @@ class Api extends HttpTools
 		$term 	= self::getRequestVar('query', Term::CHARS ); 
 		$path 	= self::getRequestVar('_path');
 		$param	= self::getRequestVar('param');
+		$method = self::getServerVar('REQUEST_METHOD', '/^\w+$/');
 		
 		$singleRow = false;
 		
@@ -285,13 +297,16 @@ class Api extends HttpTools
 			throw new \Exception('query-param is empty'); 
 			
 		if (!$term && $path)
-			list($term, $param, $singleRow) = $this->pathToTerm($path);
+			list($term, $param, $singleRow) = $this->pathToTerm($path, $method);
 			
 		// Convert space to + (since in URL's + is converted to space, while + is the attach operator and should be preserved)
 		$term = str_replace(" ", "+", $term);
 		
 		$params = $this->getQueryParams();
 
+		$this->request['method'] 	= $method;
+		$this->request['query']		= $term;	
+		
 		return array( $term, $params, $param, $singleRow );
 	}
 	
@@ -311,9 +326,9 @@ class Api extends HttpTools
 		
 		$this->query = $this->db->query($term);
 		
-		$this->request['method']	= $_SERVER['REQUEST_METHOD'];
-		$this->request['query']		= $term;	
-		$this->request['queryID'] 	= property_exists($this->query, 'id') ? $this->query->id : null;
+		$this->request['queryID'] = property_exists($this->query, 'id') 
+			? $this->query->id 
+			: null;
 	
 		if (!$this->checkRequestPermissions())
 			throw new UserFeedback( 'You have no permission to do this request' );
@@ -324,8 +339,9 @@ class Api extends HttpTools
 			throw new \Exception("Single parameter value passed, but query does not have a default parameter");
 		
 		// Only overwrite if $param is not null
-		if (!is_null($param) || !array_key_exists($this->query->defaultParam, $params))
-			$params[ $this->query->defaultParam ] = $param;
+		if ($this->query->defaultParam)
+			if (!is_null($param) || !array_key_exists($this->query->defaultParam, $params))
+				$params[ $this->query->defaultParam ] = $param;
 		
 		$response = $this->query->params( $params )->run(); 
 
