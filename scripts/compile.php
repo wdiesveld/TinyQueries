@@ -1,6 +1,6 @@
 <?php
 
-require_once('../libs/Compiler.class.php');
+require_once( dirname(__FILE__) . '/../libs/Compiler.class.php' );
 
 /**
  * Compile script for command line compiling of TinyQueries 
