@@ -252,7 +252,7 @@ class QueryTree extends Query
 		// Execute child query and group results; cleanUp can also be done at this point
 		$childRows = $child->group()->select( $params, $paramID, true );
 
-		$childFieldName = $child->name();
+		$childFieldName = $child->prefix();
 		
 		// Combine child rows with parent rows
 		for ($i=0;$i<count($parentRows);$i++)
