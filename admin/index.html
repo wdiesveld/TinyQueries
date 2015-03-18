@@ -1,46 +1,41 @@
 <!DOCTYPE html>
 <html ng-app="TinyQueriesAdmin" lang="en">
   <head>
+    <title>TinyQueries admin</title>
+
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
-    <meta name="author" content="Diesveld Query Technology">
-    <link rel="shortcut icon" href="favicon.png">
-
-    <title>TinyQueries admin</title>
-
-    <link href="css/bootstrap.css" rel="stylesheet">
+    <meta name="description" content="TinyQueries admin tool">
+    <meta name="author" content="Query Technology">
+	
+    <link href="favicon.png" rel="shortcut icon">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/main.css" rel="stylesheet">
-
 	
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
       <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
       <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
     <![endif]-->
+	
   </head>
 
   <body ng-controller="main">
-
-    <!-- Fixed navbar -->
-    <div class="navbar navbar-default navbar-fixed-top">
-      <div class="container">
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="#"><img src="css/images/tiny-queries-logo.png" /></a>
-        </div>
-        <div class="navbar-collapse collapse">
-          <ul class="nav navbar-nav">
-           <!-- <li ng-class="{active: nav=='queries'}"><a ng-click="nav='queries'" href="#queries">Queries</a></li> -->
-          </ul>
-		  <form class="navbar-form navbar-left">
-		  
-			
+  
+	<div id="toolbar">
+	
+ 		<div class="spinner" ng-show="loading">loading...</div>
+		<div ng-show="error" class="alert alert-danger">{{error}}</div>
+	
+		<div class="form-group">
+			<button ng-click="compile()" type="button" class="btn btn-default btn-primary">
+				<span class="glyphicon glyphicon-fire"></span>
+				Compile
+			</button>
+		</div>
+	
+		<div class="form-group">
 			<div class="btn-group" data-toggle="buttons">
 			  <label class="btn btn-default active" ng-click="view='queries';"> 
 				<input type="radio" ng-model="view" value="queries"> Query view
@@ -49,46 +44,30 @@
 				<input type="radio" ng-model="view" value="rest"> REST view
 			  </label>
 			</div>		
-		  
-			<button ng-click="compile()" type="button" class="btn btn-default">
-				<span class="glyphicon glyphicon-fire"></span>
-				Compile
-			</button>
-		  </form>
-		  <p class="navbar-text"><span class="glyphicon glyphicon-thumbs-up" ng-show="compileStatusCode==0"></span> {{compileStatus}}</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="container">
-	
- 		<div class="spinner" ng-show="loading">loading...</div>
-		<div ng-show="error" class="alert alert-danger">{{error}}</div>
-		
-		<div class="col-sm-4">	
-
-			<div class="container query-list">
-
-				<div ng-repeat="(queryID,spec) in project.queries" ng-show="view=='queries'">
-					<a href="#/queries/{{queryID}}" >{{queryID}}</a>
-				</div>
-				<div ng-repeat="(path,spec) in project.paths" ng-show="view=='rest'">
-					<span class="rest-method">{{project.queries[spec.queryID].method}}</span>
-					<a href="#/queries/{{spec.queryID}}" >{{path}}</a>
-				</div>
-				<p>&nbsp;</p>
-			</div>
-			
-		</div>	
-		<div class="col-sm-8">	
-
-			<div ng-view></div>
-		
 		</div>		
 		
+		<p class="navbar-text"><span class="glyphicon glyphicon-thumbs-up" ng-show="compileStatusCode==0"></span> {{compileStatus}}</p>
+	
+	</div>
 
-    </div> 
+	<div id="query-list">
 
+		<div ng-repeat="(queryID,spec) in project.queries" ng-show="view=='queries'">
+			<a href="#/queries/{{queryID}}" >{{queryID}}</a>
+		</div>
+		<div ng-repeat="(path,spec) in project.paths" ng-show="view=='rest'">
+			<span class="rest-method">{{project.queries[spec.queryID].method}}</span>
+			<a href="#/queries/{{spec.queryID}}" >{{path}}</a>
+		</div>
+		<p>&nbsp;</p>
+		
+	</div>
+			
+	<div id="query-container" >
+	
+		<div ng-view></div>
+
+	</div>
 
     <!-- Bootstrap core JavaScript
     ================================================== -->
