@@ -1,16 +1,18 @@
 <div ng-controller="query">
 
-	<div ng-show="view=='rest'"  class="alert alert-warning">Note: REST view is experimental - some functions do not work yet</div>
-		
-	<h1 ng-show="view=='queries'">{{query.id}} <span class="query-type" title="The query type is '{{query.type}}'">[{{query.type}}]</span></h1>
-	<h1 ng-show="view=='rest'"><span class="rest-method">{{query.method}}</span> {{query.path}}</h1>
+	<div class="title">
 	
+		<span ng-show="view=='queries'">{{query.id}} <span class="query-type" title="The query type is '{{query.type}}'">[{{query.type}}]</span></span>
+		<span ng-show="view=='rest'"><span class="rest-method">{{query.method}}</span> {{query.path}}</span>
+	
+	</div>
+
 	<ul class="nav nav-tabs">
 		<li ng-class="{active: tab=='run'}"><a ng-click="tab='run'">Execute</a></li>
 		<li ng-class="{active: tab=='doc'}"><a ng-click="tab='doc'">Documentation</a></li>
 	</ul>
 		
-	<div ng-show="tab=='run'">
+	<div class="tab-content run" ng-show="tab=='run'">
 	
 		<form role="form" class="form-horizontal">
 		
@@ -77,7 +79,7 @@
 	
 	</div>
 	
-	<div ng-show="tab=='doc'">
+	<div class="tab-content doc" ng-show="tab=='doc'">
 	
 		<p class="doc">
 			<div class="line" ng-repeat="line in query.doc">{{line}}</div>

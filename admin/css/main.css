@@ -18,7 +18,6 @@
 	right: 0;
 	bottom: 0;
 	left: 40%;
-	padding: 0 24px;
 	overflow-x: hidden; 
 	overflow-y: scroll; 
 }
@@ -82,6 +81,12 @@
 {
 	margin-bottom: 0;
 	padding-bottom: 0;
+}
+
+.tab-content.doc,
+.tab-content.run
+{
+	padding: 24px;
 }
 
 .table.fields td
