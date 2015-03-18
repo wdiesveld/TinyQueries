@@ -3,6 +3,14 @@
  *
  */
  
+#logo
+{
+	background: url(images/tiny-queries-logo.png) no-repeat;
+	display: block;
+	height: 32px;
+	margin: 0 0 24px 0;
+}
+ 
 #query-container
 {
 	position: absolute;
@@ -31,7 +39,8 @@
 {
 	position: absolute;
 	background: url(images/tiny-queries-logo.png) 12px 12px no-repeat #f0f0f0;
-	padding: 60px 12px;
+	background-color: #f0f0f0;
+	padding: 12px 12px;
 	top: 0;
 	left: 0;
 	right: 80%;
