@@ -1,18 +1,21 @@
-<div ng-controller="query">
+<div ng-controller="query" style="height:100%">
 
-	<div class="title">
+	<nav class="navbar title-bar">
 	
-		<span ng-show="view=='queries'">{{query.id}} <span class="query-type" title="The query type is '{{query.type}}'">[{{query.type}}]</span></span>
-		<span ng-show="view=='rest'"><span class="rest-method">{{query.method}}</span> {{query.path}}</span>
+		<span class="navbar-brand title">
+			<span ng-show="view=='queries'">{{query.id}} <span class="query-type" title="The query type is '{{query.type}}'">[{{query.type}}]</span></span>
+			<span ng-show="view=='rest'"><span class="rest-method">{{query.method}}</span> {{query.path}}</span>
+		</span>
 	
-	</div>
+		<ul class="nav navbar-nav navbar-right">
+			<li ng-class="{active: tab=='run'}"><a ng-click="tab='run'">Execute</a></li>
+			<li ng-class="{active: tab=='doc'}"><a ng-click="tab='doc'">Documentation</a></li>
+		</ul>
+	
+	</nav>
 
-	<ul class="nav nav-tabs">
-		<li ng-class="{active: tab=='run'}"><a ng-click="tab='run'">Execute</a></li>
-		<li ng-class="{active: tab=='doc'}"><a ng-click="tab='doc'">Documentation</a></li>
-	</ul>
 		
-	<div class="tab-content run" ng-show="tab=='run'">
+	<div class="tab-content run scroll-panel" ng-show="tab=='run'">
 	
 		<form role="form" class="form-horizontal">
 		
@@ -79,7 +82,7 @@
 	
 	</div>
 	
-	<div class="tab-content doc" ng-show="tab=='doc'">
+	<div class="tab-content doc scroll-panel" ng-show="tab=='doc'">
 	
 		<p class="doc">
 			<div class="line" ng-repeat="line in query.doc">{{line}}</div>

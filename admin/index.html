@@ -54,7 +54,7 @@
 	
 	</div>
 
-	<div id="query-list">
+	<div id="query-list" class="scroll-panel">
 
 		<div ng-repeat="(queryID,spec) in project.queries" ng-show="view=='queries'">
 			<a href="#/queries/{{queryID}}" >{{queryID}}</a>
@@ -67,11 +67,7 @@
 		
 	</div>
 			
-	<div id="query-container" >
-	
-		<div ng-view></div>
-
-	</div>
+	<div id="query-container" ng-view></div>
 
     <!-- Bootstrap core JavaScript
     ================================================== -->

@@ -18,8 +18,6 @@
 	right: 0;
 	bottom: 0;
 	left: 40%;
-	overflow-x: hidden; 
-	overflow-y: scroll; 
 }
 
 #query-list
@@ -29,8 +27,6 @@
 	right: 60%;
 	bottom: 0;
 	left: 20%;
-	overflow-x: hidden; 
-	overflow-y: scroll; 
 	padding: 12px;
 }
 
@@ -46,12 +42,6 @@
 	bottom: 0;
 }
 	
-.editor
-{
-	width: 100%;
-	height: calc(100% - 40px);
-}
-
 .doc .line
 {
 	min-height: 1em;
@@ -77,10 +67,22 @@
 	font-size: 0.7em;
 }
 
+.scroll-panel
+{
+	overflow-x: hidden; 
+	overflow-y: scroll; 
+}
+
 .table.fields
 {
 	margin-bottom: 0;
 	padding-bottom: 0;
+}
+
+.tab-content
+{
+	width: 100%;
+	height: calc(100% - 52px);
 }
 
 .tab-content.doc,
@@ -111,13 +113,21 @@
 	cursor: pointer;
 }
 
-.title
+.title-bar
 {
-	width: 100%;
-	height: 40px;
-	line-height: 40px;
-	padding: 0 47px;
-	color: white;
+	padding-left: 30px;
 	background: url(../favicon.png) no-repeat 16px 50% #bbb;
+	border-radius: 0 !important;
+	margin: 0 !important;
+}
+
+.title-bar li a
+{
+	color: white;
+}
+
+.title-bar li a:hover
+{
+	color: black; 
 }
 		
