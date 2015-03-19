@@ -63,8 +63,7 @@
 
 .rest-method
 {
-	color: #aaa;
-	font-size: 0.7em;
+	color: #ddd;
 }
 
 .scroll-panel
@@ -128,6 +127,7 @@
 
 .title-bar li a:hover
 {
+	cursor: pointer;
 	color: black; 
 }
 		
