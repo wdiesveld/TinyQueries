@@ -125,9 +125,18 @@
 	color: white;
 }
 
+.title-bar li.active a
+{
+	background-color: #ccc;
+	color: #888;
+}
+
+.title-bar li.active a:hover,
 .title-bar li a:hover
 {
 	cursor: pointer;
 	color: black; 
 }
+
+
 		
