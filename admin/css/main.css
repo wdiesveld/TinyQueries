@@ -56,6 +56,11 @@
 .label-child	{ background-color: #800080; }
 .label-string	{ background-color: #3A87AD; }
 
+.padded
+{
+	padding: 24px;
+}
+
 .query-type
 {
 	color: #ddd;
@@ -82,12 +87,6 @@
 {
 	width: 100%;
 	height: calc(100% - 52px);
-}
-
-.tab-content.doc,
-.tab-content.run
-{
-	padding: 24px;
 }
 
 .table.fields td
