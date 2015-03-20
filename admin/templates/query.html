@@ -8,12 +8,15 @@
 		</span>
 	
 		<ul class="nav navbar-nav navbar-right">
-			<li ng-class="{active: tab=='run'}"><a ng-click="tab='run'">Execute</a></li>
+			<li ng-class="{active: tab=='edit'}" ng-show="editmode"><a ng-click="tab='edit'">Edit</a></li>
+			<li ng-class="{active: tab=='run'}"><a ng-click="tab='run'">Run</a></li>
 			<li ng-class="{active: tab=='doc'}"><a ng-click="tab='doc'">Documentation</a></li>
 		</ul>
 	
 	</nav>
 
+	<div class="tab-content" ng-show="tab=='edit'">
+	</div>
 		
 	<div class="tab-content padded scroll-panel" ng-show="tab=='run'">
 	

@@ -105,6 +105,7 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 	$scope.error				= null;
 	$scope.compileStatusCode 	= -1;
 	$scope.compileStatus		= '';
+	$scope.editmode				= false;
 
 	$scope.$watch('compileStatusCode', function(value)
 	{
@@ -120,6 +121,7 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 		$api.getProject().success( function(data)
 		{
 			$scope.project = data;
+			$scope.editmode = (data.mode == 'edit');
 			
 			// update query path
 			setRestPaths( $scope.project );

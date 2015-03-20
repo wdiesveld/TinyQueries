@@ -30,7 +30,7 @@
  		<div class="spinner" ng-show="loading">loading...</div>
 		<div ng-show="error" class="alert alert-danger">{{error}}</div>
 	
-		<div class="form-group">
+		<div class="form-group" ng-show="editmode">
 			<button ng-click="compile()" type="button" class="btn btn-default btn-primary">
 				<span class="glyphicon glyphicon-fire"></span>
 				Compile

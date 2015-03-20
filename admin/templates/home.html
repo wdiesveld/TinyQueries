@@ -10,6 +10,8 @@
 				<dd>{{project.id}}</dd>
 				<dt>Compiler</dt>
 				<dd>{{project.compiler.server}}</dd>
+				<dt>API key</dt>
+				<dd>{{project.compiler.api_key}}</dd>
 				<dt>Version</dt>
 				<dd>Compile with {{project.compiler.version || 'latest version'}}</dd>
 				<dt>Input Folder</dt>
@@ -36,6 +38,8 @@
 					{{project.dbStatus}}
 					<p class="text-warning" ng-show="project.dbError">{{project.dbError}}</p>
 				</dd>
+				<dt>Mode</dt>
+				<dd>{{project.mode}} mode</dd>
 			</dl>
 			
 		</div>
