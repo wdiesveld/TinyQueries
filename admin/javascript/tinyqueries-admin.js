@@ -51,6 +51,16 @@ admin.factory('$api', ['$http', function($http)
 			return $http.get('api/?_method=getInterface&query=' + queryID);
 		},
 		
+		getSource: function(sourceID)
+		{
+			return $http.get('api/?_method=getSource&sourceID=' + sourceID);
+		},
+		
+		setSource: function(sourceID, source)
+		{
+			return $http.post('api/?_method=setSource', { sourceID: sourceID, source: source });
+		},
+		
 		runQuery: function(call, params)
 		{
 			var apiParams = 
@@ -100,13 +110,14 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 	// Set scope vars
 	$scope.view					= 'queries';
 	$scope.nav 					= 'queries';
+	$scope.tab					= 'run';
 	$scope.project				= {};
 	$scope.globals				= {};
 	$scope.error				= null;
 	$scope.compileStatusCode 	= -1;
 	$scope.compileStatus		= '';
 	$scope.editmode				= false;
-
+	
 	$scope.$watch('compileStatusCode', function(value)
 	{
 		if (value != 0)
@@ -169,10 +180,42 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 	$scope.query 		= {};
 	$scope.error		= null;
 	$scope.params		= {};
-	$scope.tab			= 'run';
 	$scope.queryTerm	= null;
 	$scope.output		= '';
 	$scope.profiling	= {};
+	$scope.editor		= null;
+	
+	$scope.initEditor = function()
+	{
+		if ($scope.editor)
+			return;
+			
+		$scope.editor =	ace.edit("query-editor");
+		$scope.editor.setTheme("ace/theme/chrome");
+		$scope.editor.getSession().setMode("ace/mode/javascript");	
+		
+		$api.getSource( $scope.query.id ).success( function(data)
+		{
+			$scope.error = null;
+			$scope.editor.setValue(data, 0);
+			$scope.editor.clearSelection();
+			$scope.editor.gotoLine(1);
+			$scope.editor.getSession().setScrollTop(1);
+		}).error( function(data)
+		{
+			$scope.error = data.error;
+		});
+	};
+	
+	$scope.save = function()
+	{
+		$api.setSource( $scope.query.id, $scope.editor.getValue() ).success( function(data)
+		{
+		}).error( function(data)
+		{
+			$scope.error = data.error;
+		});
+	};
 
 	$scope.$watch('compileStatusCode', function(value)
 	{

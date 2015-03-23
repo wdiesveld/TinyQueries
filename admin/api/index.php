@@ -67,7 +67,9 @@ class AdminApi extends TinyQueries\Api
 			case 'compile': 		return $this->compile();
 			case 'getInterface':	return $this->getInterface();
 			case 'getProject':		return $this->getProject();
+			case 'getSource':		return $this->getSource();
 			case 'getTermParams': 	return $this->getTermParams();
+			case 'setSource':		return $this->setSource();
 		}
 		
 		throw new Exception('Unknown method');
@@ -117,7 +119,48 @@ class AdminApi extends TinyQueries\Api
 		
 		return $project;
 	}
+	
+	/**
+	 * Returns the source of a query (if available)
+	 *
+	 */
+	public function getSource()
+	{
+		$sourceID = self::getRequestVar('sourceID');
+		
+		if (!$sourceID)
+			throw new Exception("sourceID not known");
+			
+		$config	= new TinyQueries\Config();
+			
+		if (!$config->compiler->input)
+			throw new Exception("No input folder specified");
+		
+		$filename = $config->compiler->input . "/" . $sourceID . ".json";
+		
+		// NOTE: regular api output is overruled - just the file itself is sent
+		header( 'Content-type:  text/plain' );
+		echo TinyQueries\QuerySet::load( $filename );
+		exit;
+	}
 
+	/**
+	 * Returns the source of a query (if available)
+	 *
+	 */
+	public function setSource()
+	{
+		$sourceID = self::getRequestVar('sourceID');
+		
+		if (!$sourceID)
+			throw new Exception("sourceID not known");
+			
+		return array
+		(
+			'message' => 'Source for ' . $sourceID . ' is saved'
+		);
+	}
+	
 	/**
 	 * Returns the interface for a query
 	 *
