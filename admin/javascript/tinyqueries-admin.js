@@ -193,6 +193,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		$scope.editor =	ace.edit("query-editor");
 		$scope.editor.setTheme("ace/theme/chrome");
 		$scope.editor.getSession().setMode("ace/mode/javascript");	
+		$scope.editor.getSession().setOption("useWorker", false);
 		
 		$api.getSource( $scope.query.id ).success( function(data)
 		{
