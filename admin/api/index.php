@@ -117,6 +117,29 @@ class AdminApi extends TinyQueries\Api
 		$project->dbStatus					= ($this->db && $this->db->connected()) ? 'Connected' : 'Not connected';
 		$project->mode						= ($config->compiler->api_key) ? 'edit' : 'view';
 		
+		// Load query list from the input folder in order to get the 'hidden' queries also (queries having expose='hide')
+		if ($project->mode == 'edit' && $project->compiler->input)
+		{
+			$match = null;
+			
+			foreach (scandir($project->compiler->input) as $file)
+				if (preg_match("/^(\w.*)\.json$/", $file, $match))
+				{
+					$queryID = $match[1];
+					
+					if (!property_exists( $project->queries, $queryID ))
+					{
+						$queryDef = new StdClass();
+						$queryDef->expose 		= 'hide';
+						$queryDef->type			= null;
+						$queryDef->defaultParam = null;
+						$queryDef->operation	= null;
+						
+						$project->queries->$queryID = $queryDef;
+					}
+				}
+		}
+		
 		return $project;
 	}
 	
@@ -145,7 +168,7 @@ class AdminApi extends TinyQueries\Api
 	}
 
 	/**
-	 * Returns the source of a query (if available)
+	 * Saves the source of a query
 	 *
 	 */
 	public function setSource()
