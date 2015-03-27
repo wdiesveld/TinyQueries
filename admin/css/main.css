@@ -71,6 +71,11 @@
 	color: #ddd;
 }
 
+.saveNeeded
+{
+	color: red !important;
+}
+
 .scroll-panel
 {
 	overflow-x: hidden; 

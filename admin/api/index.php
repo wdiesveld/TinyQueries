@@ -69,7 +69,7 @@ class AdminApi extends TinyQueries\Api
 			case 'getProject':		return $this->getProject();
 			case 'getSource':		return $this->getSource();
 			case 'getTermParams': 	return $this->getTermParams();
-			case 'setSource':		return $this->setSource();
+			case 'saveSource':		return $this->saveSource();
 		}
 		
 		throw new Exception('Unknown method');
@@ -144,10 +144,10 @@ class AdminApi extends TinyQueries\Api
 	}
 	
 	/**
-	 * Returns the source of a query (if available)
+	 * Returns the name of the source file which is posted
 	 *
 	 */
-	public function getSource()
+	private function getSourceFilename()
 	{
 		$sourceID = self::getRequestVar('sourceID');
 		
@@ -159,7 +159,16 @@ class AdminApi extends TinyQueries\Api
 		if (!$config->compiler->input)
 			throw new Exception("No input folder specified");
 		
-		$filename = $config->compiler->input . "/" . $sourceID . ".json";
+		return $config->compiler->input . "/" . $sourceID . ".json";
+	}
+	
+	/**
+	 * Returns the source of a query (if available)
+	 *
+	 */
+	public function getSource()
+	{
+		$filename = $this->getSourceFilename();
 		
 		// NOTE: regular api output is overruled - just the file itself is sent
 		header( 'Content-type:  text/plain' );
@@ -171,16 +180,19 @@ class AdminApi extends TinyQueries\Api
 	 * Saves the source of a query
 	 *
 	 */
-	public function setSource()
+	public function saveSource()
 	{
-		$sourceID = self::getRequestVar('sourceID');
+		$filename 	= $this->getSourceFilename();
+		$source 	= self::getRequestVar('source');
 		
-		if (!$sourceID)
-			throw new Exception("sourceID not known");
+		$r = @file_put_contents($filename, $source);
+			
+		if (!$r) 
+			throw new \Exception('Error writing ' . $filename . ' -  are the permissions set correctly?' );			
 			
 		return array
 		(
-			'message' => 'Source for ' . $sourceID . ' is saved'
+			'message' => 'Source is saved'
 		);
 	}
 	

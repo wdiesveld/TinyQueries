@@ -56,7 +56,7 @@ admin.factory('$api', ['$http', function($http)
 			return $http.get('api/?_method=getSource&sourceID=' + sourceID);
 		},
 		
-		setSource: function(sourceID, source)
+		saveSource: function(sourceID, source)
 		{
 			return $http(
 			{
@@ -64,7 +64,7 @@ admin.factory('$api', ['$http', function($http)
 				url: 'api/', 
 				data: $.param(
 				{ 
-					_method: 'setSource', 
+					_method: 'saveSource', 
 					sourceID: sourceID, 
 					source: source 
 				}),
@@ -140,6 +140,12 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 		$scope.refresh();
 	});
 	
+	// tab needs to be set at the main controller to remember the tab if another query is selected
+	$scope.setTab = function(tab)
+	{
+		$scope.tab = tab;
+	}
+	
 	// Initialize queries var
 	$scope.refresh = function() 
 	{
@@ -198,6 +204,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 	$scope.output		= '';
 	$scope.profiling	= {};
 	$scope.editor		= null;
+	$scope.saveNeeded	= false;
 	
 	$scope.initEditor = function()
 	{
@@ -206,8 +213,16 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 			
 		$scope.editor =	ace.edit("query-editor");
 		$scope.editor.setTheme("ace/theme/chrome");
-		$scope.editor.getSession().setMode("ace/mode/javascript");	
-		$scope.editor.getSession().setOption("useWorker", false);
+		$scope.editor.session.setMode("ace/mode/javascript");	
+		$scope.editor.session.setOption("useWorker", false); // disable syntax checking
+		
+		$scope.editor.session.on('change', function(e) 
+		{
+			$scope.saveNeeded = true;
+			
+			// Calling apply is needed because this is an event handler of an external module
+			$scope.$apply(); 
+		}); 		
 		
 		$api.getSource( $scope.query.id ).success( function(data)
 		{
@@ -215,7 +230,8 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 			$scope.editor.setValue(data, 0);
 			$scope.editor.clearSelection();
 			$scope.editor.gotoLine(1);
-			$scope.editor.getSession().setScrollTop(1);
+			$scope.editor.session.setScrollTop(1);
+			$scope.saveNeeded = false;
 		}).error( function(data)
 		{
 			$scope.error = data.error;
@@ -224,8 +240,9 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 	
 	$scope.save = function()
 	{
-		$api.setSource( $scope.query.id, $scope.editor.getValue() ).success( function(data)
+		$api.saveSource( $scope.query.id, $scope.editor.getValue() ).success( function(data)
 		{
+			$scope.saveNeeded = false;
 		}).error( function(data)
 		{
 			$scope.error = data.error;
@@ -324,6 +341,9 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 
 		$scope.query.id = queryID;
 		
+		if ($scope.editmode && $scope.tab == 'edit')
+			$scope.initEditor();
+			
 		$api.getQuery( queryID ).success( function(data)
 		{
 			$scope.error 	= null;

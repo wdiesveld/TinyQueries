@@ -8,10 +8,10 @@
 		</span>
 	
 		<ul class="nav navbar-nav navbar-right">
-			<li ng-class="" ng-show="tab=='edit'"><a ng-click="save()"><span class="glyphicon glyphicon-save"></span> Save</a></li>
-			<li ng-class="{active: tab=='edit'}" ng-show="editmode"><a ng-click="tab='edit';initEditor()">Edit</a></li>
-			<li ng-class="{active: tab=='run'}"><a ng-click="tab='run'">Run</a></li>
-			<li ng-class="{active: tab=='doc'}"><a ng-click="tab='doc'">Documentation</a></li>
+			<li ng-class="" ng-show="tab=='edit'"><a ng-click="save()"><span class="glyphicon glyphicon-save" ng-class="{saveNeeded: saveNeeded==true}"></span> Save</a></li>
+			<li ng-class="{active: tab=='edit'}" ng-show="editmode"><a ng-click="setTab('edit');initEditor()">Edit</a></li>
+			<li ng-class="{active: tab=='run'}"><a ng-click="setTab('run')">Run</a></li>
+			<li ng-class="{active: tab=='doc'}"><a ng-click="setTab('doc')">Documentation</a></li>
 		</ul>
 	
 	</nav>
