@@ -58,7 +58,21 @@ admin.factory('$api', ['$http', function($http)
 		
 		setSource: function(sourceID, source)
 		{
-			return $http.post('api/?_method=setSource', { sourceID: sourceID, source: source });
+			return $http(
+			{
+				method: 'POST',
+				url: 'api/', 
+				data: $.param(
+				{ 
+					_method: 'setSource', 
+					sourceID: sourceID, 
+					source: source 
+				}),
+				headers: 
+				{
+					'Content-Type': 'application/x-www-form-urlencoded'
+				}
+			});
 		},
 		
 		runQuery: function(call, params)

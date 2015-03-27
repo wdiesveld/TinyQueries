@@ -123,7 +123,7 @@ class AdminApi extends TinyQueries\Api
 			$match = null;
 			
 			foreach (scandir($project->compiler->input) as $file)
-				if (preg_match("/^(\w.*)\.json$/", $file, $match))
+				if (preg_match("/^(.*)\.json$/", $file, $match))
 				{
 					$queryID = $match[1];
 					
