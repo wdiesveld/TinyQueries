@@ -222,6 +222,18 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 			
 			// Calling apply is needed because this is an event handler of an external module
 			$scope.$apply(); 
+		});
+		
+		$scope.editor.commands.addCommand(
+		{
+			name: 'Save',
+			bindKey: {win: 'Ctrl-S',  mac: 'Command-S'},
+			exec: function(editor) 
+			{
+				$scope.save();
+				$scope.$apply(); 
+			},
+			readOnly: false
 		}); 		
 		
 		$api.getSource( $scope.query.id ).success( function(data)
