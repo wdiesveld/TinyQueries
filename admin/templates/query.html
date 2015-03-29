@@ -8,6 +8,7 @@
 		</span>
 	
 		<ul class="nav navbar-nav navbar-right">
+			<li ng-class="" ng-show="tab=='edit'"><a ng-click="compile()"><span class="glyphicon glyphicon-fire"></span> Compile</a></li>
 			<li ng-class="" ng-show="tab=='edit'"><a ng-click="save()"><span class="glyphicon glyphicon-save" ng-class="{saveNeeded: saveNeeded==true}"></span> Save</a></li>
 			<li ng-class="{active: tab=='edit'}" ng-show="editmode"><a ng-click="setTab('edit');initEditor()">Edit</a></li>
 			<li ng-class="{active: tab=='run'}"><a ng-click="setTab('run')">Run</a></li>

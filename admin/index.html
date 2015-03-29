@@ -31,9 +31,9 @@
 		<div ng-show="error" class="alert alert-danger">{{error}}</div>
 	
 		<div class="form-group">
-			<button ng-show="editmode" ng-click="compile()" type="button" class="btn btn-default btn-primary">
-				<span class="glyphicon glyphicon-fire"></span>
-				Compile
+			<button ng-show="editmode" ng-click="new()" type="button" class="btn btn-default">
+				<span class="glyphicon glyphicon-plus-sign"></span>
+				New query
 			</button>
 			<div class="btn-group" data-toggle="buttons">
 			  <label class="btn btn-default active" ng-click="view='queries';"> 
@@ -45,14 +45,14 @@
 			</div>		
 		</div>		
 		
-		<div ng-show="view=='rest'"  class="alert alert-warning">Note: REST view is experimental - some functions do not work yet</div>
-		
-		<p class="navbar-text"><span class="glyphicon glyphicon-thumbs-up" ng-show="compileStatusCode==0"></span> {{compileStatus}}</p>
+		<div><span class="glyphicon glyphicon-thumbs-up" ng-show="compileStatusCode==0"></span> {{compileStatus}}</div>
 	
 	</div>
 
 	<div id="query-list" class="scroll-panel">
 
+		<div ng-show="view=='rest'"  class="alert alert-warning">Note: REST view is experimental - some functions do not work yet</div>
+		
 		<div ng-repeat="(queryID,spec) in project.queries" ng-show="view=='queries'">
 			<a href="#/queries/{{queryID}}" >{{queryID}}</a>
 		</div>
