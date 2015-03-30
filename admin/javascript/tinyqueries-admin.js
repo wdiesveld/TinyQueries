@@ -125,7 +125,7 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 	$scope.view					= 'queries';
 	$scope.nav 					= 'queries';
 	$scope.tab					= 'run';
-	$scope.project				= {};
+	$scope.project				= null;
 	$scope.globals				= {};
 	$scope.error				= null;
 	$scope.compileStatusCode 	= -1;
@@ -144,7 +144,7 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 	$scope.setTab = function(tab)
 	{
 		$scope.tab = tab;
-	}
+	};
 	
 	// Initialize queries var
 	$scope.refresh = function() 
@@ -165,6 +165,13 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 		});
 	};
 	
+	$scope.newQuery = function()
+	{
+		var queryID = 'new-query-1';
+
+		window.location.replace( '#/queries/' + queryID );
+	};
+	
 	$scope.compile = function()
 	{
 		$scope.compileStatusCode = 1;
@@ -179,7 +186,7 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 			$scope.compileStatusCode = 2;
 			$scope.compileStatus = data.error;
 		});
-	}
+	};
 	
 	$scope.refresh();
 }]);
@@ -221,9 +228,16 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 			$scope.saveNeeded = true;
 			
 			// Calling apply is needed because this is an event handler of an external module
-			$scope.$apply(); 
+			try
+			{
+				$scope.$apply(); 
+			}
+			catch (ex)
+			{
+			}
 		});
 		
+		// Set key for save
 		$scope.editor.commands.addCommand(
 		{
 			name: 'Save',
@@ -234,20 +248,34 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 				$scope.$apply(); 
 			},
 			readOnly: false
-		}); 		
+		}); 
+
+		// Set template for new queries
+		if ($scope.query.status == 'new')
+		{
+			$scope.loadIntoEditor("/**\n *\n *\n */\n{\n\tselect: []\n\tfrom: \"\"\n}");
+			$scope.saveNeeded = true;
+			return;
+		}
 		
+		// Load source file for existing queries
 		$api.getSource( $scope.query.id ).success( function(data)
 		{
 			$scope.error = null;
-			$scope.editor.setValue(data, 0);
-			$scope.editor.clearSelection();
-			$scope.editor.gotoLine(1);
-			$scope.editor.session.setScrollTop(1);
+			$scope.loadIntoEditor(data);
 			$scope.saveNeeded = false;
 		}).error( function(data)
 		{
 			$scope.error = data.error;
 		});
+	};
+	
+	$scope.loadIntoEditor = function( text )
+	{
+		$scope.editor.setValue(text, 0);
+		$scope.editor.clearSelection();
+		$scope.editor.gotoLine(1);
+		$scope.editor.session.setScrollTop(1);
 	};
 	
 	$scope.save = function()
@@ -264,6 +292,14 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 	$scope.$watch('compileStatusCode', function(value)
 	{
 		if (value != 0)
+			return;
+			
+		$scope.refresh();
+	});
+	
+	$scope.$watch('project', function(value)
+	{
+		if (!value)
 			return;
 			
 		$scope.refresh();
@@ -353,8 +389,30 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 
 		$scope.query.id = queryID;
 		
+		// Copy status from queries var to check if query is new
+		if ($scope.project)
+		{
+			$scope.query.status = ($scope.project.queries[ queryID ])
+				? 'exist'
+				: 'new';
+		}
+		
 		if ($scope.editmode && $scope.tab == 'edit')
 			$scope.initEditor();
+			
+		if ($scope.query.status == 'new')
+		{
+			$scope.project.queries[ queryID ] = 
+			{
+				status:			'new',
+				expose: 		'public',
+				type: 			null,
+				defaultParam: 	null,
+				operation: 		null
+			};
+		
+			return;
+		}
 			
 		$api.getQuery( queryID ).success( function(data)
 		{

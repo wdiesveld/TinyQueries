@@ -10,15 +10,15 @@
 		<ul class="nav navbar-nav navbar-right">
 			<li ng-class="" ng-show="tab=='edit'"><a ng-click="compile()"><span class="glyphicon glyphicon-fire"></span> Compile</a></li>
 			<li ng-class="" ng-show="tab=='edit'"><a ng-click="save()"><span class="glyphicon glyphicon-save" ng-class="{saveNeeded: saveNeeded==true}"></span> Save</a></li>
-			<li ng-class="{active: tab=='edit'}" ng-show="editmode"><a ng-click="setTab('edit');initEditor()">Edit</a></li>
-			<li ng-class="{active: tab=='run'}"><a ng-click="setTab('run')">Run</a></li>
-			<li ng-class="{active: tab=='doc'}"><a ng-click="setTab('doc')">Documentation</a></li>
+			<li ng-class="{active: tab=='edit'}" ng-show="editmode"><a ng-click="setTab('edit');initEditor()"><span class="glyphicon glyphicon-pencil"></span> Edit</a></li>
+			<li ng-class="{active: tab=='run'}"><a ng-click="setTab('run')"><span class="glyphicon glyphicon-play-circle"></span> Run</a></li>
+			<li ng-class="{active: tab=='doc'}"><a ng-click="setTab('doc')"><span class="glyphicon glyphicon-info-sign"></span> Doc</a></li>
+			<li ng-class="" ng-show="editmode"><a ng-click="delete()"><span class="glyphicon glyphicon-trash"></span> Delete</a></li>
 		</ul>
 	
 	</nav>
 
-	<div class="tab-content" ng-show="tab=='edit'" id="query-editor" >
-	</div>
+	<div class="tab-content" ng-show="tab=='edit'" id="query-editor" ></div>
 		
 	<div class="tab-content padded scroll-panel" ng-show="tab=='run'">
 	
