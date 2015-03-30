@@ -40,6 +40,11 @@ admin.factory('$api', ['$http', function($http)
 		{
 			return $http.get('api/?_method=compile');
 		},
+		
+		deleteQuery: function(queryID)
+		{
+			return $http.get('api/?_method=deleteQuery&query=' + queryID);
+		},
 	
 		getProject:	function()
 		{
@@ -146,6 +151,11 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 		$scope.tab = tab;
 	};
 	
+	$scope.refreshMain = function()
+	{
+		$scope.refresh();
+	};
+	
 	// Initialize queries var
 	$scope.refresh = function() 
 	{
@@ -212,6 +222,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 	$scope.profiling	= {};
 	$scope.editor		= null;
 	$scope.saveNeeded	= false;
+	$scope.renameMode	= false;
 	
 	$scope.initEditor = function()
 	{
@@ -276,6 +287,24 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		$scope.editor.clearSelection();
 		$scope.editor.gotoLine(1);
 		$scope.editor.session.setScrollTop(1);
+	};
+	
+	$scope.rename = function()
+	{
+		$scope.renameMode = false;
+	};
+	
+	$scope.delete = function()
+	{
+		$api.deleteQuery( $scope.query.id ).success( function(data)
+		{
+			$scope.refreshMain();
+			// Go to home
+			// window.location.replace( '#/' );
+		}).error( function(data)
+		{
+			$scope.error = data.error;
+		});
 	};
 	
 	$scope.save = function()

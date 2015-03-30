@@ -62,6 +62,12 @@
 	padding: 24px;
 }
 
+.query-id:hover
+{
+	background-color: #CCCCCC;
+	cursor: pointer;
+}
+
 .query-type
 {
 	color: #ddd;

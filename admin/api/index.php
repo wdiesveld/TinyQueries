@@ -17,6 +17,8 @@ require_once( $pathLibs . '/Compiler.class.php' );
 // Implements the API
 class AdminApi extends TinyQueries\Api
 {
+	const REG_EXP_SOURCE_ID = "/^[\w\-]+$/";
+	
 	private $compiler;
 	private $dbError;
 	
@@ -65,6 +67,7 @@ class AdminApi extends TinyQueries\Api
 		switch ($method)
 		{
 			case 'compile': 		return $this->compile();
+			case 'deleteQuery':		return $this->deleteQuery();
 			case 'getInterface':	return $this->getInterface();
 			case 'getProject':		return $this->getProject();
 			case 'getSource':		return $this->getSource();
@@ -87,6 +90,44 @@ class AdminApi extends TinyQueries\Api
 		(
 			'message' => 'Compiled at ' . date('Y-m-d H:i:s')
 		);
+	}
+	
+	/**
+	 * Checks if file exists, if so deletes it
+	 *
+	 */
+	private function deleteFile($path)
+	{
+		if (!file_exists($path))
+			return;
+			
+		$r = @unlink( $path );
+		
+		if (!$r)
+			throw new Exception("Could not delete $file");
+	}
+	
+	/**
+	 * Deletes the source, sql and interface file of a query and recompiles the code
+	 *
+	 */
+	public function deleteQuery()
+	{
+		$queryID = self::getRequestVar('query', self::REG_EXP_SOURCE_ID);
+		
+		if (!$queryID)
+			throw new Exception("No queryID");
+		
+		$config	= new TinyQueries\Config();
+			
+		if (!$config->compiler->input)
+			throw new Exception("No input folder specified");
+			
+		$this->deleteFile( $config->compiler->input . "/" . $queryID . ".json" );
+		$this->deleteFile( $this->compiler->querySet->path() . TinyQueries\QuerySet::PATH_INTERFACE  . "/" . $queryID . ".json" );
+		$this->deleteFile( $this->compiler->querySet->path() . TinyQueries\QuerySet::PATH_SQL  		. "/" . $queryID . ".sql" );
+		
+		return $this->compile();
 	}
 	
 	/**
@@ -149,7 +190,7 @@ class AdminApi extends TinyQueries\Api
 	 */
 	private function getSourceFilename()
 	{
-		$sourceID = self::getRequestVar('sourceID');
+		$sourceID = self::getRequestVar('sourceID', self::REG_EXP_SOURCE_ID);
 		
 		if (!$sourceID)
 			throw new Exception("sourceID not known");
