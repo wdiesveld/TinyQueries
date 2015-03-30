@@ -156,7 +156,7 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 		$scope.refresh();
 	};
 	
-	// Initialize queries var
+	// Load project var
 	$scope.refresh = function() 
 	{
 		$api.getProject().success( function(data)
@@ -214,15 +214,46 @@ admin.controller('message', ['$scope', function($scope)
  */
 admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', function($scope, $api, $cookies, $routeParams)
 {
-	$scope.query 		= {};
+	$scope.query 		= null;
 	$scope.error		= null;
 	$scope.params		= {};
 	$scope.queryTerm	= null;
 	$scope.output		= '';
 	$scope.profiling	= {};
 	$scope.editor		= null;
-	$scope.saveNeeded	= false;
 	$scope.renameMode	= false;
+	
+	$scope.$watch('compileStatusCode', function(value)
+	{
+		if (value != 0)
+			return;
+			
+		$scope.refresh();
+	});
+	
+	$scope.$watch('project', function(value)
+	{
+		if (!value)
+			return;
+
+		$scope.refresh();
+	});
+	
+	/**
+	 * Destructor for this controller
+	 *
+	 */
+	$scope.$on("$destroy", function()
+	{
+		if (!$scope.editor)
+			return;
+			
+		if (!$scope.query)
+			return;
+			
+		// Copy the content of the editor to the source
+		$scope.query.source = $scope.editor.getValue();
+	});
 	
 	$scope.initEditor = function()
 	{
@@ -233,19 +264,14 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		$scope.editor.setTheme("ace/theme/chrome");
 		$scope.editor.session.setMode("ace/mode/javascript");	
 		$scope.editor.session.setOption("useWorker", false); // disable syntax checking
-		
+
 		$scope.editor.session.on('change', function(e) 
 		{
-			$scope.saveNeeded = true;
-			
 			// Calling apply is needed because this is an event handler of an external module
-			try
+			$scope.$apply( function()
 			{
-				$scope.$apply(); 
-			}
-			catch (ex)
-			{
-			}
+				$scope.query.saveNeeded = true;
+			});
 		});
 		
 		// Set key for save
@@ -260,30 +286,33 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 			},
 			readOnly: false
 		}); 
-
-		// Set template for new queries
-		if ($scope.query.status == 'new')
+		
+		// If the source is already in memory, just put it in the editor
+		if ($scope.query.source)
 		{
-			$scope.loadIntoEditor("/**\n *\n *\n */\n{\n\tselect: []\n\tfrom: \"\"\n}");
-			$scope.saveNeeded = true;
+			// Save state of saveNeeded
+			var saveNeeded = $scope.query.saveNeeded;
+			$scope.loadIntoEditor();
+			$scope.query.saveNeeded = saveNeeded;
 			return;
 		}
-		
+
 		// Load source file for existing queries
 		$api.getSource( $scope.query.id ).success( function(data)
 		{
 			$scope.error = null;
-			$scope.loadIntoEditor(data);
-			$scope.saveNeeded = false;
+			$scope.query.source = data;
+			$scope.loadIntoEditor();
+			$scope.query.saveNeeded = false;
 		}).error( function(data)
 		{
 			$scope.error = data.error;
 		});
 	};
 	
-	$scope.loadIntoEditor = function( text )
+	$scope.loadIntoEditor = function()
 	{
-		$scope.editor.setValue(text, 0);
+		$scope.editor.setValue( $scope.query.source, 0);
 		$scope.editor.clearSelection();
 		$scope.editor.gotoLine(1);
 		$scope.editor.session.setScrollTop(1);
@@ -291,6 +320,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 	
 	$scope.rename = function()
 	{
+		// TODO..
 		$scope.renameMode = false;
 	};
 	
@@ -311,29 +341,13 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 	{
 		$api.saveSource( $scope.query.id, $scope.editor.getValue() ).success( function(data)
 		{
-			$scope.saveNeeded = false;
+			$scope.query.saveNeeded = false;
 		}).error( function(data)
 		{
 			$scope.error = data.error;
 		});
 	};
 
-	$scope.$watch('compileStatusCode', function(value)
-	{
-		if (value != 0)
-			return;
-			
-		$scope.refresh();
-	});
-	
-	$scope.$watch('project', function(value)
-	{
-		if (!value)
-			return;
-			
-		$scope.refresh();
-	});
-	
 	$scope.numberOfParams = function()
 	{
 		var n=0;
@@ -414,53 +428,64 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 	
 	$scope.refresh = function()
 	{
-		var queryID = $routeParams.queryID;
-
-		$scope.query.id = queryID;
-		
-		// Copy status from queries var to check if query is new
-		if ($scope.project)
-		{
-			$scope.query.status = ($scope.project.queries[ queryID ])
-				? 'exist'
-				: 'new';
-		}
-		
-		if ($scope.editmode && $scope.tab == 'edit')
-			$scope.initEditor();
+		// As long as the project info is not loaded, don't do refresh
+		if (!$scope.project)
+			return;
 			
-		if ($scope.query.status == 'new')
-		{
+		// Get the queryID from the URL
+		var queryID = $routeParams.queryID;
+		
+		// If the query is not present in the list, create a new one
+		if (!$scope.project.queries[ queryID ])
 			$scope.project.queries[ queryID ] = 
 			{
 				status:			'new',
 				expose: 		'public',
 				type: 			null,
 				defaultParam: 	null,
-				operation: 		null
+				operation: 		null,
+				runnable:		false,
+				source:			"/**\n *\n *\n */\n{\n\tselect: []\n\tfrom: \"\"\n}",
+				saveNeeded:		true
 			};
 		
-			return;
-		}
-			
-		$api.getQuery( queryID ).success( function(data)
-		{
-			$scope.error 	= null;
-			$scope.query 	= reformatQueryDef( data );
-			$scope.query.id = queryID;
-			$scope.query.path = getPath( $scope.query, queryID );
-			$scope.query.method = getMethod( $scope.query );
-			
-			if ($scope.query && !$scope.queryTerm)
-				$scope.queryTerm = $scope.query.id;
+		// Assign query as reference 
+		$scope.query = $scope.project.queries[ queryID ];
+
+		$scope.query.id = queryID;
+		
+		// Change tab if query is not runnable
+		if (($scope.tab == 'run' || $scope.tab == 'doc') && !$scope.query.runnable)
+			$scope.setTab('edit');
+		
+		if ($scope.editmode && $scope.tab == 'edit')
+			$scope.initEditor();
+		
+		if ($scope.query.runnable)
+			$api.getQuery( queryID ).success( function(data)
+			{
+				var query = reformatQueryDef( data );
 				
-			// Set the parameters
-			$scope.params = setValues( $scope.query.params, $cookies );
+				// Override query props
+				for (var prop in query)
+					$scope.query[ prop ] = query[ prop ];
 				
-		}).error( function(data)
-		{
-			$scope.error = data.error;
-		});
+				$scope.error 	= null;
+				
+				$scope.query.id = queryID;
+				$scope.query.path = getPath( $scope.query, queryID );
+				$scope.query.method = getMethod( $scope.query );
+				
+				if (query && !$scope.queryTerm)
+					$scope.queryTerm = $scope.query.id;
+					
+				// Set the parameters
+				$scope.params = setValues( $scope.query.params, $cookies );
+					
+			}).error( function(data)
+			{
+				$scope.error = data.error;
+			});
 	};
 	
 	$scope.refresh();

@@ -17,7 +17,7 @@ require_once( $pathLibs . '/Compiler.class.php' );
 // Implements the API
 class AdminApi extends TinyQueries\Api
 {
-	const REG_EXP_SOURCE_ID = "/^[\w\-]+$/";
+	const REG_EXP_SOURCE_ID = "/^[\w\.\-]+$/";
 	
 	private $compiler;
 	private $dbError;
@@ -158,7 +158,12 @@ class AdminApi extends TinyQueries\Api
 		$project->dbStatus					= ($this->db && $this->db->connected()) ? 'Connected' : 'Not connected';
 		$project->mode						= ($config->compiler->api_key) ? 'edit' : 'view';
 		
-		// Load query list from the input folder in order to get the 'hidden' queries also (queries having expose='hide')
+		// Set runnable = true for all compiled queries
+		foreach ($project->queries as $queryID => $def)
+			$project->queries->$queryID->runnable = true;
+		
+		// Load query list from the input folder in order to get all other files which have no equivalent in the sql folder
+		// (these are _model, hidden queries, not compiled queries)
 		if ($project->mode == 'edit' && $project->compiler->input)
 		{
 			$match = null;
@@ -175,6 +180,7 @@ class AdminApi extends TinyQueries\Api
 						$queryDef->type			= null;
 						$queryDef->defaultParam = null;
 						$queryDef->operation	= null;
+						$queryDef->runnable		= false;
 						
 						$project->queries->$queryID = $queryDef;
 					}
