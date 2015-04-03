@@ -44,8 +44,6 @@
 			  </label>
 			</div>		
 		</div>		
-		
-		<div><span class="glyphicon glyphicon-thumbs-up" ng-show="compileStatusCode==0"></span> {{compileStatus}}</div>
 	
 	</div>
 
@@ -64,7 +62,11 @@
 		
 	</div>
 			
-	<div id="query-container" ng-view></div>
+	<div id="query-container" ng-view class="{{mode}}"></div>
+	
+	<div id="message-container" class="scroll-panel" ng-show="editmode">
+		<div><span class="glyphicon glyphicon-thumbs-up" ng-show="compileStatusCode==0"></span> {{compileStatus}}</div>
+	</div>
 
     <!-- Bootstrap core JavaScript
     ================================================== -->

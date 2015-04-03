@@ -10,6 +10,17 @@
 	height: 32px;
 	margin: 0 0 24px 0;
 }
+
+#message-container
+{
+	position: absolute;
+	top: calc(100% - 110px);
+	right: 75%;
+	bottom: 0;
+	left: 0;
+	background-color: #F0F0F0;
+	padding: 12px;
+}
  
 #query-container
 {
@@ -23,12 +34,17 @@
 #query-list
 {
 	position: absolute;
-	top: 150px;
+	top: 110px;
 	right: 75%;
 	bottom: 0;
 	left: 0;
 	padding: 12px;
 	background-color: #f0f0f0;
+}
+
+#query-list.edit
+{
+	bottom: 110px;
 }
 
 #toolbar
@@ -40,7 +56,7 @@
 	top: 0;
 	left: 0;
 	right: 75%;
-	bottom: calc(100% - 150px);
+	bottom: calc(100% - 110px);
 }
 	
 .doc .line
