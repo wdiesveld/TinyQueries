@@ -18,7 +18,8 @@
 	right: 75%;
 	bottom: 0;
 	left: 0;
-	background-color: #F0F0F0;
+	background-color: #f0f0f0;
+	border-top: 2px solid #ccc;
 	padding: 12px;
 }
  

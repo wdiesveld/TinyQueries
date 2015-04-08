@@ -47,7 +47,7 @@
 	
 	</div>
 
-	<div id="query-list" class="scroll-panel">
+	<div id="query-list" class="scroll-panel {{mode}}">
 
 		<div ng-show="view=='rest'"  class="alert alert-warning">Note: REST view is experimental - some functions do not work yet</div>
 		
@@ -62,7 +62,7 @@
 		
 	</div>
 			
-	<div id="query-container" ng-view class="{{mode}}"></div>
+	<div id="query-container" ng-view ></div>
 	
 	<div id="message-container" class="scroll-panel" ng-show="editmode">
 		<div><span class="glyphicon glyphicon-thumbs-up" ng-show="compileStatusCode==0"></span> {{compileStatus}}</div>
