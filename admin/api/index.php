@@ -157,10 +157,13 @@ class AdminApi extends TinyQueries\Api
 		$project->dbError 					= $this->dbError;
 		$project->dbStatus					= ($this->db && $this->db->connected()) ? 'Connected' : 'Not connected';
 		$project->mode						= ($config->compiler->api_key) ? 'edit' : 'view';
+
+		if (!property_exists($project, 'queries'))
+			$project->queries = new StdClass();
 		
 		// Set runnable = true for all compiled queries
-		foreach ($project->queries as $queryID => $def)
-			$project->queries->$queryID->runnable = true;
+			foreach ($project->queries as $queryID => $def)
+				$project->queries->$queryID->runnable = true;
 		
 		// Load query list from the input folder in order to get all other files which have no equivalent in the sql folder
 		// (these are _model, hidden queries, not compiled queries)
