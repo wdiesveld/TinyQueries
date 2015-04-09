@@ -27,9 +27,6 @@
 	
 		<a href="#" id="logo">&nbsp;</a>
 	
- 		<div class="spinner" ng-show="loading">loading...</div>
-		<div ng-show="error" class="alert alert-danger">{{error}}</div>
-	
 		<div class="form-group">
 			<button ng-show="editmode" ng-click="newQuery()" type="button" class="btn btn-default">
 				<span class="glyphicon glyphicon-plus-sign"></span>
@@ -47,7 +44,7 @@
 	
 	</div>
 
-	<div id="query-list" class="scroll-panel {{mode}}">
+	<div id="query-list" class="scroll-panel" ng-class="{ short: showMessageBox }">
 
 		<div ng-show="view=='rest'"  class="alert alert-warning">Note: REST view is experimental - some functions do not work yet</div>
 		
@@ -64,8 +61,14 @@
 			
 	<div id="query-container" ng-view ></div>
 	
-	<div id="message-container" class="scroll-panel" ng-show="editmode">
-		<div><span class="glyphicon glyphicon-thumbs-up" ng-show="compileStatusCode==0"></span> {{compileStatus}}</div>
+	<div id="message-container" ng-show="showMessageBox">
+		<div class="header">Messages 
+			<button ng-click="showMessageBox=false" type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+		</div>
+		<div class="scroll-panel content">
+			<div><span class="glyphicon glyphicon-thumbs-up" ng-show="compileStatusCode==0"></span> {{compileStatus}}</div>
+			<div ng-show="error" class="alert alert-danger">{{error}}</div>
+		</div>
 	</div>
 
     <!-- Bootstrap core JavaScript

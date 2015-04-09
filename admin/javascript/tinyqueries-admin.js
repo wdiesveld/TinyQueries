@@ -137,6 +137,7 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 	$scope.compileStatus		= '';
 	$scope.editmode				= false;
 	$scope.mode					= 'view';
+	$scope.showMessageBox		= false;
 	
 	$scope.$watch('compileStatusCode', function(value)
 	{
@@ -173,6 +174,7 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 				
 		}).error( function(data)
 		{
+			$scope.showMessageBox = true;
 			$scope.error = data.error;
 		});
 	};
@@ -186,6 +188,7 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 	
 	$scope.compile = function()
 	{
+		$scope.showMessageBox = true;
 		$scope.compileStatusCode = 1;
 		$scope.compileStatus = 'Compiler is being called...';
 		$api.compile().success(function(data)

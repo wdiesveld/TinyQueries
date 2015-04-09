@@ -14,13 +14,25 @@
 #message-container
 {
 	position: absolute;
-	top: calc(100% - 110px);
+	top: calc(100% - 160px);
 	right: 75%;
 	bottom: 0;
 	left: 0;
 	background-color: #f0f0f0;
 	border-top: 2px solid #ccc;
+}
+
+#message-container .header
+{
+	background-color: #BBBBBB;
+	line-height: 30px;
+	padding: 0 12px;
+}
+
+#message-container .content
+{
 	padding: 12px;
+	height: calc(100% - 30px);
 }
  
 #query-container
@@ -43,9 +55,9 @@
 	background-color: #f0f0f0;
 }
 
-#query-list.edit
+#query-list.short
 {
-	bottom: 110px;
+	bottom: 160px;
 }
 
 #toolbar
