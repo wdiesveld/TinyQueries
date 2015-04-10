@@ -1,0 +1,20 @@
+{
+    "name": "tiny-queries/tiny-queries",
+    "description": "Highly efficient database layer as alternative for ORM - direct mapping to REST interface",
+    "require": {
+		"php": ">=5.3.0",
+		"ext-pdo": "*"
+    },
+	"keywords": ["database", "pdo", "orm", "sql", "compiler"],
+	"homepage": "http://www.tinyqueries.com/",
+	"license": ["Apache-2.0", "GPL-2.0+"],
+	"authors": [
+		{
+			"name": "Query Technology",
+			"homepage": "http://www.querytechnology.com"
+		}
+	],
+	"autoload": {
+		"files": ["libs/QueryDB.php"]
+	}
+}
