@@ -19,20 +19,24 @@
 	bottom: 0;
 	left: 0;
 	background-color: #f0f0f0;
-	border-top: 2px solid #ccc;
 }
 
 #message-container .header
 {
 	background-color: #BBBBBB;
-	line-height: 30px;
 	padding: 0 12px;
+}
+
+#message-container .header,
+#message-container .header>*
+{
+	line-height: 32px;
 }
 
 #message-container .content
 {
 	padding: 12px;
-	height: calc(100% - 30px);
+	height: calc(100% - 32px);
 }
  
 #query-container

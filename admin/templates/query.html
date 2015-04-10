@@ -42,7 +42,6 @@
 		</form>
 	
 		<ul class="nav navbar-nav navbar-right">
-			<li ng-class="" ng-show="tab=='edit'"><a ng-click="compile()"><span class="glyphicon glyphicon-fire"></span> Compile</a></li>
 			<li ng-class="" ng-show="tab=='edit'"><a ng-click="save()"><span class="glyphicon glyphicon-save" ng-class="{saveNeeded: query.saveNeeded==true}"></span> Save</a></li>
 			<li ng-class="{active: tab=='edit'}" ng-show="editmode"><a ng-click="setTab('edit');initEditor()"><span class="glyphicon glyphicon-pencil"></span> Edit</a></li>
 			<li ng-class="{active: tab=='run'}" ng-show="query.runnable"><a ng-click="setTab('run')"><span class="glyphicon glyphicon-play-circle"></span> Run</a></li>
