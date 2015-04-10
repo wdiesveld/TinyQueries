@@ -15,6 +15,6 @@
 		}
 	],
 	"autoload": {
-		"files": ["libs/QueryDB.php"]
+		"files": ["libs/QueryDB.class.php"]
 	}
 }
