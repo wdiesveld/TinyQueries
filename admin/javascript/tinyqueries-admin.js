@@ -138,6 +138,7 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 	$scope.editmode				= false;
 	$scope.mode					= 'view';
 	$scope.showMessageBox		= false;
+	$scope.newQueryIndex		= 0;
 	
 	$scope.$watch('compileStatusCode', function(value)
 	{
@@ -181,7 +182,14 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 	
 	$scope.newQuery = function()
 	{
-		var queryID = 'new-query-1';
+		var queryID;
+		
+		do
+		{
+			$scope.newQueryIndex ++;
+			queryID = 'new-query-' + $scope.newQueryIndex;
+		} 
+		while ($scope.project.queries[ queryID ]);
 
 		window.location.replace( '#/queries/' + queryID );
 	};
@@ -450,7 +458,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 				defaultParam: 	null,
 				operation: 		null,
 				runnable:		false,
-				source:			"/**\n *\n *\n */\n{\n\tselect: []\n\tfrom: \"\"\n}",
+				source:			"/**\n *\n *\n */\n{\n\tselect: [],\n\tfrom: \"\"\n}",
 				saveNeeded:		true
 			};
 		
