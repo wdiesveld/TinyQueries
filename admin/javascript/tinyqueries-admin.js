@@ -159,6 +159,12 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 		$scope.refresh();
 	};
 	
+	$scope.showError = function(error)
+	{
+		$scope.showMessageBox = true;
+		$scope.error = error;
+	};
+	
 	// Load project var
 	$scope.refresh = function() 
 	{
@@ -175,8 +181,7 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 				
 		}).error( function(data)
 		{
-			$scope.showMessageBox = true;
-			$scope.error = data.error;
+			$scope.showError( data.error );
 		});
 	};
 	
@@ -228,7 +233,7 @@ admin.controller('message', ['$scope', function($scope)
 admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', function($scope, $api, $cookies, $routeParams)
 {
 	$scope.query 		= null;
-	$scope.error		= null;
+	$scope.errorRun		= null;
 	$scope.params		= {};
 	$scope.queryTerm	= null;
 	$scope.output		= '';
@@ -319,7 +324,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 			$scope.query.saveNeeded = false;
 		}).error( function(data)
 		{
-			$scope.error = data.error;
+			$scope.showError( data.error );
 		});
 	};
 	
@@ -346,7 +351,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 			// window.location.replace( '#/' );
 		}).error( function(data)
 		{
-			$scope.error = data.error;
+			$scope.showError( data.error );
 		});
 	};
 	
@@ -357,7 +362,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 			$scope.query.saveNeeded = false;
 		}).error( function(data)
 		{
-			$scope.error = data.error;
+			$scope.showError( data.error );
 		});
 	};
 
@@ -390,11 +395,11 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		
 		$api.getTermParams( $scope.queryTerm ).success( function(data)
 		{
-			$scope.error = null;
+			$scope.errorRun = null;
 			$scope.params = setValues( data.params, $cookies );
 		}).error(function(data)
 		{
-			$scope.error = data.error;
+			$scope.errorRun = data.error;
 		});
 	}
 	
@@ -419,7 +424,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		
 		$api.runQuery( call, params ).success( function(data)
 		{
-			$scope.error 	= null;
+			$scope.errorRun	= null;
 			$scope.output 	= data.result;
 			$scope.nRows 	= (data.result && data.result.length) ? data.result.length + ' rows' : '';
 			
@@ -429,7 +434,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 					
 		}).error( function(data)
 		{
-			$scope.error 	= data.error;
+			$scope.errorRun	= data.error;
 			$scope.output 	= data;
 			$scope.nRows 	= null;
 			$scope.profiling = {};
@@ -483,7 +488,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 				for (var prop in query)
 					$scope.query[ prop ] = query[ prop ];
 				
-				$scope.error 	= null;
+				$scope.errorRun	= null;
 				
 				$scope.query.id = queryID;
 				$scope.query.path = getPath( $scope.query, queryID );
