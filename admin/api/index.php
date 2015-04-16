@@ -127,7 +127,10 @@ class AdminApi extends TinyQueries\Api
 		$this->deleteFile( $this->compiler->querySet->path() . TinyQueries\QuerySet::PATH_INTERFACE  . "/" . $queryID . ".json" );
 		$this->deleteFile( $this->compiler->querySet->path() . TinyQueries\QuerySet::PATH_SQL  		. "/" . $queryID . ".sql" );
 		
-		return $this->compile();
+		return array
+		(
+			'message' => 'Query is removed'
+		);
 	}
 	
 	/**

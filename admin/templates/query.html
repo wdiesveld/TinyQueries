@@ -51,7 +51,15 @@
 	 
 	</nav>
 
-	<div class="tab-content" ng-show="tab=='edit'" id="query-editor" ></div>
+	<div class="tab-content" ng-show="tab=='edit'" >
+		
+		<section ng-controller="AceCtrl" style="width: 100%; height: 100%">
+ 
+			<div ui-ace="aceOption" ng-model="query.source" id="query-editor" style="width: 100%; height: 100%"></div>
+ 
+		</section>
+	
+	</div>
 		
 	<div class="tab-content padded scroll-panel" ng-show="tab=='run'">
 	

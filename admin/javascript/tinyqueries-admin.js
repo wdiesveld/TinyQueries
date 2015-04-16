@@ -5,7 +5,7 @@
  * @package TinyQueries
  */
  
-var admin = angular.module('TinyQueriesAdmin', ['ngCookies', 'ngRoute']);
+var admin = angular.module('TinyQueriesAdmin', ['ngCookies', 'ngRoute', 'ui.ace']);
 
 admin.config(['$routeProvider',
 	function($routeProvider) 
@@ -129,7 +129,7 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 	// Set scope vars
 	$scope.view					= 'queries';
 	$scope.nav 					= 'queries';
-	$scope.tab					= 'run';
+	$scope.tab					= 'edit';
 	$scope.project				= null;
 	$scope.globals				= {};
 	$scope.error				= null;
@@ -228,7 +228,61 @@ admin.controller('message', ['$scope', function($scope)
 
 
 /**
- * Controller for query info
+ * Controller for editor
+ *
+ */
+admin.controller('AceCtrl', [ '$scope', function($scope)
+{
+	// The ui-ace option
+	$scope.aceOption = 
+	{
+		onLoad: function (_ace) 
+		{
+			_ace.setTheme("ace/theme/chrome");
+			_ace.session.setMode("ace/mode/javascript");	
+			_ace.session.setOption("useWorker", false); // disable syntax checking
+			
+			// Set event handler for code changes
+			_ace.session.on('change', function(e) 
+			{
+				if (!$scope.query)
+					return;
+				
+				// If no source code is being loaded, it is assumed the change event was triggered by an edit
+				if (!$scope.query.loading)
+				{
+					$scope.query.saveNeeded = true;
+					return;
+				}
+				
+				$scope.query.saveNeeded = false;
+					
+				// Somehow, the source is loaded in 4 parts
+				if ($scope.query.loading<4)
+					$scope.query.loading++;
+				else
+					$scope.query.loading = 0;
+			});
+			
+			// Set key for save
+			_ace.commands.addCommand(
+			{
+				name: 'Save',
+				bindKey: {win: 'Ctrl-S',  mac: 'Command-S'},
+				exec: function(editor) 
+				{
+					$scope.save();
+				},
+				readOnly: false
+			}); 
+		}
+	};
+}]);
+
+
+/**
+ * Controller for query 
+ *
  */
 admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', function($scope, $api, $cookies, $routeParams)
 {
@@ -238,7 +292,6 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 	$scope.queryTerm	= null;
 	$scope.output		= '';
 	$scope.profiling	= {};
-	$scope.editor		= null;
 	$scope.renameMode	= false;
 	
 	$scope.$watch('compileStatusCode', function(value)
@@ -257,83 +310,29 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		$scope.refresh();
 	});
 	
-	/**
-	 * Destructor for this controller
-	 *
-	 */
-	$scope.$on("$destroy", function()
+	$scope.initSource = function()
 	{
-		if (!$scope.editor)
-			return;
-			
-		if (!$scope.query)
-			return;
-			
-		// Copy the content of the editor to the source
-		$scope.query.source = $scope.editor.getValue();
-	});
-	
-	$scope.initEditor = function()
-	{
-		if ($scope.editor)
-			return;
-			
-		$scope.editor =	ace.edit("query-editor");
-		$scope.editor.setTheme("ace/theme/chrome");
-		$scope.editor.session.setMode("ace/mode/javascript");	
-		$scope.editor.session.setOption("useWorker", false); // disable syntax checking
-
-		$scope.editor.session.on('change', function(e) 
-		{
-			// Calling apply is needed because this is an event handler of an external module
-			$scope.$apply( function()
-			{
-				$scope.query.saveNeeded = true;
-			});
-		});
-		
-		// Set key for save
-		$scope.editor.commands.addCommand(
-		{
-			name: 'Save',
-			bindKey: {win: 'Ctrl-S',  mac: 'Command-S'},
-			exec: function(editor) 
-			{
-				$scope.save();
-				$scope.$apply(); 
-			},
-			readOnly: false
-		}); 
-		
-		// If the source is already in memory, just put it in the editor
+		// Return if the source is already in memory
 		if ($scope.query.source)
 		{
-			// Save state of saveNeeded
-			var saveNeeded = $scope.query.saveNeeded;
-			$scope.loadIntoEditor();
-			$scope.query.saveNeeded = saveNeeded;
+			$scope.query.loading = 1;
 			return;
 		}
+		
+		// Return if there is no ID
+		if (!$scope.query.id)
+			return;
 
 		// Load source file for existing queries
 		$api.getSource( $scope.query.id ).success( function(data)
 		{
 			$scope.error = null;
+			$scope.query.loading = 1;
 			$scope.query.source = data;
-			$scope.loadIntoEditor();
-			$scope.query.saveNeeded = false;
 		}).error( function(data)
 		{
 			$scope.showError( data.error );
 		});
-	};
-	
-	$scope.loadIntoEditor = function()
-	{
-		$scope.editor.setValue( $scope.query.source, 0);
-		$scope.editor.clearSelection();
-		$scope.editor.gotoLine(1);
-		$scope.editor.session.setScrollTop(1);
 	};
 	
 	$scope.rename = function()
@@ -346,9 +345,14 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 	{
 		$api.deleteQuery( $scope.query.id ).success( function(data)
 		{
+			// Query list is changed so update main controller
 			$scope.refreshMain();
-			// Go to home
-			// window.location.replace( '#/' );
+			
+			// Go to home (wait before modal has been removed)
+			setTimeout( function()
+			{
+				window.location.replace( '#/' );
+			}, 1000);
 		}).error( function(data)
 		{
 			$scope.showError( data.error );
@@ -357,8 +361,11 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 	
 	$scope.save = function()
 	{
-		$api.saveSource( $scope.query.id, $scope.editor.getValue() ).success( function(data)
+		$api.saveSource( $scope.query.id, $scope.query.source ).success( function(data)
 		{
+			// Query file might be changed so update main controller (e.g. for compile needed)
+			$scope.refreshMain();
+			
 			$scope.query.saveNeeded = false;
 		}).error( function(data)
 		{
@@ -468,7 +475,14 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 			};
 		
 		// Assign query as reference 
-		$scope.query = $scope.project.queries[ queryID ];
+		if (!$scope.query)
+			$scope.query = $scope.project.queries[ queryID ];
+		else
+		{
+			// If query already exists only overwrite properties (otherwise source is reloaded which causes the cursor to be at the top)
+			for (var prop in $scope.project.queries[ queryID ])
+				$scope.query[ prop ] = $scope.project.queries[ queryID ][ prop ];
+		}
 
 		$scope.query.id = queryID;
 		
@@ -477,7 +491,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 			$scope.setTab('edit');
 		
 		if ($scope.editmode && $scope.tab == 'edit')
-			$scope.initEditor();
+			$scope.initSource();
 		
 		if ($scope.query.runnable)
 			$api.getQuery( queryID ).success( function(data)

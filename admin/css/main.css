@@ -75,7 +75,12 @@
 	right: calc(100% - 350px);
 	bottom: calc(100% - 120px);
 }
-	
+
+.compileNeeded
+{
+	color: #FCA235 !important;
+}
+
 .doc .line
 {
 	min-height: 1em;

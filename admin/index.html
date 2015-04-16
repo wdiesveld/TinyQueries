@@ -30,7 +30,7 @@
 		<div class="form-group">
 
 			<button ng-show="editmode" ng-click="compile()" type="button" class="btn btn-primary">
-				<span class="glyphicon glyphicon-fire"></span>
+				<span class="glyphicon glyphicon-fire" ng-class="{compileNeeded: project.compiler.compileNeeded==true}"></span>
 				Compile
 			</button>
 			
@@ -92,6 +92,8 @@
     <script src="javascript/angular-cookies-1.2.1.js" type="text/javascript" charset="utf-8"></script>
     <script src="javascript/angular-route-1.2.1.js" type="text/javascript" charset="utf-8"></script>
 	<script src="javascript/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+	<script src="javascript/ui-ace.min.js" type="text/javascript" charset="utf-8"></script>
+
     <script src="javascript/tinyqueries-admin.js"></script>
 
   </body>
