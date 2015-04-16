@@ -255,8 +255,6 @@ admin.controller('AceCtrl', [ '$scope', function($scope)
 					return;
 				}
 				
-				$scope.query.saveNeeded = false;
-					
 				// Somehow, the source is loaded in 4 parts
 				if ($scope.query.loading<4)
 					$scope.query.loading++;
@@ -520,7 +518,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 			});
 	};
 	
-	$scope.refresh();
+	// $scope.refresh();
 }]);
 
 
