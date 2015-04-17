@@ -41,6 +41,11 @@ admin.factory('$api', ['$http', function($http)
 	 */
 	return {
 	
+		testApi: function()
+		{
+			return $http.get('api/?_method=testApi');
+		},
+	
 		compile: function()
 		{
 			return $http.get('api/?_method=compile');
@@ -49,6 +54,11 @@ admin.factory('$api', ['$http', function($http)
 		deleteQuery: function(queryID)
 		{
 			return $http.get('api/?_method=deleteQuery&query=' + queryID);
+		},
+		
+		renameQuery: function(queryIDold, queryIDnew)
+		{
+			return $http.get('api/?_method=renameQuery&query_old=' + queryIDold + '&query_new=' + queryIDnew);
 		},
 	
 		getProject:	function()
@@ -145,6 +155,17 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 	$scope.mode					= 'view';
 	$scope.showMessageBox		= false;
 	$scope.newQueryIndex		= 0;
+	
+	// Basic check if api is working
+	$api.testApi().success( function(data)
+	{
+		if (!data.message)
+			$scope.showError("API for admintool is not working; there might be a PHP error: " + data);
+		
+	}).error( function(data)
+	{
+		$scope.showError("API for admintool is not working; check webserver settings for admin/api folder");
+	});
 	
 	$scope.$watch('compileStatusCode', function(value)
 	{
@@ -336,8 +357,38 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 	 */
 	$scope.rename = function()
 	{
-		// TODO..
 		$scope.renameMode = false;
+		
+		var oldName = $routeParams.queryID;
+		
+		// If name has not changed do nothing
+		if (oldName == $scope.query.id)
+			return;
+		
+		$api.renameQuery( oldName, $scope.query.id ).success( function(data)
+		{
+			// Update URL and query list
+			window.location.replace( '#/queries/' + $scope.query.id );
+			$scope.refreshMain();
+			
+		}).error( function(data)
+		{
+			$scope.showError( data.error );
+		});
+		
+		return false;
+	};
+	
+	/**
+	 * Handler for cancelling rename query
+	 *
+	 */
+	$scope.renameCancel = function()
+	{
+		$scope.renameMode = false;
+		
+		// Reset to the old queryID
+		$scope.query.id = $routeParams.queryID;
 	};
 	
 	/**

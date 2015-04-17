@@ -31,13 +31,13 @@
 		
 		<form ng-show="renameMode" ng-submit="rename()" class="navbar-form navbar-left">
 			<div class="form-group">
-				<input type="text" class="form-control" placeholder="QueryID" ng-model="query.id" ng-blur="rename()" style="width: 400px" />
+				<input type="text" class="form-control" placeholder="QueryID" ng-model="query.id" style="width: 320px" />
 			</div>
 			<div class="form-group">
-				<input type="submit" class="form-control btn btn-primary" value="Rename" />
+				<input type="submit" class="form-control btn btn-primary" ng-click="rename()" value="Rename" />
 			</div>
 			<div class="form-group">
-				<button class="form-control btn btn-default">Cancel</button>
+				<button class="form-control btn btn-default" ng-click="renameCancel()">Cancel</button>
 			</div>
 		</form>
 	

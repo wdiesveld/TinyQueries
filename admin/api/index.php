@@ -72,7 +72,9 @@ class AdminApi extends TinyQueries\Api
 			case 'getProject':		return $this->getProject();
 			case 'getSource':		return $this->getSource();
 			case 'getTermParams': 	return $this->getTermParams();
+			case 'renameQuery':		return $this->renameQuery();
 			case 'saveSource':		return $this->saveSource();
+			case 'testApi':			return array( "message" => "Api is working" );
 		}
 		
 		throw new Exception('Unknown method');
@@ -108,7 +110,7 @@ class AdminApi extends TinyQueries\Api
 	}
 	
 	/**
-	 * Deletes the source, sql and interface file of a query and recompiles the code
+	 * Deletes the source, sql and interface file of a query
 	 *
 	 */
 	public function deleteQuery()
@@ -130,6 +132,54 @@ class AdminApi extends TinyQueries\Api
 		return array
 		(
 			'message' => 'Query is removed'
+		);
+	}
+	
+	/**
+	 * Renames the source file and deletes the sql and interface file of a query
+	 *
+	 */
+	public function renameQuery()
+	{
+		$queryIDold = self::getRequestVar('query_old', self::REG_EXP_SOURCE_ID);
+		$queryIDnew = self::getRequestVar('query_new', self::REG_EXP_SOURCE_ID);
+		
+		if (!$queryIDold)
+			throw new Exception("param query_old is missing");
+			
+		if (!$queryIDnew)
+			throw new Exception("param query_new is missing");
+		
+		$config	= new TinyQueries\Config();
+			
+		if (!$config->compiler->input)
+			throw new Exception("No input folder specified");
+			
+		$filenameSourceOld = $config->compiler->input . "/" . $queryIDold . ".json";
+		$filenameSourceNew = $config->compiler->input . "/" . $queryIDnew . ".json";
+		
+		// Don't throw error in this case, because the query which is being renamed might not be saved yet
+		if (!file_exists($filenameSourceOld))
+			return array
+			(
+				'message' => 'Query is not present on file system'
+			);
+		
+		if (file_exists($filenameSourceNew))
+			throw new Exception("Cannot rename: queryID already exists");
+			
+		$r = @rename($filenameSourceOld, $filenameSourceNew);
+		
+		if (!$r)
+			throw new Exception("Error during renaming");
+		
+		// Delete compiled files
+		$this->deleteFile( $this->compiler->querySet->path() . TinyQueries\QuerySet::PATH_INTERFACE . "/" . $queryIDold . ".json" );
+		$this->deleteFile( $this->compiler->querySet->path() . TinyQueries\QuerySet::PATH_SQL  		. "/" . $queryIDold . ".sql" );
+		
+		return array
+		(
+			'message' => 'Query is renamed'
 		);
 	}
 	
@@ -168,30 +218,39 @@ class AdminApi extends TinyQueries\Api
 			foreach ($project->queries as $queryID => $def)
 				$project->queries->$queryID->runnable = true;
 		
+		// We are ready in case there is nothing to edit
+		if ($project->mode != 'edit' || !$project->compiler->input)
+			return $project;
+		
 		// Load query list from the input folder in order to get all other files which have no equivalent in the sql folder
 		// (these are _model, hidden queries, not compiled queries)
-		if ($project->mode == 'edit' && $project->compiler->input)
-		{
-			$match = null;
+		$match = null;
+		$sourceIDs = array();
 			
-			foreach (scandir($project->compiler->input) as $file)
-				if (preg_match("/^(.*)\.json$/", $file, $match))
-				{
-					$queryID = $match[1];
-					
-					if (!property_exists( $project->queries, $queryID ))
-					{
-						$queryDef = new StdClass();
-						$queryDef->expose 		= 'hide';
-						$queryDef->type			= null;
-						$queryDef->defaultParam = null;
-						$queryDef->operation	= null;
-						$queryDef->runnable		= false;
+		// Scan input folder for source files
+		foreach (scandir($project->compiler->input) as $file)
+			if (preg_match("/^(.*)\.json$/", $file, $match))
+				$sourceIDs[] = $match[1];
+
+		// Compiled items which are not in the source file list should be removed
+		// (usually these are deleted or renamed source files)
+		foreach (array_keys(get_object_vars($project->queries)) as $queryID)
+			if (!in_array($queryID, $sourceIDs))
+				unset($project->queries->$queryID);
+		
+		// Source files which are not in the compiled list should be added
+		foreach ($sourceIDs as $sourceID)		
+			if (!property_exists( $project->queries, $sourceID ))
+			{
+				$queryDef = new StdClass();
+				$queryDef->expose 		= 'hide';
+				$queryDef->type			= null;
+				$queryDef->defaultParam = null;
+				$queryDef->operation	= null;
+				$queryDef->runnable		= false;
 						
-						$project->queries->$queryID = $queryDef;
-					}
-				}
-		}
+				$project->queries->$sourceID = $queryDef;
+			}
 		
 		return $project;
 	}
