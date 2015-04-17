@@ -7,6 +7,10 @@
  
 var admin = angular.module('TinyQueriesAdmin', ['ngCookies', 'ngRoute', 'ui.ace']);
 
+/**
+ * Specification of the URL routes
+ *
+ */
 admin.config(['$routeProvider',
 	function($routeProvider) 
 	{
@@ -28,6 +32,7 @@ admin.config(['$routeProvider',
 
 /**
  * Service for the api
+ *
  */
 admin.factory('$api', ['$http', function($http)
 {
@@ -123,6 +128,7 @@ admin.factory('$api', ['$http', function($http)
  
 /**
  * Main controller which is attached to the body element
+ *
  */
 admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $cookies)
 {
@@ -148,24 +154,20 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 		$scope.refresh();
 	});
 	
-	// tab needs to be set at the main controller to remember the tab if another query is selected
+	/**
+	 * Sets tab of query controller
+	 * (needs to be in main controller to remember the tab when another query is selected)
+	 *
+	 */
 	$scope.setTab = function(tab)
 	{
 		$scope.tab = tab;
 	};
 	
-	$scope.refreshMain = function()
-	{
-		$scope.refresh();
-	};
-	
-	$scope.showError = function(error)
-	{
-		$scope.showMessageBox = true;
-		$scope.error = error;
-	};
-	
-	// Load project var
+	/**
+	 * Update function for this controller; loads the project info
+	 *
+	 */
 	$scope.refresh = function() 
 	{
 		$api.getProject().success( function(data)
@@ -185,6 +187,29 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 		});
 	};
 	
+	/**
+	 * Alias to be used in child controllers
+	 *
+	 */
+	$scope.refreshMain = function()
+	{
+		$scope.refresh();
+	};
+	
+	/**
+	 * Displays error message
+	 *
+	 */
+	$scope.showError = function(error)
+	{
+		$scope.showMessageBox = true;
+		$scope.error = error;
+	};
+	
+	/**
+	 * Handler for new query button
+	 *
+	 */
 	$scope.newQuery = function()
 	{
 		var queryID;
@@ -196,9 +221,14 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 		} 
 		while ($scope.project.queries[ queryID ]);
 
+		// Just go to the URL; the query controller will initialize the new query
 		window.location.replace( '#/queries/' + queryID );
 	};
 	
+	/**
+	 * Handler for compile button
+	 *
+	 */
 	$scope.compile = function()
 	{
 		$scope.showMessageBox = true;
@@ -219,21 +249,14 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 	$scope.refresh();
 }]);
 
-
-// not in use yet
-admin.controller('message', ['$scope', function($scope)
-{
-	$scope.content = '';
-}]);
-
-
 /**
- * Controller for editor
+ * Controller for ace editor
+ * The content of the editor is binded to $scope.query.source
  *
  */
 admin.controller('AceCtrl', [ '$scope', function($scope)
 {
-	// The ui-ace option
+	// Set the options for the ace editor
 	$scope.aceOption = 
 	{
 		onLoad: function (_ace) 
@@ -256,7 +279,6 @@ admin.controller('AceCtrl', [ '$scope', function($scope)
 		}
 	};
 }]);
-
 
 /**
  * Controller for query 
@@ -295,10 +317,10 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		if (!$scope.query)
 			return;
 		
-		// Skip this trigger when controller is still initializing the source
+		// Skip this watch when controller is still initializing the source
 		if ($scope.sourceInitializing)	
 		{
-			// Once there is a value, the initializing is finished
+			// Once there is a value, initializing has finished
 			if (value)
 				$scope.sourceInitializing = false;
 				
@@ -308,12 +330,20 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		$scope.query.saveNeeded = true;
 	});
 	
+	/**
+	 * Handler for rename query
+	 *
+	 */
 	$scope.rename = function()
 	{
 		// TODO..
 		$scope.renameMode = false;
 	};
 	
+	/**
+	 * Handler for delete query
+	 *
+	 */
 	$scope.delete = function()
 	{
 		$api.deleteQuery( $scope.query.id ).success( function(data)
@@ -336,6 +366,10 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		});
 	};
 	
+	/**
+	 * Handler for save query
+	 *
+	 */
 	$scope.save = function()
 	{
 		$api.saveSource( $scope.query.id, $scope.query.source ).success( function(data)
@@ -348,6 +382,10 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		});
 	};
 
+	/**
+	 * Helper function
+	 *
+	 */
 	$scope.numberOfParams = function()
 	{
 		var n=0;
@@ -357,6 +395,10 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		return n;
 	};
 	
+	/**
+	 * Save parameter values into cookies
+	 *
+	 */
 	$scope.saveParams = function()
 	{
 		// Copy params to cookies
@@ -367,6 +409,10 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		
 	};
 	
+	/**
+	 * Handler for update params button
+	 *
+	 */
 	$scope.updateParams = function()
 	{
 		if (!$scope.queryTerm)
@@ -385,6 +431,10 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		});
 	}
 	
+	/**
+	 * Handler for run button
+	 *
+	 */
 	$scope.run = function()
 	{
 		$scope.status = "Query is running...";
@@ -426,6 +476,10 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		});
 	};
 	
+	/**
+	 * Generic refresh function for this controller
+	 *
+	 */
 	$scope.refresh = function()
 	{
 		// As long as the project info is not loaded, don't do refresh
