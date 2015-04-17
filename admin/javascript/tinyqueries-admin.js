@@ -242,34 +242,6 @@ admin.controller('AceCtrl', [ '$scope', function($scope)
 			_ace.session.setMode("ace/mode/javascript");	
 			_ace.session.setOption("useWorker", false); // disable syntax checking
 			
-			// Set event handler for code changes
-			_ace.session.on('change', function(e) 
-			{
-				if (!$scope.query)
-					return;
-				
-				// Hack needed to get a proper state for saveNeeded
-				// Once you set query.source, the content of the editor is loaded and this event is triggered.
-				// However, the content is not loaded at once but in parts (sometimes 3 or 4 parts)
-				// But there is no event fired when the complete source is loaded. 
-				// So we need an ugly setTimeout solution
-				if ($scope.query.loading)
-				{
-					setTimeout( function()
-					{
-						$scope.$apply(function () 
-						{
-							$scope.query.loading = 0;
-						});					
-					}, 1000);
-						
-					$scope.query.loading++;
-					return;
-				}
-					
-				$scope.query.saveNeeded = true;
-			});
-			
 			// Set key for save
 			_ace.commands.addCommand(
 			{
@@ -299,6 +271,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 	$scope.output		= '';
 	$scope.profiling	= {};
 	$scope.renameMode	= false;
+	$scope.sourceInitializing = false;
 	
 	$scope.$watch('compileStatusCode', function(value)
 	{
@@ -316,31 +289,24 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		$scope.refresh();
 	});
 	
-	$scope.initSource = function()
+	// Needed to keep track of saveNeeded
+	$scope.$watch('query.source', function(value)
 	{
-		// Return if the source is already in memory
-		if ($scope.query.source)
+		if (!$scope.query)
+			return;
+		
+		// Skip this trigger when controller is still initializing the source
+		if ($scope.sourceInitializing)	
 		{
-			// Still loading needs to be set when switching between files
-			$scope.query.loading = 1;
+			// Once there is a value, the initializing is finished
+			if (value)
+				$scope.sourceInitializing = false;
+				
 			return;
 		}
-		
-		// Return if there is no ID
-		if (!$scope.query.id)
-			return;
-
-		// Load source file for existing queries
-		$api.getSource( $scope.query.id ).success( function(data)
-		{
-			$scope.error = null;
-			$scope.query.loading = 1;
-			$scope.query.source = data;
-		}).error( function(data)
-		{
-			$scope.showError( data.error );
-		});
-	};
+			
+		$scope.query.saveNeeded = true;
+	});
 	
 	$scope.rename = function()
 	{
@@ -483,6 +449,11 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 				saveNeeded:		true
 			};
 			
+		// This var must be set before the next assignment, because
+		// query.source might change by that assignment
+		// which causes the $watch the apply
+		$scope.sourceInitializing = true;
+			
 		// Assign query as reference 
 		$scope.query = $scope.project.queries[ queryID ];
 		$scope.query.id = queryID;
@@ -491,9 +462,20 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		if (($scope.tab == 'run' || $scope.tab == 'doc') && !$scope.query.runnable)
 			$scope.setTab('edit');
 		
-		if ($scope.editmode && $scope.tab == 'edit')
-			$scope.initSource();
-		
+		// Load source file for existing queries
+		if ($scope.editmode && $scope.tab == 'edit' && queryID && !$scope.query.source)
+		{
+			$api.getSource( $scope.query.id ).success( function(data)
+			{
+				$scope.error = null;
+				$scope.query.source = data;
+			}).error( function(data)
+			{
+				$scope.showError( data.error );
+			});
+		}
+
+		// Load compiled query interface-file
 		if ($scope.query.runnable)
 			$api.getQuery( queryID ).success( function(data)
 			{
@@ -520,8 +502,6 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 				$scope.error = data.error;
 			});
 	};
-	
-	// $scope.refresh();
 }]);
 
 
