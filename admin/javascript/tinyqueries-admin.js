@@ -350,14 +350,18 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 	{
 		$api.deleteQuery( $scope.query.id ).success( function(data)
 		{
-			// Query list is changed so update main controller
-			$scope.refreshMain();
-			
 			// Go to home (wait before modal has been removed)
 			setTimeout( function()
 			{
 				window.location.replace( '#/' );
-			}, 1000);
+				
+				$scope.$apply( function()
+				{
+					// Query list is changed so update main controller
+					$scope.refreshMain();
+				});
+				
+			}, 500);
 		}).error( function(data)
 		{
 			$scope.showError( data.error );
