@@ -233,8 +233,6 @@ admin.controller('message', ['$scope', function($scope)
  */
 admin.controller('AceCtrl', [ '$scope', function($scope)
 {
-	$scope.loading = 1;
-	
 	// The ui-ace option
 	$scope.aceOption = 
 	{
@@ -255,18 +253,17 @@ admin.controller('AceCtrl', [ '$scope', function($scope)
 				// However, the content is not loaded at once but in parts (sometimes 3 or 4 parts)
 				// But there is no event fired when the complete source is loaded. 
 				// So we need an ugly setTimeout solution
-				if ($scope.loading)
+				if ($scope.query.loading)
 				{
-					if ($scope.loading == 1)
-						setTimeout( function()
+					setTimeout( function()
+					{
+						$scope.$apply(function () 
 						{
-							$scope.$apply(function () 
-							{
-								$scope.loading = 0;
-							});					
-						}, 1000);
+							$scope.query.loading = 0;
+						});					
+					}, 1000);
 						
-					$scope.loading++;
+					$scope.query.loading++;
 					return;
 				}
 					
@@ -323,7 +320,11 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 	{
 		// Return if the source is already in memory
 		if ($scope.query.source)
+		{
+			// Still loading needs to be set when switching between files
+			$scope.query.loading = 1;
 			return;
+		}
 		
 		// Return if there is no ID
 		if (!$scope.query.id)
@@ -333,6 +334,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		$api.getSource( $scope.query.id ).success( function(data)
 		{
 			$scope.error = null;
+			$scope.query.loading = 1;
 			$scope.query.source = data;
 		}).error( function(data)
 		{
