@@ -233,6 +233,8 @@ admin.controller('message', ['$scope', function($scope)
  */
 admin.controller('AceCtrl', [ '$scope', function($scope)
 {
+	$scope.loading = 1;
+	
 	// The ui-ace option
 	$scope.aceOption = 
 	{
@@ -248,18 +250,27 @@ admin.controller('AceCtrl', [ '$scope', function($scope)
 				if (!$scope.query)
 					return;
 				
-				// If no source code is being loaded, it is assumed the change event was triggered by an edit
-				if (!$scope.query.loading)
+				// Hack needed to get a proper state for saveNeeded
+				// Once you set query.source, the content of the editor is loaded and this event is triggered.
+				// However, the content is not loaded at once but in parts (sometimes 3 or 4 parts)
+				// But there is no event fired when the complete source is loaded. 
+				// So we need an ugly setTimeout solution
+				if ($scope.loading)
 				{
-					$scope.query.saveNeeded = true;
+					if ($scope.loading == 1)
+						setTimeout( function()
+						{
+							$scope.$apply(function () 
+							{
+								$scope.loading = 0;
+							});					
+						}, 1000);
+						
+					$scope.loading++;
 					return;
 				}
-				
-				// Somehow, the source is loaded in 4 parts
-				if ($scope.query.loading<4)
-					$scope.query.loading++;
-				else
-					$scope.query.loading = 0;
+					
+				$scope.query.saveNeeded = true;
 			});
 			
 			// Set key for save
@@ -312,10 +323,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 	{
 		// Return if the source is already in memory
 		if ($scope.query.source)
-		{
-			$scope.query.loading = 1;
 			return;
-		}
 		
 		// Return if there is no ID
 		if (!$scope.query.id)
@@ -325,7 +333,6 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		$api.getSource( $scope.query.id ).success( function(data)
 		{
 			$scope.error = null;
-			$scope.query.loading = 1;
 			$scope.query.source = data;
 		}).error( function(data)
 		{
