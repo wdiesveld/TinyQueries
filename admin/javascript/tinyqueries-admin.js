@@ -361,10 +361,8 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 	{
 		$api.saveSource( $scope.query.id, $scope.query.source ).success( function(data)
 		{
-			// Query file might be changed so update main controller (e.g. for compile needed)
-			$scope.refreshMain();
-			
 			$scope.query.saveNeeded = false;
+			$scope.project.compiler.compileNeeded = true;
 		}).error( function(data)
 		{
 			$scope.showError( data.error );
@@ -471,17 +469,9 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 				source:			"/**\n *\n *\n */\n{\n\tselect: [],\n\tfrom: \"\"\n}",
 				saveNeeded:		true
 			};
-		
+			
 		// Assign query as reference 
-		if (!$scope.query)
-			$scope.query = $scope.project.queries[ queryID ];
-		else
-		{
-			// If query already exists only overwrite properties (otherwise source is reloaded which causes the cursor to be at the top)
-			for (var prop in $scope.project.queries[ queryID ])
-				$scope.query[ prop ] = $scope.project.queries[ queryID ][ prop ];
-		}
-
+		$scope.query = $scope.project.queries[ queryID ];
 		$scope.query.id = queryID;
 		
 		// Change tab if query is not runnable
