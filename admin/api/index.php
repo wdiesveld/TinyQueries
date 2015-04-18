@@ -120,12 +120,7 @@ class AdminApi extends TinyQueries\Api
 		if (!$queryID)
 			throw new Exception("No queryID");
 		
-		$config	= new TinyQueries\Config();
-			
-		if (!$config->compiler->input)
-			throw new Exception("No input folder specified");
-			
-		$this->deleteFile( $config->compiler->input . "/" . $queryID . ".json" );
+		$this->deleteFile( $this->getSourceFilename('query') );
 		$this->deleteFile( $this->compiler->querySet->path() . TinyQueries\QuerySet::PATH_INTERFACE  . "/" . $queryID . ".json" );
 		$this->deleteFile( $this->compiler->querySet->path() . TinyQueries\QuerySet::PATH_SQL  		. "/" . $queryID . ".sql" );
 		
@@ -136,27 +131,39 @@ class AdminApi extends TinyQueries\Api
 	}
 	
 	/**
+	 * Checks the given ID and gives feedback if it is not ok
+	 *
+	 */
+	private static function checkUserDefinedSourceID($requestVar)
+	{
+		$sourceID = self::getRequestVar($requestVar);
+		
+		if (is_null($sourceID) || ($sourceID === ''))
+			throw new Exception("You have to give a name to the query");
+
+		if (!preg_match(self::REG_EXP_SOURCE_ID, $sourceID))
+			throw new Exception("Name of the query can only contain the characters: a-z A-Z _ 0-9 . -");
+			
+		return $sourceID;
+	}
+	
+	/**
 	 * Renames the source file and deletes the sql and interface file of a query
 	 *
 	 */
 	public function renameQuery()
 	{
+		// First save the source
+		$this->saveSource('query_old');
+		
 		$queryIDold = self::getRequestVar('query_old', self::REG_EXP_SOURCE_ID);
-		$queryIDnew = self::getRequestVar('query_new', self::REG_EXP_SOURCE_ID);
+		$queryIDnew = self::checkUserDefinedSourceID('query_new');
 		
 		if (!$queryIDold)
 			throw new Exception("param query_old is missing");
-			
-		if (!$queryIDnew)
-			throw new Exception("param query_new is missing");
 		
-		$config	= new TinyQueries\Config();
-			
-		if (!$config->compiler->input)
-			throw new Exception("No input folder specified");
-			
-		$filenameSourceOld = $config->compiler->input . "/" . $queryIDold . ".json";
-		$filenameSourceNew = $config->compiler->input . "/" . $queryIDnew . ".json";
+		$filenameSourceOld = $this->getSourceFilename('query_old');
+		$filenameSourceNew = $this->getSourceFilename('query_new');
 		
 		// Don't throw error in this case, because the query which is being renamed might not be saved yet
 		if (!file_exists($filenameSourceOld))
@@ -214,9 +221,12 @@ class AdminApi extends TinyQueries\Api
 		if (!property_exists($project, 'queries'))
 			$project->queries = new StdClass();
 		
-		// Set runnable = true for all compiled queries
-			foreach ($project->queries as $queryID => $def)
-				$project->queries->$queryID->runnable = true;
+		// Set runnable = true for all compiled queries & add id
+		foreach ($project->queries as $queryID => $def)
+		{
+			$project->queries->$queryID->id			= $queryID;
+			$project->queries->$queryID->runnable 	= true;
+		}
 		
 		// We are ready in case there is nothing to edit
 		if ($project->mode != 'edit' || !$project->compiler->input)
@@ -243,6 +253,7 @@ class AdminApi extends TinyQueries\Api
 			if (!property_exists( $project->queries, $sourceID ))
 			{
 				$queryDef = new StdClass();
+				$queryDef->id			= $sourceID;
 				$queryDef->expose 		= 'hide';
 				$queryDef->type			= null;
 				$queryDef->defaultParam = null;
@@ -259,9 +270,9 @@ class AdminApi extends TinyQueries\Api
 	 * Returns the name of the source file which is posted
 	 *
 	 */
-	private function getSourceFilename()
+	private function getSourceFilename( $requestVar )
 	{
-		$sourceID = self::getRequestVar('sourceID', self::REG_EXP_SOURCE_ID);
+		$sourceID = self::getRequestVar($requestVar, self::REG_EXP_SOURCE_ID);
 		
 		if (!$sourceID)
 			throw new Exception("sourceID not known");
@@ -280,7 +291,7 @@ class AdminApi extends TinyQueries\Api
 	 */
 	public function getSource()
 	{
-		$filename = $this->getSourceFilename();
+		$filename = $this->getSourceFilename('sourceID');
 		
 		// NOTE: regular api output is overruled - just the file itself is sent
 		header( 'Content-type:  text/plain' );
@@ -292,9 +303,11 @@ class AdminApi extends TinyQueries\Api
 	 * Saves the source of a query
 	 *
 	 */
-	public function saveSource()
+	public function saveSource( $sourceIDvar = 'sourceID' )
 	{
-		$filename 	= $this->getSourceFilename();
+		self::checkUserDefinedSourceID($sourceIDvar);
+		
+		$filename 	= $this->getSourceFilename($sourceIDvar);
 		$source 	= self::getRequestVar('source');
 		
 		$r = @file_put_contents($filename, $source);

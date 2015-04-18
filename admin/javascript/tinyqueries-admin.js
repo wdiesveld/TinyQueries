@@ -56,9 +56,25 @@ admin.factory('$api', ['$http', function($http)
 			return $http.get('api/?_method=deleteQuery&query=' + queryID);
 		},
 		
-		renameQuery: function(queryIDold, queryIDnew)
+		renameQuery: function(queryIDold, queryIDnew, source)
 		{
-			return $http.get('api/?_method=renameQuery&query_old=' + queryIDold + '&query_new=' + queryIDnew);
+			// NOTE: The source is always saved when renaming, otherwise not saved edits might be lost
+			return $http(
+			{
+				method: 'POST',
+				url: 'api/', 
+				data: $.param(
+				{ 
+					_method: 'renameQuery', 
+					query_old: queryIDold, 
+					query_new: queryIDnew,
+					source: source 
+				}),
+				headers: 
+				{
+					'Content-Type': 'application/x-www-form-urlencoded'
+				}
+			});
 		},
 	
 		getProject:	function()
@@ -357,17 +373,19 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 	 */
 	$scope.rename = function()
 	{
-		$scope.renameMode = false;
-		
 		var oldName = $routeParams.queryID;
 		
 		// If name has not changed do nothing
 		if (oldName == $scope.query.id)
+		{
+			$scope.renameMode = false;
 			return;
+		}
 		
-		$api.renameQuery( oldName, $scope.query.id ).success( function(data)
+		$api.renameQuery( oldName, $scope.query.id, $scope.query.source ).success( function(data)
 		{
 			// Update URL and query list
+			$scope.renameMode = false;
 			window.location.replace( '#/queries/' + $scope.query.id );
 			$scope.refreshMain();
 			
@@ -375,8 +393,6 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		{
 			$scope.showError( data.error );
 		});
-		
-		return false;
 	};
 	
 	/**
@@ -544,6 +560,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		if (!$scope.project.queries[ queryID ])
 			$scope.project.queries[ queryID ] = 
 			{
+				id:				queryID,
 				status:			'new',
 				expose: 		'public',
 				type: 			null,
@@ -561,7 +578,6 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 			
 		// Assign query as reference 
 		$scope.query = $scope.project.queries[ queryID ];
-		$scope.query.id = queryID;
 		
 		// Change tab if query is not runnable
 		if (($scope.tab == 'run' || $scope.tab == 'doc') && !$scope.query.runnable)
