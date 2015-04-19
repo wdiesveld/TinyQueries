@@ -58,9 +58,8 @@
 	<div id="query-list" class="scroll-panel" ng-class="{ short: showMessageBox }">
 
 		<div ng-show="view=='rest'"  class="alert alert-warning">Note: REST view is experimental - some functions do not work yet</div>
-		
 		<div ng-repeat="(queryID,spec) in project.queries" ng-show="view=='queries'">
-			<a href="#/queries/{{queryID}}" >{{queryID}}</a>
+			<a href="#/queries/{{queryID}}" ng-class="{ selected: sourceIDselected == queryID }" >{{queryID}}</a>
 		</div>
 		<div ng-repeat="(path,spec) in project.paths" ng-show="view=='rest'">
 			<span class="rest-method">{{project.queries[spec.queryID].method}}</span>

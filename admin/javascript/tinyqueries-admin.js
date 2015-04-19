@@ -156,7 +156,7 @@ admin.factory('$api', ['$http', function($http)
  * Main controller which is attached to the body element
  *
  */
-admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $cookies)
+admin.controller('main', ['$scope', '$api', '$cookies', '$routeParams', function($scope, $api, $cookies, $routeParams)
 {
 	// Set scope vars
 	$scope.view					= 'queries';
@@ -171,6 +171,7 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 	$scope.mode					= 'view';
 	$scope.showMessageBox		= false;
 	$scope.newQueryIndex		= 0;
+	$scope.sourceIDselected		= null;
 	
 	// Basic check if api is working
 	$api.testApi().success( function(data)
@@ -190,6 +191,11 @@ admin.controller('main', ['$scope', '$api', '$cookies', function($scope, $api, $
 		
 		$scope.refresh();
 	});
+	
+	$scope.$on('$routeChangeSuccess', function() 
+	{
+		$scope.sourceIDselected	= $routeParams.queryID;
+	});	
 	
 	/**
 	 * Sets tab of query controller
