@@ -67,7 +67,6 @@
 			<span class="rest-method">{{project.queries[spec.queryID].method}}</span>
 			<a href="#/queries/{{spec.queryID}}" >{{path}}</a>
 		</div>
-		<p>&nbsp;</p>
 		
 	</div>
 			
@@ -75,12 +74,11 @@
 	
 	<div id="message-container" ng-show="showMessageBox">
 		<div class="header">
-			<span>Messages</span>
+			<span>Compiler Messages</span>
 			<button ng-click="showMessageBox=false" type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 		</div>
 		<div class="scroll-panel content">
 			<div><span class="glyphicon glyphicon-thumbs-up" ng-show="compileStatusCode==0"></span> {{compileStatus}}</div>
-			<div ng-show="error" class="alert alert-danger">{{error}}</div>
 		</div>
 	</div>
 

@@ -1,5 +1,15 @@
 <div class="padded">
 
+	<div ng-show="error" class="alert alert-danger">
+		
+		{{error}}
+
+		<button type="button" class="close" ng-click="error = null" aria-label="Close">
+		  <span aria-hidden="true">&times;</span>
+		</button>		
+			
+	</div>
+
 	<div class="panel panel-default">
 		<div class="panel-heading">
 			<h3 class="panel-title">Project</h3>

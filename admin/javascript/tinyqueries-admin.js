@@ -177,11 +177,11 @@ admin.controller('main', ['$scope', '$api', '$cookies', '$routeParams', function
 	$api.testApi().success( function(data)
 	{
 		if (!data.message)
-			$scope.showError("API for admintool is not working; there might be a PHP error: " + data);
+			$scope.error = "API for admintool is not working; there might be a PHP error: " + data;
 		
 	}).error( function(data)
 	{
-		$scope.showError("API for admintool is not working; check webserver settings for admin/api folder");
+		$scope.error = "API for admintool is not working; check webserver settings for admin/api folder";
 	});
 	
 	$scope.$watch('compileStatusCode', function(value)
@@ -226,7 +226,7 @@ admin.controller('main', ['$scope', '$api', '$cookies', '$routeParams', function
 				
 		}).error( function(data)
 		{
-			$scope.showError( data.error );
+			$scope.error = data.error;
 		});
 	};
 	
@@ -237,16 +237,6 @@ admin.controller('main', ['$scope', '$api', '$cookies', '$routeParams', function
 	$scope.refreshMain = function()
 	{
 		$scope.refresh();
-	};
-	
-	/**
-	 * Displays error message
-	 *
-	 */
-	$scope.showError = function(error)
-	{
-		$scope.showMessageBox = true;
-		$scope.error = error;
 	};
 	
 	/**
@@ -394,10 +384,11 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 			$scope.renameMode = false;
 			window.location.replace( '#/queries/' + $scope.query.id );
 			$scope.refreshMain();
+			$scope.error = null;
 			
 		}).error( function(data)
 		{
-			$scope.showError( data.error );
+			$scope.error = data.error;
 		});
 	};
 	
@@ -408,6 +399,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 	$scope.renameCancel = function()
 	{
 		$scope.renameMode = false;
+		$scope.error = null;
 		
 		// Reset to the old queryID
 		$scope.query.id = $routeParams.queryID;
@@ -421,6 +413,8 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 	{
 		$api.deleteQuery( $scope.query.id ).success( function(data)
 		{
+			$scope.error = null;
+			
 			// Go to home (wait before modal has been removed)
 			setTimeout( function()
 			{
@@ -435,7 +429,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 			}, 500);
 		}).error( function(data)
 		{
-			$scope.showError( data.error );
+			$scope.error = data.error;
 		});
 	};
 	
@@ -447,11 +441,12 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 	{
 		$api.saveSource( $scope.query.id, $scope.query.source ).success( function(data)
 		{
+			$scope.error = null;
 			$scope.query.saveNeeded = false;
 			$scope.project.compiler.compileNeeded = true;
 		}).error( function(data)
 		{
-			$scope.showError( data.error );
+			$scope.error = data.error;
 		});
 	};
 
@@ -594,11 +589,10 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		{
 			$api.getSource( $scope.query.id ).success( function(data)
 			{
-				$scope.error = null;
 				$scope.query.source = data;
 			}).error( function(data)
 			{
-				$scope.showError( data.error );
+				$scope.error = data.error;
 			});
 		}
 
@@ -626,7 +620,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 					
 			}).error( function(data)
 			{
-				$scope.error = data.error;
+				$scope.errorRun = data.error;
 			});
 	};
 }]);
