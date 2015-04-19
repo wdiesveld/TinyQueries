@@ -66,9 +66,9 @@
 
 #query-list a.selected
 {
-	background-color: #BBBBBB;
+	background-color: #cccccc;
 	border-radius: 2px;
-	color: black;
+	color: #444;
 }
 
 #query-list.short
