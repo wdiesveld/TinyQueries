@@ -161,7 +161,7 @@ admin.controller('main', ['$scope', '$api', '$cookies', '$routeParams', function
 	// Set scope vars
 	$scope.view					= 'queries';
 	$scope.nav 					= 'queries';
-	$scope.tab					= 'edit';
+	$scope.tab					= 'run';
 	$scope.project				= null;
 	$scope.globals				= {};
 	$scope.error				= null;
