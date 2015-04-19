@@ -99,8 +99,10 @@ class Compiler
 		if ($project->compiledWith && $this->version && $project->compiledWith != $this->version)
 			return true;
 		
+		$sourceFiles = $this->inputFiles();
+		
 		// Get max time of all project files
-		foreach ($this->inputFiles() as $file)
+		foreach ($sourceFiles as $file)
 		{
 			$mtime = filemtime($this->folderInput . "/" . $file);
 			if ($mtime > $qplChanged)
@@ -118,7 +120,15 @@ class Compiler
 				$sqlChanged = $mtime;
 		}
 
-		return ($qplChanged > $sqlChanged);
+		if ($qplChanged > $sqlChanged)
+			return true;
+			
+		// Check for source files which are deleted
+		foreach ($project->queries as $queryID => $dummy)
+			if (!in_array( $queryID . ".json" , $sourceFiles))
+				return true; 
+			
+		return false;	
 	}
 	
 	/**
