@@ -585,7 +585,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 			$scope.setTab('edit');
 		
 		// Load source file for existing queries
-		if ($scope.editmode && $scope.tab == 'edit' && queryID && !$scope.query.source)
+		if ($scope.editmode && queryID && !$scope.query.source)
 		{
 			$api.getSource( $scope.query.id ).success( function(data)
 			{
