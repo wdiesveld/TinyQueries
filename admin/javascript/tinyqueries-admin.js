@@ -92,6 +92,11 @@ admin.factory('$api', ['$http', function($http)
 			return $http.get('api/?_method=getSource&sourceID=' + sourceID);
 		},
 		
+		getSQL: function(queryID)
+		{
+			return $http.get('api/?_method=getSQL&query=' + queryID);
+		},
+		
 		saveSource: function(sourceID, source)
 		{
 			return $http(
@@ -290,7 +295,7 @@ admin.controller('main', ['$scope', '$api', '$cookies', '$routeParams', function
 admin.controller('AceCtrl', [ '$scope', function($scope)
 {
 	// Set the options for the ace editor
-	$scope.aceOption = 
+	$scope.aceOptionSource = 
 	{
 		onLoad: function (_ace) 
 		{
@@ -311,6 +316,18 @@ admin.controller('AceCtrl', [ '$scope', function($scope)
 			}); 
 		}
 	};
+	
+	$scope.aceOptionSQL = 
+	{
+		onLoad: function (_ace) 
+		{
+			_ace.setTheme("ace/theme/chrome");
+			_ace.session.setMode("ace/mode/sql");	
+			_ace.session.setOption("useWorker", false); // disable syntax checking
+			_ace.setReadOnly();
+		}
+	};
+	
 }]);
 
 /**
@@ -596,8 +613,10 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 			});
 		}
 
-		// Load compiled query interface-file
+		// Load compiled query interface-file & sql
 		if ($scope.query.runnable)
+		{
+			// Load interface
 			$api.getQuery( queryID ).success( function(data)
 			{
 				var query = reformatQueryDef( data );
@@ -622,6 +641,18 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 			{
 				$scope.errorRun = data.error;
 			});
+			
+			// Load SQL
+			$api.getSQL( queryID ).success( function(data)
+			{
+				$scope.query.sql = data.sql;
+				
+			}).error( function(data)
+			{
+				$scope.error = data.error;
+			});
+			
+		}
 	};
 }]);
 

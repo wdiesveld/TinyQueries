@@ -46,6 +46,7 @@
 			<li ng-class="{active: tab=='edit'}" ng-show="editmode"><a ng-click="setTab('edit');initEditor()"><span class="glyphicon glyphicon-pencil"></span> Edit</a></li>
 			<li ng-class="{active: tab=='run'}" ng-show="query.runnable"><a ng-click="setTab('run')"><span class="glyphicon glyphicon-play-circle"></span> Run</a></li>
 			<li ng-class="{active: tab=='doc'}" ng-show="query.runnable"><a ng-click="setTab('doc')"><span class="glyphicon glyphicon-info-sign"></span> Doc</a></li>
+			<li ng-class="{active: tab=='sql'}" ng-show="query.runnable"><a ng-click="setTab('sql')"><span class="glyphicon glyphicon-file"></span> SQL</a></li>
 			<li ng-class="" ng-show="editmode"><a ng-click="" data-toggle="modal" data-target="#deleteModal"><span class="glyphicon glyphicon-trash"></span> Delete</a></li>
 		</ul>
 	 
@@ -65,7 +66,7 @@
 
 		<section ng-controller="AceCtrl" style="width: 100%; height: 100%">
  
-			<div ui-ace="aceOption" ng-model="query.source" id="query-editor" style="width: 100%; height: 100%"></div>
+			<div ui-ace="aceOptionSource" ng-model="query.source" id="query-editor" style="width: 100%; height: 100%"></div>
  
 		</section>
 	
@@ -248,40 +249,52 @@
 		
 		<div ng-show="query.output && (query.output.rows != 'first' || query.output.columns != 'first')">
 		
-		<script type="text/ng-template" id="output-fields.html">
+			<script type="text/ng-template" id="output-fields.html">
+			
+			<table class="table table-striped table-condensed fields">
+				<!--
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Type</th>
+					</tr>
+				</thead>
+				-->
+				<tbody>
+					<tr ng-repeat="field in fields">
+						<td ng-show="field.fields" colspan="2">
+							<a ng-click="field.showsub = !field.showsub" title="Show subfields">{{field.label}}</a>
+							<div ng-show="field.showsub" class="subfields" ng-repeat="fields in [ field.fields ]" ng-include="'output-fields.html'"></div>
+						</td>
+						<td ng-show="!field.fields">
+							{{field.label}}
+						</td>
+						<td ng-show="!field.fields" class="type">
+							<span ng-repeat="type in field.type">
+								<span class="label label-{{type}}">{{type}}</span>
+							</span>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			
+			</script>		
+			
+			<div ng-repeat="fields in [ query.output.fields ]" ng-include="'output-fields.html'"></div>
 		
-		<table class="table table-striped table-condensed fields">
-			<!--
-			<thead>
-				<tr>
-					<th>Name</th>
-					<th>Type</th>
-				</tr>
-			</thead>
-			-->
-			<tbody>
-				<tr ng-repeat="field in fields">
-					<td ng-show="field.fields" colspan="2">
-						<a ng-click="field.showsub = !field.showsub" title="Show subfields">{{field.label}}</a>
-						<div ng-show="field.showsub" class="subfields" ng-repeat="fields in [ field.fields ]" ng-include="'output-fields.html'"></div>
-					</td>
-					<td ng-show="!field.fields">
-						{{field.label}}
-					</td>
-					<td ng-show="!field.fields" class="type">
-						<span ng-repeat="type in field.type">
-							<span class="label label-{{type}}">{{type}}</span>
-						</span>
-					</td>
-				</tr>
-			</tbody>
-		</table>
-		
-		</script>		
-		
-		<div ng-repeat="fields in [ query.output.fields ]" ng-include="'output-fields.html'"></div>
+		</div>
 	
 	</div>
 	
+	<div class="tab-content" ng-show="tab=='sql'" >
+
+		<section ng-controller="AceCtrl" style="width: 100%; height: 100%">
+ 
+			<div ui-ace="aceOptionSQL" ng-model="query.sql" style="width: 100%; height: 100%"></div>
+ 
+		</section>
+	
+	</div>
+		
 			
 </div>

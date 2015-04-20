@@ -71,6 +71,7 @@ class AdminApi extends TinyQueries\Api
 			case 'getInterface':	return $this->getInterface();
 			case 'getProject':		return $this->getProject();
 			case 'getSource':		return $this->getSource();
+			case 'getSQL':			return $this->getSQL();
 			case 'getTermParams': 	return $this->getTermParams();
 			case 'renameQuery':		return $this->renameQuery();
 			case 'saveSource':		return $this->saveSource();
@@ -340,6 +341,16 @@ class AdminApi extends TinyQueries\Api
 		}
 		
 		return $interface;
+	}
+	
+	public function getSQL()
+	{
+		list($queryID, $dummy) = self::requestedQuery();
+		
+		return array
+		(
+			"sql" => $this->compiler->querySet->sql($queryID)
+		);
 	}
 	
 	/**
