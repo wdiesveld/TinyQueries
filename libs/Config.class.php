@@ -85,6 +85,10 @@ class Config
 		$this->compiler->version	= ($config->compiler['version']) 	? (string) $config->compiler['version'] : null;
 		$this->compiler->logfile	= null;
 		
+		// Add "v" to version if missing
+		if ($this->compiler->version && !preg_match("/^v/", $this->compiler->version))
+			$this->compiler->version = "v" . $this->compiler->version;
+		
 		// Logfile needs special treatment 
 		if ((string) $config->compiler['logfile']) 
 		{
