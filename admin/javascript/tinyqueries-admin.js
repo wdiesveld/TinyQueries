@@ -598,7 +598,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		$scope.query = $scope.project.queries[ queryID ];
 		
 		// Change tab if query is not runnable
-		if (($scope.tab == 'run' || $scope.tab == 'doc') && !$scope.query.runnable)
+		if (($scope.tab == 'run' || $scope.tab == 'doc' || $scope.tab == 'sql') && !$scope.query.runnable)
 			$scope.setTab('edit');
 		
 		// Load source file for existing queries
