@@ -304,6 +304,9 @@ class QueryDB
 	 */
 	public function execute($query, $params = array())
 	{
+		if (!$this->dbh) 
+			throw new \Exception("QueryDB::execute called but there is no connection to the DB - call connect first");
+	
 		$this->profiler->begin('db::execute');
 		
 		$sth = $this->dbh->prepare($query);
