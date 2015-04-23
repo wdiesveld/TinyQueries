@@ -347,10 +347,15 @@ class AdminApi extends TinyQueries\Api
 	{
 		list($queryID, $dummy) = self::requestedQuery();
 		
-		return array
-		(
-			"sql" => $this->compiler->querySet->sql($queryID)
-		);
+		$sql = $this->compiler->querySet->sql($queryID);
+		
+		if (!$sql)
+			throw new Exception("Could not read SQL file");
+	
+		// NOTE: regular api output is overruled - just the file itself is sent
+		header( 'Content-type:  text/plain' );
+		echo $sql;
+		exit;
 	}
 	
 	/**

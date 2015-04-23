@@ -645,7 +645,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 			// Load SQL
 			$api.getSQL( queryID ).success( function(data)
 			{
-				$scope.query.sql = data.sql;
+				$scope.query.sql = data;
 				
 			}).error( function(data)
 			{
