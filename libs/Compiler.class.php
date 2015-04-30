@@ -126,7 +126,15 @@ class Compiler
 		// Check for source files which are deleted
 		foreach ($project->queries as $queryID => $dummy)
 			if (!in_array( $queryID . ".json" , $sourceFiles))
-				return true; 
+			{
+				$sqlFile = $sqlPath . "/" . $queryID . ".sql";
+				if (file_exists($sqlFile))
+				{
+					$mtime = filemtime($sqlFile);
+					if ($mtime < $sqlChanged)
+						return true; 
+				}
+			}
 			
 		return false;	
 	}
