@@ -72,6 +72,31 @@ class Compiler
 	}
 	
 	/**
+	 * Returns the path + files 
+	 *
+	 */
+	private function getQueryFolder( $subFolder )
+	{
+		$extension = null;
+		
+		switch ($subFolder)
+		{
+			case QuerySet::PATH_SQL: 		$extenstion = "sql"; break;
+			case QuerySet::PATH_INTERFACE: 	$extenstion = "sql"; break;
+			default: throw new Exception("getQueryFolder: Unknown subfolder");
+		}
+		
+		$sqlPath = $this->querySet->path() . $subFolder ;
+		
+		$files = array();
+		foreach (scandir($sqlPath) as $file)
+			if (preg_match('/\.'.$extenstion.'$/', $file))
+				$files[] = $file;
+				
+		return array($sqlPath, $files);
+	}
+	
+	/**
 	 * Checks whether there are changes made in either the model or the queries file
 	 *
 	 */
@@ -108,12 +133,11 @@ class Compiler
 			if ($mtime > $qplChanged)
 				$qplChanged = $mtime;
 		}
-
-		$sqlPath = $this->querySet->path() . QuerySet::PATH_SQL;
 		
+		list($sqlPath, $sqlFiles) = $this->getQueryFolder( QuerySet::PATH_SQL );
+
 		// Get max time of all sql files
-		foreach (scandir($sqlPath) as $file)
-		if (preg_match('/\.sql$/', $file))
+		foreach ($sqlFiles as $file)
 		{
 			$mtime = filemtime($sqlPath . "/" . $file);
 			if ($mtime > $sqlChanged)
@@ -261,8 +285,11 @@ class Compiler
 				$this->writeSQLfile( $queryID, $queryCode->query[$i]->sql );
 		}
 		
+		// Write _project file
 		if ($queryCode->{'interface'})
 			$this->writeInterface( '_project', (string) $queryCode->{'interface'} );
+			
+		// Clean up files which are not in the compiler output
 		
 		// Update log-file
 		$this->log('SQL-files updated successfully');
