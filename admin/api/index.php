@@ -87,7 +87,8 @@ class AdminApi extends TinyQueries\Api
 	 */
 	public function compile()
 	{
-		$this->compiler->compile( true );
+		// Call compiler with settings Force compile & do clean up
+		$this->compiler->compile( true, true );
 		
 		return array
 		(
@@ -122,8 +123,6 @@ class AdminApi extends TinyQueries\Api
 			throw new Exception("No queryID");
 		
 		$this->deleteFile( $this->getSourceFilename('query') );
-		$this->deleteFile( $this->compiler->querySet->path() . TinyQueries\QuerySet::PATH_INTERFACE  . "/" . $queryID . ".json" );
-		$this->deleteFile( $this->compiler->querySet->path() . TinyQueries\QuerySet::PATH_SQL  		. "/" . $queryID . ".sql" );
 		
 		return array
 		(
@@ -180,10 +179,6 @@ class AdminApi extends TinyQueries\Api
 		
 		if (!$r)
 			throw new Exception("Error during renaming");
-		
-		// Delete compiled files
-		$this->deleteFile( $this->compiler->querySet->path() . TinyQueries\QuerySet::PATH_INTERFACE . "/" . $queryIDold . ".json" );
-		$this->deleteFile( $this->compiler->querySet->path() . TinyQueries\QuerySet::PATH_SQL  		. "/" . $queryIDold . ".sql" );
 		
 		return array
 		(

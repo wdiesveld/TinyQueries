@@ -16,6 +16,10 @@ require_once("QuerySet.class.php");
  */
 class Compiler
 {
+	const SQL_FILES			= 'sql';
+	const INTERFACE_FILES 	= 'interface';
+	const SOURCE_FILES 		= 'source';
+	
 	public $querySet;
 	
 	private $apiKey;
@@ -26,6 +30,7 @@ class Compiler
 	private $logfile;
 	private $verbose;
 	private $curlOutput;
+	private $filesWritten;
 	
 	/**
 	 * Constructor
@@ -45,6 +50,7 @@ class Compiler
 		$this->logfile		= $config->compiler->logfile;
 		$this->querySet 	= new QuerySet( $this->folderOutput );
 		$this->verbose		= true;
+		$this->filesWritten	= array();
 	}
 	
 	/**
@@ -52,14 +58,14 @@ class Compiler
 	 *
 	 * @param {boolean} $force (optional) Set this to true to call the compiler anyway
 	 */
-	public function compile($force = false)
+	public function compile($force = false, $doCleanUp = false)
 	{
 		if (!$force && !$this->compileNeeded())
 			return;
 		
 		try
 		{
-			$this->callCompiler();
+			$this->callCompiler($doCleanUp);
 		}
 		catch (\Exception $e)
 		{
@@ -69,31 +75,6 @@ class Compiler
 				
 			throw $e;
 		}
-	}
-	
-	/**
-	 * Returns the path + files 
-	 *
-	 */
-	private function getQueryFolder( $subFolder )
-	{
-		$extension = null;
-		
-		switch ($subFolder)
-		{
-			case QuerySet::PATH_SQL: 		$extenstion = "sql"; break;
-			case QuerySet::PATH_INTERFACE: 	$extenstion = "sql"; break;
-			default: throw new Exception("getQueryFolder: Unknown subfolder");
-		}
-		
-		$sqlPath = $this->querySet->path() . $subFolder ;
-		
-		$files = array();
-		foreach (scandir($sqlPath) as $file)
-			if (preg_match('/\.'.$extenstion.'$/', $file))
-				$files[] = $file;
-				
-		return array($sqlPath, $files);
 	}
 	
 	/**
@@ -124,22 +105,21 @@ class Compiler
 		if ($project->compiledWith && $this->version && $project->compiledWith != $this->version)
 			return true;
 		
-		$sourceFiles = $this->inputFiles();
+		list($dummy, $sourceFiles, $sourceIDs) = $this->getFolder( self::SOURCE_FILES );
+		list($sqlPath, $sqlFiles)  = $this->getFolder( self::SQL_FILES );
 		
-		// Get max time of all project files
+		// Get max time of all source files
 		foreach ($sourceFiles as $file)
 		{
-			$mtime = filemtime($this->folderInput . "/" . $file);
+			$mtime = filemtime($file);
 			if ($mtime > $qplChanged)
 				$qplChanged = $mtime;
 		}
-		
-		list($sqlPath, $sqlFiles) = $this->getQueryFolder( QuerySet::PATH_SQL );
 
 		// Get max time of all sql files
 		foreach ($sqlFiles as $file)
 		{
-			$mtime = filemtime($sqlPath . "/" . $file);
+			$mtime = filemtime($file);
 			if ($mtime > $sqlChanged)
 				$sqlChanged = $mtime;
 		}
@@ -149,7 +129,7 @@ class Compiler
 			
 		// Check for source files which are deleted
 		foreach ($project->queries as $queryID => $dummy)
-			if (!in_array( $queryID . ".json" , $sourceFiles))
+			if (!in_array($queryID, $sourceIDs))
 			{
 				$sqlFile = $sqlPath . "/" . $queryID . ".sql";
 				if (file_exists($sqlFile))
@@ -164,26 +144,57 @@ class Compiler
 	}
 	
 	/**
-	 * Reads the filenames of all project files
+	 * Returns the path + files + fileID's
 	 *
 	 */
-	private function inputFiles()
+	private function getFolder( $fileType )
 	{
-		$inputFiles = array();
-
-		foreach (scandir($this->folderInput) as $file)
-			if (preg_match('/\.json$/', $file))
-				$inputFiles[] = $file;
+		$extension = null;
+		
+		switch ($fileType)
+		{
+			case self::SQL_FILES:
+				$path = $this->querySet->path() . QuerySet::PATH_SQL;
+				$extenstion = "sql"; 
+				break;
 				
-		return $inputFiles;
+			case self::INTERFACE_FILES:
+				$path = $this->querySet->path() . QuerySet::PATH_INTERFACE;
+				$extenstion = "json"; 
+				break;
+				
+			case self::SOURCE_FILES:
+				$path = $this->folderInput;
+				$extenstion = "json"; 
+				break;
+				
+			default: 
+				throw new \Exception("getFolder: Unknown filetype");
+		}
+		
+		$files 	= array();
+		$ids	= array();
+		$match	= null;
+		
+		foreach (scandir($path) as $file)
+			if (preg_match('/^(.+)\.'.$extenstion.'$/', $file, $match))
+			{
+				$files[] = $path . "/" . $file;
+				$ids[] 	 = $match[1];
+			}
+				
+		return array($path, $files, $ids);
 	}
 	
 	/**
 	 * Calls the online TinyQueries compiler and updates the local SQL-cache
 	 *
 	 */
-	private function callCompiler()
+	private function callCompiler($doCleanUp)
 	{
+		// Reset array
+		$this->filesWritten = array();
+		
 		// Update log-file
 		$this->log('Compiler being called..');
 
@@ -200,16 +211,18 @@ class Compiler
 			"version=" . urlencode( $this->version )	. "&" ;
 
 		// Read project files and add them to the postBody
-		foreach ($this->inputFiles() as $file)
+		list($dummy, $sourceFiles, $sourceIDs) = $this->getFolder( self::SOURCE_FILES );
+		
+		for ($i=0; $i<count($sourceFiles); $i++)
 		{
-			$content = @file_get_contents( $this->folderInput . "/" . $file );
+			$content = @file_get_contents( $sourceFiles[ $i ] );
 		
 			if (!$content) 	
 				throw new \Exception('Cannot read ' . $file);
 				
-			$codeID = preg_replace("/\.json$/", "", $file);
+			$sourceID = $sourceIDs[ $i ];
 				
-			$postBody .= "code[$codeID]=" . urlencode( $content ) . "&";
+			$postBody .= "code[$sourceID]=" . urlencode( $content ) . "&";
 		}
 			
 		// Catch curl output
@@ -289,7 +302,19 @@ class Compiler
 		if ($queryCode->{'interface'})
 			$this->writeInterface( '_project', (string) $queryCode->{'interface'} );
 			
-		// Clean up files which are not in the compiler output
+		// Clean up files which were not in the compiler output
+		if ($doCleanUp)
+			foreach (array(self::SQL_FILES, self::INTERFACE_FILES) as $filetype)
+			{
+				list($path, $files) = $this->getFolder( $filetype );
+				foreach ($files as $file)
+					if (!in_array($file, $this->filesWritten))
+					{
+						$r = @unlink($file);
+						if ($r)
+							$this->log( 'Deleted ' . $file );
+					}
+			}
 		
 		// Update log-file
 		$this->log('SQL-files updated successfully');
@@ -347,5 +372,7 @@ class Compiler
 			
 		if (!$r) 
 			throw new \Exception('Error writing ' . $filename . ' -  are the permissions set correctly?' );
+			
+		$this->filesWritten[] = $filename;
 	}
 }
