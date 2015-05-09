@@ -30,11 +30,14 @@
 		Compiler settings
 		
 		REQUIRED FIELDS:
-		output		- Folder where the compiled SQL files should be put
+		output		- Path to folder where the compiled files should be put 
+					  Normally the folder is called 'queries'. 
+					  It is assumed that this folder has two subfolders 'sql' and 'interface'
 		
 		OPTIONAL:
-		api_key 	- Your TinyQueries api key
-		input		- Folder of your source files
+		api_key 	- Your TinyQueries API key
+		input		- Path to folder where you want to put your TinyQueries source files 
+					  Normally the folder is called 'queries/tiny'
 		server		- The compiler server
 		version		- Version of the compiler
 		logfile		- Path to a logfile
@@ -42,8 +45,8 @@
 	-->	
 	<compiler
 		api_key 	= ""
-		input		= ""
-		output		= ""
+		input		= "/path/to/queries/tiny"
+		output		= "/path/to/queries"
 	/>
 	
 	<!--
@@ -52,6 +55,12 @@
 		
 		REQUIRED FIELDS:
 		none
+		
+		OPTIONAL:
+		nest_fields	- If true, fieldnames containing one or more dots will be converted to
+					  nested fields. So "user.name" will be converted to structure like
+					  'user: { name: ".." }'
+					  (default = true) 
 		
 	-->
 	<postprocessor
