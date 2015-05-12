@@ -22,6 +22,7 @@ class QueryDB
 	public $profiler;
 	public $globals;
 	
+	private $driver;
 	private $host;
 	private $dbname;
 	private $user;
@@ -51,13 +52,13 @@ class QueryDB
 		$config = new Config( $configFile );
 		
 		// Import settings
+		$this->driver		= $config->database->driver; 
 		$this->host			= $config->database->host;
 		$this->dbname		= $config->database->name;
 		$this->user			= $config->database->user;
 		$this->pw 			= $config->database->password;
 		$this->nested		= $config->postprocessor->nest_fields;
 		$this->queries 		= new QuerySet( $config->compiler->output );
-		
 		$this->globals 		= array();
 		$this->primaryKey 	= 'id'; 
 		
@@ -93,7 +94,7 @@ class QueryDB
 		$this->disconnect();
 		
 		// construct PDO object
-		$dsn = "mysql:dbname=" . $this->dbname . ";host=" . $this->host;
+		$dsn = $this->driver . ":dbname=" . $this->dbname . ";host=" . $this->host;
 		$this->dbh = new \PDO($dsn, $this->user, $this->pw);
 		
 		// throw exception for each error

@@ -13,12 +13,14 @@
 		Database credentials
 		
 		REQUIRED FIELDS:
+		driver		- PDO drivername of your database (e.g. 'mysql', 'pgsql', 'odbc')
 		name		- Name of your database
 		user		- Database user
 		password	- User's password
 		
 	-->
 	<database
+		driver		= "mysql"
 		host 		= "localhost"
 		name		= ""
 		user		= ""
