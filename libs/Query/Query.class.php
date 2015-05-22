@@ -174,8 +174,11 @@ class Query
 			if (!array_key_exists($keyField, $rows[0]))
 				throw new \Exception("Field $keyField is not present in rows");
 				
-			for ($i=0; $i<count($rows); $i++)
-				$values[] = $rows[ $i ][ $keyField ];
+			return array_reduce($rows, function ($result, $item) use ($keyField)
+			{
+				$result[] = $item[$keyField];
+				return $result;
+			}, array());
 				
 			return $values;
 		}
