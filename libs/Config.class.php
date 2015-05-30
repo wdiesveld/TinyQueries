@@ -76,6 +76,7 @@ class Config
 		$this->database->name		= (string) $config->database['name'];
 		$this->database->user		= (string) $config->database['user'];
 		$this->database->password	= (string) $config->database['password'];
+		$this->database->initQuery	= (string) $config->database['initquery'];
 		
 		// Import compiler fields
 		$this->compiler = new \StdClass();

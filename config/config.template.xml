@@ -18,6 +18,9 @@
 		user		- Database user
 		password	- User's password
 		
+		OPTIONAL:
+		initquery	- can be used to do initial query/queries which should be called after setting up a connection
+		
 	-->
 	<database
 		driver		= "mysql"

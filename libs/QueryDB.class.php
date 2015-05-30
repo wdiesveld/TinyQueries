@@ -27,6 +27,7 @@ class QueryDB
 	private $dbname;
 	private $user;
 	private $pw;
+	private $initQuery;
 	private $globalQueryParams;
 	private $primaryKey;
 	
@@ -57,6 +58,7 @@ class QueryDB
 		$this->dbname		= $config->database->name;
 		$this->user			= $config->database->user;
 		$this->pw 			= $config->database->password;
+		$this->initQuery	= $config->database->initQuery;
 		$this->nested		= $config->postprocessor->nest_fields;
 		$this->queries 		= new QuerySet( $config->compiler->output );
 		$this->globals 		= array();
@@ -99,6 +101,10 @@ class QueryDB
 		
 		// throw exception for each error
 		$this->dbh->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+		
+		// execute the initial query
+		if ($this->initQuery)
+			$this->execute($this->initQuery);
 	}
 
 	/**
