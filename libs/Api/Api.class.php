@@ -103,7 +103,7 @@ class Api extends HttpTools
 			$dbConnectedModus = ($this->db && $this->db->connected());
 			
 			if ($dbConnectedModus && $this->doTransaction)
-				$this->db->execute('START TRANSACTION');
+				$this->db->pdo()->beginTransaction();
 			
 			$response = $this->processRequest();
 
@@ -122,7 +122,7 @@ class Api extends HttpTools
 			if ($dbConnectedModus)
 			{
 				if ($this->doTransaction)
-					$this->db->execute('COMMIT');
+					$this->db->pdo()->commit();
 					
 				$this->db->disconnect();
 			}
@@ -189,7 +189,7 @@ class Api extends HttpTools
 		if (!$this->db->pdo())
 			return;
 			
-		$this->db->execute('ROLLBACK');
+		$this->db->pdo()->rollBack();
 	}
 	
 	/**
