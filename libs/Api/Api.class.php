@@ -262,7 +262,7 @@ class Api extends HttpTools
 		$reserved = array('query', 'param', '_profiling', '_path');
 		
 		// read the query-parameters
-		foreach (array_keys($_GET) as $paramname)
+		foreach (array_keys($_REQUEST) as $paramname)
 			if (!in_array($paramname, $reserved))
 			{
 				// Try/catch is needed to prevent global parameters to be overwritten by api users
