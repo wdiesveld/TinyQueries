@@ -108,10 +108,6 @@ class QueryMerge extends Query
 		
 		foreach ($this->children as $query)
 		{
-			// Add the key to the select fields
-			if (get_class($query) == "TinyQueries\\QueryJSON")
-				$query->addSelect($query->keys->$key);
-
 			$rows = $query->select( $this->paramValues, $query->keyField($key), false );
 				
 			Arrays::mergeAssocs( $result, $rows, $orderBy, $this->orderType );

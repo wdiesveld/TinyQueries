@@ -3,7 +3,6 @@ namespace TinyQueries;
 
 require_once('Query/Attach.class.php');
 require_once('Query/Filter.class.php');
-require_once('Query/JSON.class.php');
 require_once('Query/Merge.class.php');
 require_once('Query/SQL.class.php');
 require_once('Query/Tree.class.php');
@@ -195,36 +194,13 @@ class Term
 	 */
 	private static function atomic($db, $id)
 	{
-		$interface = null;
-		
-		// Try to load the compiled variant first
-		try
-		{
-			$interface = $db->queries->getInterface( $id );
-		}
-		catch (\Exception $e)
-		{
-		}
-		
-		if ($interface)
-		{
-			// Check if query is an alias
-			if (property_exists($interface, 'term'))
-				return self::parse($db, $interface->term);
-					
-			return new QuerySQL($db, $id);
-		}
+		$interface = $db->queries->getInterface( $id );
 
-		// If that fails load it as not compiled query
-		try
-		{
-			return new QueryJSON($db, $id);
-		}
-		catch (\Exception $e)
-		{
-		}
-		
-		throw new \Exception("Cannot load query '" . $id . "'");
+		// Check if query is an alias
+		if (property_exists($interface, 'term'))
+			return self::parse($db, $interface->term);
+					
+		return new QuerySQL($db, $id);
 	}
 	
 	/**
