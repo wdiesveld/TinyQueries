@@ -277,7 +277,25 @@ class Api extends HttpTools
 				}
 			}
 		
-		return $params;
+		if (count($params) > 0)
+			return array( $params );
+			
+		// If no params are found check if the body is a json blob
+		$body = file_get_contents('php://input');
+		
+		// Replace EOL's and tabs by a space character (these chars are forbidden to be used within json strings)
+		$body = preg_replace("/[\n\r\t]/", " ", $body);		
+		if ($json = json_decode($body, true))
+		{
+			// Ensure the output is an array of assoc arrays
+			if (Arrays::isAssoc($json))
+				return array( $json );
+				
+			if (is_array($json))
+				return $json;
+		}
+				
+		return array(array());
 	}
 	
 	/**
@@ -321,8 +339,10 @@ class Api extends HttpTools
 		if (!$this->db->connected())
 			throw new \Exception('There is no database connection');
 			
-		list($term, $params, $param, $singleRow) = self::requestedQuery();
-		$response = null; 
+		list($term, $paramsSet, $param, $singleRow) = self::requestedQuery();
+		
+		$multipleCalls 	= (count($paramsSet) > 1) ? true : false;
+		$response 		= ($multipleCalls) ? array() : null; 
 		
 		$this->query = $this->db->query($term);
 		
@@ -337,13 +357,19 @@ class Api extends HttpTools
 		
 		if ($param && !$this->query->defaultParam)
 			throw new \Exception("Single parameter value passed, but query does not have a default parameter");
-		
-		// Only overwrite if $param is not null
-		if ($this->query->defaultParam)
-			if (!is_null($param) || !array_key_exists($this->query->defaultParam, $params))
-				$params[ $this->query->defaultParam ] = $param;
-		
-		$response = $this->query->params( $params )->run(); 
+
+		foreach ($paramsSet as $params)
+		{		
+			// Only overwrite if $param is not null
+			if ($this->query->defaultParam)
+				if (!is_null($param) || !array_key_exists($this->query->defaultParam, $params))
+					$params[ $this->query->defaultParam ] = $param;
+					
+			if ($multipleCalls)
+				$response[] = $this->query->params( $params )->run(); 
+			else
+				$response   = $this->query->params( $params )->run(); 
+		}
 
 		$this->postProcessResponse( $response );
 		
