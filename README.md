@@ -4,13 +4,6 @@ TinyQueries can be regarded as an alternative for Object Relation Mapping. It's 
 * A query compiler - it's like a Less for SQL, so you create SQL queries by compiling them.
 * A simple and powerful syntax to combine the output of SQL queries
 
-## Example
-
-Suppose you want a nested data structure consisting of a list of users and for each user you want a list of the messages written by the user.
-For this you write two queries **users** and **messages**. To nest the data you just need to write:
-
-	users(messages)
-	
 ## System Requirements
 
 * Currently TinyQueries is only available for PHP. You need at least PHP 5.3
