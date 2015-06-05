@@ -320,7 +320,16 @@ class QueryDB
 
 		// Bind the parameters
 		foreach ($params as $name => $props)
+		{
+			// Do casting (otherwise the types might still not be set correctly)
+			switch ($props['type'])
+			{
+				case \PDO::PARAM_INT: $props['value'] = (int) $props['value']; break;
+				case \PDO::PARAM_STR: $props['value'] = (string) $props['value']; break;
+			}
+			
 			$sth->bindValue( ":" . $name, $props['value'], $props['type'] );
+		}
 		
 		$r = $sth->execute();
 
