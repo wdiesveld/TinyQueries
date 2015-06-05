@@ -4,7 +4,7 @@ TinyQueries can be regarded as an alternative for Object Relation Mapping. It's 
 * A query compiler - it's like a Less for SQL, so you create SQL queries by compiling them.
 * A simple and powerful syntax to combine the output of SQL queries
 
-## System Requirements 
+## System Requirements
 
 * Currently TinyQueries is only available for PHP. You need at least PHP 5.3
 * PHP's PDO database layer should be installed
