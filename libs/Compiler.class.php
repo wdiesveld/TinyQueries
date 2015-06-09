@@ -228,10 +228,12 @@ class Compiler
 		// Catch curl output
 		$curlOutputFile = "qpl-call.txt";
 		
-		$handle = fopen($curlOutputFile, "w+");
+		$handle = @fopen($curlOutputFile, "w+");
+
+		if ($handle)
+			curl_setopt($ch, CURLOPT_STDERR, $handle);	
 
 		curl_setopt($ch, CURLOPT_VERBOSE, true);
-		curl_setopt($ch, CURLOPT_STDERR, $handle);	
 		curl_setopt($ch, CURLOPT_HEADER, true); 		// Return the headers
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);	// Return the actual reponse as string
 		curl_setopt($ch, CURLOPT_POST, true);
@@ -246,9 +248,12 @@ class Compiler
 		curl_close($ch);
 		
 		// Read temp file for curl output
-		fclose($handle);
-		$this->curlOutput = file_get_contents($curlOutputFile);
-		@unlink($curlOutputFile);
+		if ($handle)
+		{
+			fclose($handle);
+			$this->curlOutput = file_get_contents($curlOutputFile);
+			@unlink($curlOutputFile);
+		}
 		
 		$status = null;
 		
