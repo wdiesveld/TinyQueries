@@ -177,16 +177,22 @@ admin.controller('main', ['$scope', '$api', '$cookies', '$routeParams', function
 	$scope.showMessageBox		= false;
 	$scope.newQueryIndex		= 0;
 	$scope.sourceIDselected		= null;
+	$scope.apiWorking			= false;
 	
 	// Basic check if api is working
 	$api.testApi().success( function(data)
 	{
-		if (!data.message)
+		if (data.message)
+		{
+			$scope.apiWorking = true;
+			$scope.refresh();
+		}
+		else
 			$scope.error = "API for admintool is not working; there might be a PHP error: " + data;
 		
-	}).error( function(data)
+	}).error( function(data, status)
 	{
-		$scope.error = "API for admintool is not working; check webserver settings for admin/api folder";
+		$scope.error = "API for admintool is not working; check webserver settings for admin/api folder - details: " + errorMessage( data, status );
 	});
 	
 	$scope.$watch('compileStatusCode', function(value)
@@ -218,6 +224,9 @@ admin.controller('main', ['$scope', '$api', '$cookies', '$routeParams', function
 	 */
 	$scope.refresh = function() 
 	{
+		if (!$scope.apiWorking)
+			return;
+			
 		$api.getProject().success( function(data)
 		{
 			$scope.project = data;
@@ -229,9 +238,9 @@ admin.controller('main', ['$scope', '$api', '$cookies', '$routeParams', function
 			
 			$scope.globals = setValues( reformatParams(data.globals), $cookies );
 				
-		}).error( function(data)
+		}).error( function(data, status)
 		{
-			$scope.error = data.error;
+			$scope.error = errorMessage( data, status );
 		});
 	};
 	
@@ -277,14 +286,12 @@ admin.controller('main', ['$scope', '$api', '$cookies', '$routeParams', function
 			$scope.compileStatusCode = 0;
 			$scope.compileStatus = data.message;
 			$scope.refresh();
-		}).error(function(data)
+		}).error(function(data, status)
 		{
 			$scope.compileStatusCode = 2;
-			$scope.compileStatus = data.error;
+			$scope.compileStatus = errorMessage( data, status );
 		});
 	};
-	
-	$scope.refresh();
 }]);
 
 /**
@@ -403,10 +410,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 			$scope.refreshMain();
 			$scope.error = null;
 			
-		}).error( function(data)
-		{
-			$scope.error = data.error;
-		});
+		}).error( $scope.errorHandler );
 	};
 	
 	/**
@@ -444,10 +448,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 				});
 				
 			}, 500);
-		}).error( function(data)
-		{
-			$scope.error = data.error;
-		});
+		}).error( $scope.errorHandler );
 	};
 	
 	/**
@@ -461,10 +462,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 			$scope.error = null;
 			$scope.query.saveNeeded = false;
 			$scope.project.compiler.compileNeeded = true;
-		}).error( function(data)
-		{
-			$scope.error = data.error;
-		});
+		}).error( $scope.errorHandler );
 	};
 
 	/**
@@ -510,10 +508,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		{
 			$scope.errorRun = null;
 			$scope.params = setValues( data.params, $cookies );
-		}).error(function(data)
-		{
-			$scope.errorRun = data.error;
-		});
+		}).error( $scope.errorHandlerRun );
 	}
 	
 	/**
@@ -549,13 +544,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 				for (var pv in data.profiling)
 					$scope.profiling[ pv ] = pv + ': ' + new String( data.profiling[pv] ).substr(0,5) + ' sec';
 					
-		}).error( function(data)
-		{
-			$scope.errorRun	= data.error;
-			$scope.output 	= data;
-			$scope.nRows 	= null;
-			$scope.profiling = {};
-		}).finally( function()
+		}).error( $scope.errorHandlerRun ).finally( function()
 		{
 			$scope.status 	= null;
 		});
@@ -607,10 +596,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 			$api.getSource( $scope.query.id ).success( function(data)
 			{
 				$scope.query.source = data;
-			}).error( function(data)
-			{
-				$scope.error = data.error;
-			});
+			}).error( $scope.errorHandler );
 		}
 
 		// Load compiled query interface-file & sql
@@ -637,22 +623,29 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 				// Set the parameters
 				$scope.params = setValues( $scope.query.params, $cookies );
 					
-			}).error( function(data)
-			{
-				$scope.errorRun = data.error;
-			});
+			}).error( $scope.errorHandlerRun );
 			
 			// Load SQL
 			$api.getSQL( queryID ).success( function(data)
 			{
 				$scope.query.sql = data;
 				
-			}).error( function(data)
-			{
-				$scope.error = data.error;
-			});
+			}).error( $scope.errorHandler );
 			
 		}
+	};
+	
+	$scope.errorHandler = function(data, status)
+	{
+		$scope.error = errorMessage( data, status );
+	};
+	
+	$scope.errorHandlerRun = function(data, status)
+	{
+		$scope.errorRun = errorMessage( data, status );
+		$scope.output 	= data;
+		$scope.nRows 	= null;
+		$scope.profiling = {};
 	};
 }]);
 
@@ -834,3 +827,17 @@ function getPath(query, id)
 	return path;
 }
 
+/**
+ * Tries to return a readable error message
+ *
+ */
+function errorMessage( data, status )
+{
+	if (!data)
+		return "Server responded with status " + status;
+		
+	if (data && data.error)
+		return data.error;
+		
+	return "An error occurred; no details available";
+}
