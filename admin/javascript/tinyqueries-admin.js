@@ -589,6 +589,10 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		// Change tab if query is not runnable
 		if (($scope.tab == 'run' || $scope.tab == 'doc' || $scope.tab == 'sql') && !$scope.query.runnable)
 			$scope.setTab('edit');
+			
+		// Change tab if query is alias
+		if (($scope.tab == 'sql') && $scope.query.term)
+			$scope.setTab('edit');
 		
 		// Load source file for existing queries
 		if ($scope.editmode && queryID && !$scope.query.source)
@@ -599,31 +603,33 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 			}).error( $scope.errorHandler );
 		}
 
+		if (!$scope.query.runnable)
+			return;
+			
 		// Load compiled query interface-file & sql
-		if ($scope.query.runnable)
+		$api.getQuery( queryID ).success( function(data)
 		{
-			// Load interface
-			$api.getQuery( queryID ).success( function(data)
-			{
-				var query = reformatQueryDef( data );
+			var query = reformatQueryDef( data );
+			
+			// Override query props
+			for (var prop in query)
+				$scope.query[ prop ] = query[ prop ];
+			
+			$scope.errorRun	= null;
+			
+			$scope.query.id = queryID;
+			$scope.query.path = getPath( $scope.query, queryID );
+			$scope.query.method = getMethod( $scope.query );
+			
+			if (query && !$scope.queryTerm)
+				$scope.queryTerm = $scope.query.id;
 				
-				// Override query props
-				for (var prop in query)
-					$scope.query[ prop ] = query[ prop ];
-				
-				$scope.errorRun	= null;
-				
-				$scope.query.id = queryID;
-				$scope.query.path = getPath( $scope.query, queryID );
-				$scope.query.method = getMethod( $scope.query );
-				
-				if (query && !$scope.queryTerm)
-					$scope.queryTerm = $scope.query.id;
-					
-				// Set the parameters
-				$scope.params = setValues( $scope.query.params, $cookies );
-					
-			}).error( $scope.errorHandlerRun );
+			// Set the parameters
+			$scope.params = setValues( $scope.query.params, $cookies );
+			
+			// If query is an alias there is no SQL to load
+			if ($scope.query.term)
+				return;
 			
 			// Load SQL
 			$api.getSQL( queryID ).success( function(data)
@@ -631,8 +637,8 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 				$scope.query.sql = data;
 				
 			}).error( $scope.errorHandler );
-			
-		}
+				
+		}).error( $scope.errorHandlerRun );
 	};
 	
 	$scope.errorHandler = function(data, status)
