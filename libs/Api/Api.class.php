@@ -187,6 +187,7 @@ class Api extends HttpTools
 		switch ($this->contentType)
 		{
 			case 'text/csv': 
+				header('Content-Disposition: attachment; filename="' . $this->createFilename( $this->request['query'] ) . '.csv"');
 				$this->csvEncode( $response );
 				break; 
 				
@@ -218,6 +219,18 @@ class Api extends HttpTools
 	 */
 	protected function postProcessResponse( &$response )
 	{
+	}
+	
+	/**
+	 * Returns a filename based on a queryID (term)
+	 */
+	protected function createFilename( $queryTerm )
+	{
+		if (!$queryTerm)
+			return 'query_output';
+			
+		// Replace all query term special chars with underscore
+		return preg_replace('/[\+\(\)\,\s\:\|]/', '_', $queryTerm);
 	}
 	
 	/**
@@ -460,24 +473,27 @@ class Api extends HttpTools
 		// Should not occur at this point..
 		if (!is_array($response))
 			throw new \Exception("Cannot convert reponse to CSV");
+
+		// Encode as UTF8
+		array_walk_recursive($response, array($this, 'toUTF8'));			
 			
 		// If output is array of assocs
 		if (count($response)>0 && Arrays::isAssoc($response[0]))
 		{
 			// Put array keys as first CSV line
-		    fputcsv($stdout, array_keys($response[0]));
+		    fputcsv($stdout, array_keys($response[0]), ';');
 			
 			foreach($response as $row) 
-				fputcsv($stdout, array_values($row));
+				fputcsv($stdout, array_values($row), ';');
 		}
 		// Output is an array of arrays
 		elseif (count($response)>0 && is_array($response[0]))
 			foreach($response as $row) 
-				fputcsv($stdout, $row);
+				fputcsv($stdout, $row, ';');
 		// Output is 1 dim array
 		else
 			foreach($response as $item) 
-				fputcsv($stdout, array( $item ));
+				fputcsv($stdout, array( $item ), ';');
 		
         fclose($stdout);
 	}
