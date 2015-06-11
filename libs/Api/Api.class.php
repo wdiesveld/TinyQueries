@@ -23,6 +23,7 @@ class Api extends HttpTools
 	protected $addProfilingInfo;
 	protected $doTransaction;
 	protected $request;
+	protected $outputFormat;
 	
 	public $db;
 	public $profiler;
@@ -42,6 +43,7 @@ class Api extends HttpTools
 		$this->addProfilingInfo = $addProfilingInfo;
 		$this->doTransaction	= true;
 		$this->request			= array();
+		$this->contentType		= null;
 
 		// Overrule profiling setting if param _profiling is send
 		if (array_key_exists('_profiling', $_REQUEST))
@@ -75,19 +77,17 @@ class Api extends HttpTools
 	}
 	
 	/**
-	 * Processes the request and sends the JSON response to the stdout
+	 * Processes the request and sends the response to the stdout
 	 *
 	 * @param {string} $contentType (optional)
-	 * @param {function} $postProcess (optional) Callback function which postprocesses the json output
 	 */
-	public function sendResponse($contentType = "application/json; charset=utf-8", $postProcess = null)
+	public function sendResponse($contentType = 'application/json')
 	{
-		// optional parameters for redirect (non ajax only)
-		$urlSuccess	= self::getRequestVar('url-success');
-		$urlError 	= self::getRequestVar('url-error');
+		// Get the output format
+		$this->contentType = self::getRequestVar('_contentType', '/^[\w\/]+$/', $contentType);
 		
 		// Set content type
-		header( 'Content-type: ' . $contentType);
+		header( 'Content-type: ' . $this->contentType . '; charset=utf-8' );
 
 		$response = array();
 		
@@ -96,14 +96,20 @@ class Api extends HttpTools
  			// vang alle eventuele warnings/errors op
 			ob_start();
 			
-			$this->apiCallID = self::getRequestVar('apicall_id',	'/^[\d\w\-]+$/'); // is sent back to caller; can be used to discriminate between responses
+			$this->apiCallID = self::getRequestVar('apicall_id', '/^[\d\w\-]+$/'); // is sent back to caller; can be used to discriminate between responses
 			
 			$this->init();
 			
 			$dbConnectedModus = ($this->db && $this->db->connected());
 			
 			if ($dbConnectedModus && $this->doTransaction)
+			{
+				// Disable nested fields for CSV since CSV can only handle 'flat' data
+				if (preg_match('/\/csv$/', $this->contentType))
+					$this->db->nested = false;
+		
 				$this->db->pdo()->beginTransaction();
+			}
 			
 			$response = $this->processRequest();
 
@@ -159,23 +165,36 @@ class Api extends HttpTools
 			$response['server'] 	= $this->server;
 		}
 		
+		// optional parameters for redirect (non ajax only)
+		$urlSuccess	= self::getRequestVar('url-success');
+		$urlError 	= self::getRequestVar('url-error');
+		
+		// Do redirect
 		if ($urlSuccess && !array_key_exists('error', $response))
 		{
 			header('Location: ' . self::addParamsToURL($urlSuccess, $response));
 			exit;
 		}
 		
+		// Do redirect
 		if ($urlError && array_key_exists('error', $response))
 		{
 			header('Location: ' . self::addParamsToURL($urlError, $response));
 			exit;
 		}
 
-		$json = $this->jsonEncode( $response );
-		
-		echo ($postProcess)
-				? $postProcess( $json )
-				: $json;
+		// Do contentType specific encoding and output to stdout
+		switch ($this->contentType)
+		{
+			case 'text/csv': 
+				$this->csvEncode( $response );
+				break; 
+				
+			case 'application/json':
+			default:
+				echo $this->jsonEncode( $response );
+				break;
+		}
 	}
 	
 	/**
@@ -259,7 +278,7 @@ class Api extends HttpTools
 	private function getQueryParams()
 	{
 		$params = array();
-		$reserved = array('query', 'param', '_profiling', '_path');
+		$reserved = array('query', 'param', '_profiling', '_path', '_contentType');
 		
 		// read the query-parameters
 		foreach (array_keys($_REQUEST) as $paramname)
@@ -408,6 +427,59 @@ class Api extends HttpTools
 		$this->setHttpResponseCode($httpCode);
 		
 		return $response;
+	}
+
+	/**
+	 * CSV encoder function; outputs to stdout
+	 *
+	 * @param {assoc|array} $response
+	 */
+	public function csvEncode($response)
+	{
+		$stdout = fopen("php://output", 'w');
+
+		if (is_object($response))
+			$response = Arrays::objectToArray($response);
+
+		// Ignore meta info; only output query output
+		if (Arrays::isAssoc($response) && count($response)>0 && array_key_exists('result', $response))
+			$response = $response['result'];
+		
+		if (is_null($response))
+			$response = array( "" );
+		
+		if (is_string($response))
+			$response = array( $response );
+			
+		if (Arrays::isAssoc($response))
+			$response = array(
+				array_keys( $response ),
+				array_values( $response )
+			);
+			
+		// Should not occur at this point..
+		if (!is_array($response))
+			throw new \Exception("Cannot convert reponse to CSV");
+			
+		// If output is array of assocs
+		if (count($response)>0 && Arrays::isAssoc($response[0]))
+		{
+			// Put array keys as first CSV line
+		    fputcsv($stdout, array_keys($response[0]));
+			
+			foreach($response as $row) 
+				fputcsv($stdout, array_values($row));
+		}
+		// Output is an array of arrays
+		elseif (count($response)>0 && is_array($response[0]))
+			foreach($response as $row) 
+				fputcsv($stdout, $row);
+		// Output is 1 dim array
+		else
+			foreach($response as $item) 
+				fputcsv($stdout, array( $item ));
+		
+        fclose($stdout);
 	}
 	
 	/**
