@@ -93,7 +93,7 @@ class Api extends HttpTools
 		
 		try
 		{
- 			// vang alle eventuele warnings/errors op
+ 			// Catch all output which is send to stdout
 			ob_start();
 			
 			$this->apiCallID = self::getRequestVar('apicall_id', '/^[\d\w\-]+$/'); // is sent back to caller; can be used to discriminate between responses
