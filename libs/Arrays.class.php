@@ -152,6 +152,47 @@ class Arrays
                 + $replacement
                 + array_slice($input, $offset + $length, NULL, TRUE);
 	}
+
+	/**
+	 * Merges the $key - $value pair into $assoc
+	 * Simple case is that $value is just a string or int
+	 * But it can also be the case that $value is an assoc and that $assoc[$key] is also an assoc
+	 *
+	 * @param {assoc} $assoc
+	 * @param {string} $key
+	 * @param {string|int|assoc} $value
+	 */
+	public static function mergeField( &$assoc, $key, $value )
+	{
+		// Simple case; key is not present
+		if (!array_key_exists($key, $assoc))
+		{
+			// Create entry
+			$assoc[$key] = $value;
+			return;
+		}
+		
+		$a1 = self::isAssoc( $assoc[$key] );
+		$a2 = self::isAssoc( $value );
+		
+		if (!$a1 && !$a2)
+		{
+			// Overwrite entry
+			$assoc[$key] = $value;
+			return;
+		}
+		
+		if ($a1 && $a2)
+		{
+			// Do recursive call
+			foreach ($value as $subkey => $subvalue)
+				self::mergeField( $assoc[$key], $subkey, $subvalue );
+				
+			return;
+		}
+		
+		throw new \Exception("Cannot merge field '$key' - types are different");
+	}
 	
 	/**
 	 *
@@ -165,9 +206,7 @@ class Arrays
 			{
 				// copy and/or add the fields of the array-element
 				foreach (array_keys($itemToAdd) as $field)
-				{
-					$array[ $idToAdd ][ $field ] = $itemToAdd[ $field ];
-				}
+					self::mergeField( $array[ $idToAdd ], $field, $itemToAdd[ $field ] );
 			}
 			// element does not exist and elements should be ordered
 			elseif ($orderBy)

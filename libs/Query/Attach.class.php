@@ -89,7 +89,7 @@ class QueryAttach extends Query
 				// Attach the fields of $rows1 to $rows
 				if (array_key_exists($keyValue, $rows1))
 					foreach ($rows1[ $keyValue ] as $name => $value)
-						$rows[$j][$name] = $value;
+						Arrays::mergeField( $rows[$j], $name, $value );
 			}
 		}
 		
