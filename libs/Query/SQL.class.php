@@ -90,12 +90,49 @@ class QuerySQL extends Query
 		
 		$this->getInterface();
 
+		// Check if there is a split defined for a parameter
+		$paramSplit = null;
+		foreach ($this->params as $paramID => $def)
+			if (property_exists($this->params->$paramID, 'split') && is_array($this->paramValues[ $paramID]))
+			{
+				$buffersize = $this->params->$paramID->split;
+				$paramSplit = $paramID;
+			}
+		
+		if (!$paramSplit)
+			return $this->executeHelper($this->paramValues);
+		
+		// Split parameter value
+		$output 	= array();
+		$nValues 	= count( $this->paramValues[ $paramSplit ] );
+		
+		for ($k=0; $k<$nValues; $k+=$buffersize)
+		{
+			// Create parameter value set for the current buffer
+			$paramsBuffer = array();
+			foreach ($this->paramValues as $key => $value)
+				$paramsBuffer[$key] = ($key==$paramSplit)
+					? array_slice($value, $k, $buffersize)
+					: $value;
+					
+			$output = array_merge( $output, $this->executeHelper($paramsBuffer) );
+		}	
+		
+		return $output;
+	}
+	
+	/**
+	 *
+	 *
+	 */
+	private function executeHelper($paramValues)
+	{
 		try
 		{
 			// If the query has no output just execute it
 			if (!$this->output)
 			{
-				list($sql, $pdoParams) = $this->getSql( $this->paramValues );
+				list($sql, $pdoParams) = $this->getSql( $paramValues );
 				return $this->db->execute( $sql, $pdoParams );
 			}
 			
@@ -103,13 +140,13 @@ class QuerySQL extends Query
 			$cols = (string) $this->_interface->output->columns;
 			
 			// Determine which select function should be used
-			if ($rows == "first" && $cols == "first")	return $this->selectFirst( $this->paramValues );
-			if ($rows == "first" && $cols == "all")		return $this->selectAssoc( $this->paramValues );
-			if ($rows == "all" 	 && $cols == "first")	return $this->selectAllFirst( $this->paramValues );
-			if ($rows == "all" 	 && $cols == "all")		return $this->selectAllAssoc( $this->paramValues );
+			if ($rows == "first" && $cols == "first")	return $this->selectFirst( $paramValues );
+			if ($rows == "first" && $cols == "all")		return $this->selectAssoc( $paramValues );
+			if ($rows == "all" 	 && $cols == "first")	return $this->selectAllFirst( $paramValues );
+			if ($rows == "all" 	 && $cols == "all")		return $this->selectAllAssoc( $paramValues );
 			
 			// Default:
-			return $this->selectAllAssoc( $this->paramValues );
+			return $this->selectAllAssoc( $paramValues );
 		}
 		catch (\Exception $e)
 		{

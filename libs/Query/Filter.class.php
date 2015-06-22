@@ -13,6 +13,9 @@ require_once('Query.class.php');
  */
 class QueryFilter extends Query
 {
+	// Max number of records which can come out of a filter query
+	const MAX_SIZE_FILTER = 5000;
+	
 	/**
 	 * Constructor
 	 *
@@ -99,10 +102,16 @@ class QueryFilter extends Query
 			if (count($rows) == 0)
 				return $rows;
 			
-			$params[ $key ] = $baseQuery->keyValues($key, $rows);
+			// Get all values for $rows[0..n][$key]
+			$params[$key] 	= $baseQuery->keyValues($key, $rows);
+			$query 			= $this->children[ $i ];
 			
-			$query 	= $this->children[ $i ];
-			$rows1 	= $query->select($params, $query->keyField($key), false );
+			// Check to prevent the SQL query to be blown up in size
+			if (count($params[$key]) > self::MAX_SIZE_FILTER)
+				throw new \Exception("Cannot apply filter query " . $this->name() . "; number of intermediate results is too large - if possible use 'split' option for the parameter");
+				
+			// Execute query
+			$rows1 = $query->select($params, $query->keyField($key), false );
 			
 			$j=0;
 			
