@@ -817,10 +817,10 @@ function getPath(query, id)
 			defaultParamSet = true;
 			break;
 		case 'filter':	
-			path = "/" + parts[0] + "/" + parts[1];		
+			path = "/" + parts[0] + "#" + parts[1];		
 			break;
 		case 'attach':	
-			path = "/" + parts[0] + "+" + parts[1];		
+			path = "/" + parts[0] + ";" + parts[1];		
 			break;
 		default:
 			path = "/" + id;

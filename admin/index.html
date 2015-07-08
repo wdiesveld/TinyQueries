@@ -39,7 +39,6 @@
 				New query
 			</button>
 			
-			<!-- 
 			<span class="dropdown">
 			  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
 				<span ng-show="view=='queries'">Query view</span>
@@ -51,7 +50,6 @@
 				<li role="presentation"><a ng-click="view='rest'"    role="menuitem" tabindex="-1" href="#">REST view</a></li>
 			  </ul>
 			</span>
-			-->
 			
 		</div>		
 	
@@ -59,7 +57,6 @@
 
 	<div id="query-list" class="scroll-panel" ng-class="{ short: showMessageBox }">
 
-		<div ng-show="view=='rest'"  class="alert alert-warning">Note: REST view is experimental - some functions do not work yet</div>
 		<div ng-repeat="(queryID,spec) in project.queries" ng-show="view=='queries'">
 			<a href="#/queries/{{queryID}}" ng-class="{ selected: sourceIDselected == queryID }" ng-show="editmode || spec.expose == 'public'">{{queryID}}</a>
 		</div>

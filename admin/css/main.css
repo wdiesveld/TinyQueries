@@ -130,6 +130,11 @@
 	color: #ddd;
 }
 
+#query-list .rest-method
+{
+	color: #aaa;
+}
+
 .saveNeeded
 {
 	color: red !important;

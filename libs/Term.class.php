@@ -18,7 +18,7 @@ require_once('Query/Tree.class.php');
 class Term
 {
 	// A term string should match the following reg exp
-	const CHARS = '/^[\w\.\:\-\,\(\)\|\+\s]+$/';
+	const CHARS = '/^[\w\.\:\#\-\,\(\)\|\+\;\s]+$/';
 	
 	/**
 	 * Parses a query term and returns an object of type Query (or extended class)
@@ -110,7 +110,7 @@ class Term
 	 */
 	private static function parseAttach($db, $term)
 	{
-		$list = self::split($term, '+');
+		$list = self::split($term, '+', ';');
 		
 		// If there is only 1 element, parse it as a chain
 		if (count($list) == 1)
@@ -127,7 +127,7 @@ class Term
 	 */
 	private static function parseChain($db, $term)
 	{
-		$list = self::split($term, ':');
+		$list = self::split($term, ':', '#');
 		
 		// If there is only 1 element, parse it as an tree
 		if (count($list) == 1)
@@ -207,9 +207,10 @@ class Term
 	 * Splits the string by the separator, respecting possible nested parenthesis structures
 	 *
 	 * @param {string} $string
-	 * @param {string} $separator Must be a single char!
+	 * @param {string} $separator1 Must be a single char!
+	 * @param {string} $separator2 (optional) Must be a single char!
 	 */
-	private static function split($string, $separator)
+	private static function split($string, $separator1, $separator2=null)
 	{
 		$string = trim( $string );
 		$stack 	= 0;
@@ -227,7 +228,8 @@ class Term
 			{
 				case '(': $stack++; break;
 				case ')': $stack--; break;
-				case $separator: 
+				case $separator1: 
+				case $separator2: 
 					if ($stack == 0)
 					{
 						$list[] = $part;
