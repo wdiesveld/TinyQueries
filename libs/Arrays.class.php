@@ -171,6 +171,16 @@ class Arrays
 			$assoc[$key] = $value;
 			return;
 		}
+
+		// Special cases
+		if (is_null($value))
+			return;
+
+		if (is_null($assoc[$key]))
+		{
+			$assoc[$key] = $value;
+			return;
+		}
 		
 		$a1 = self::isAssoc( $assoc[$key] );
 		$a2 = self::isAssoc( $value );
