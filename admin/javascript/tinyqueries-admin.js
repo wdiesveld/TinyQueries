@@ -89,7 +89,12 @@ admin.factory('$api', ['$http', function($http)
 		
 		getSource: function(sourceID)
 		{
-			return $http.get('api/?_method=getSource&sourceID=' + sourceID);
+			return $http({
+				method: 'GET',
+				url: 'api/?_method=getSource&sourceID=' + sourceID,
+				responseType: 'text',
+				transformResponse: null // disable automatic JSON parsing
+			});
 		},
 		
 		getSQL: function(queryID)
