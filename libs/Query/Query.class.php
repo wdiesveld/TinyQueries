@@ -355,8 +355,8 @@ class Query
 			foreach ($this->keys as $dummy => $field)
 				for ($i=0; $i<$n; $i++)
 				{
-					$data[$i][ '_' . $field . '_prev' ] = ($i>0) 	? $data[$i-1][$field] : null;
-					$data[$i][ '_' . $field . '_next' ] = ($i<$n-1) ? $data[$i+1][$field] : null;
+					$data[$i][ '_' . $field . '_prev' ] = ($i>0 	&& array_key_exists($field, $data[$i-1])) ? $data[$i-1][$field] : null;
+					$data[$i][ '_' . $field . '_next' ] = ($i<$n-1 	&& array_key_exists($field, $data[$i+1])) ? $data[$i+1][$field] : null;
 				}
 		}
 				
