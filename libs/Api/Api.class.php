@@ -376,7 +376,7 @@ class Api extends HttpTools
 		$multipleCalls 	= (count($paramsSet) > 1) ? true : false;
 		$response 		= ($multipleCalls) ? array() : null; 
 		
-		$this->query = $this->db->query($term);
+		$this->query = $this->db->query($term)->addPrevNext();
 		
 		$this->request['queryID'] = property_exists($this->query, 'id') 
 			? $this->query->id 
@@ -398,9 +398,9 @@ class Api extends HttpTools
 					$params[ $this->query->defaultParam ] = $param;
 					
 			if ($multipleCalls)
-				$response[] = $this->query->params( $params )->run(); 
+				$response[] = $this->query->run( $params ); 
 			else
-				$response   = $this->query->params( $params )->run(); 
+				$response   = $this->query->run( $params ); 
 		}
 
 		$this->postProcessResponse( $response );

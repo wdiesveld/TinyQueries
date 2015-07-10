@@ -52,6 +52,7 @@ class Query
 		$this->output->columns 	= "all";
 		$this->output->nested 	= true;
 		$this->output->fields 	= new \StdClass();
+		$this->output->addPrevNext = false;
 	}
 
 	/**
@@ -202,6 +203,18 @@ class Query
 	}
 	
 	/**
+	 * Adds the fields _[key]_prev and _[key]_next to the query output
+	 * (only when output is array of assoc)
+	 *
+	 */
+	public function addPrevNext()
+	{
+		$this->output->addPrevNext = true;
+		
+		return $this;
+	}
+	
+	/**
 	 * Sets whether the output should be grouped by the key
 	 * so you get a structure like: { a: [..], b: [..] }
 	 *
@@ -334,6 +347,18 @@ class Query
 				$this->output->rows2columns->key,
 				$this->output->rows2columns->name,
 				$this->output->rows2columns->value );
+		
+		// Add fields _next and _prev for each key
+		if ($this->output->addPrevNext)
+		{
+			$n = count($data);
+			foreach ($this->keys as $dummy => $field)
+				for ($i=0; $i<$n; $i++)
+				{
+					$data[$i][ '_' . $field . '_prev' ] = ($i>0) 	? $data[$i-1][$field] : null;
+					$data[$i][ '_' . $field . '_next' ] = ($i<$n-1) ? $data[$i+1][$field] : null;
+				}
+		}
 				
 		// Apply grouping transformation
 		if ($key && $this->output->group)
