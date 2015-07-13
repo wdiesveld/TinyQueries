@@ -376,7 +376,7 @@ class Api extends HttpTools
 		$multipleCalls 	= (count($paramsSet) > 1) ? true : false;
 		$response 		= ($multipleCalls) ? array() : null; 
 		
-		$this->query = $this->db->query($term)->addPrevNext();
+		$this->query = $this->db->query($term);
 		
 		$this->request['queryID'] = property_exists($this->query, 'id') 
 			? $this->query->id 

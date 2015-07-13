@@ -152,7 +152,7 @@ class QueryDB
 	 */
 	public function get($term, $paramValues = null)
 	{
-		return $this->query($term)->addPrevNext()->select($paramValues);
+		return $this->query($term)->select($paramValues);
 	}
 	
 	/**
