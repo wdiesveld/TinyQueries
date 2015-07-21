@@ -1,11 +1,12 @@
 <?php
 
-require_once( dirname(__FILE__) . '/../libs/Compiler.class.php' );
-
 /**
  * Compile script for command line compiling of TinyQueries 
  *
  */
+
+require_once( dirname(__FILE__) . '/../libs/Compiler.class.php' );
+
 try
 {
 	$configFile = (count($argv) > 1)
