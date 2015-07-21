@@ -18,12 +18,18 @@ require_once( dirname(__FILE__) . '/../libs/QueryDB.class.php' );
 
 try
 {
+	// Show usage message
 	if (count($argv) <= 1)
-		throw new Exception("Connector should be called with query term as first parameter");
+	{
+		echo "Usage: php connector.php [queryTerm] [queryParameters]\n";
+		exit(0);
+	}
 	
-	$term = $argv[1];
+	// Get query term
+	$term 	= $argv[1];
 	$params = null;
 	
+	// Get query parameters
 	if (count($argv) >= 3)
 	{
 		$params = @json_decode( $argv[2], true );
@@ -32,10 +38,12 @@ try
 			throw new Exception("Cannot decode parameters - parameters should be encoded as JSON");
 	}
 	
+	// Create database object
 	$db = new TinyQueries\QueryDB();
 	
 	$db->connect();
 	
+	// Run query and return result as JSON
 	echo json_encode( $db->query($term)->run($params) );
 }
 catch (Exception $e)
