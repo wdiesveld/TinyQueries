@@ -126,6 +126,9 @@ class QueryFilter extends Query
 					foreach ($rows1[ $keyValue ] as $name => $value)
 						$rows[$j][$name] = $value;
 					$j++;
+					
+					// Remove the entry (needed for next loop)
+					unset( $rows1[ $keyValue ] );
 				}
 				else
 				{
@@ -133,6 +136,11 @@ class QueryFilter extends Query
 					array_splice( $rows, $j, 1 );
 				}
 			}
+			
+			// Add fields to $rows which were not in $rows yet
+			// (in general this will not occur, but there are some exceptions, like aggregate queries)
+			foreach ($rows1 as $keyValue => $record)
+				$rows[] = $record;
 		}
 		
 		return $rows;
