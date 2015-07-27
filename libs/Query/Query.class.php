@@ -63,10 +63,14 @@ class Query
 	 */
 	public function params( $paramValues )
 	{
-		// If paramValues is already an assoc, just copy it
+		// If paramValues is already an assoc, just copy the params
 		if (Arrays::isAssoc($paramValues) || is_null($paramValues))
 		{
-			$this->paramValues = $paramValues;
+			// Only copy the params which are defined for this query
+			foreach ($this->params as $name => $def)
+				if (array_key_exists($name, $paramValues))
+					$this->paramValues[$name] = $paramValues[$name];
+				
 			return $this;
 		}
 		
