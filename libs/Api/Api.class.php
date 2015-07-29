@@ -24,6 +24,7 @@ class Api extends HttpTools
 	protected $doTransaction;
 	protected $request;
 	protected $outputFormat;
+	protected $reservedParams;
 	
 	public $db;
 	public $profiler;
@@ -44,6 +45,7 @@ class Api extends HttpTools
 		$this->doTransaction	= true;
 		$this->request			= array();
 		$this->contentType		= null;
+		$this->reservedParams 	= array('query', 'param'); // + all params starting with _ are also ignored as query parameter
 
 		// Overrule profiling setting if param _profiling is send
 		if (array_key_exists('_profiling', $_REQUEST))
@@ -291,11 +293,10 @@ class Api extends HttpTools
 	private function getQueryParams()
 	{
 		$params = array();
-		$reserved = array('query', 'param', '_profiling', '_path', '_contentType');
 		
 		// read the query-parameters
 		foreach (array_keys($_REQUEST) as $paramname)
-			if (!in_array($paramname, $reserved))
+			if (!in_array($paramname, $this->reservedParams) && substr($paramname, 0, 1) != '_')
 			{
 				// Try/catch is needed to prevent global parameters to be overwritten by api users
 				try
