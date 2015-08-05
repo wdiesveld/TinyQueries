@@ -15,27 +15,38 @@
  */
 
 require_once( dirname(__FILE__) . '/../libs/QueryDB.class.php' ); 
+require_once( dirname(__FILE__) . '/../libs/Api/Api.class.php' ); 
 
 try
 {
 	// Show usage message
 	if (count($argv) <= 1)
 	{
-		echo "Usage: php connector.php [queryTerm] [queryParameters]\n";
+		echo "Usage: php connector.php [queryTerm] [queryParameters] [globalParameters]\n";
 		exit(0);
 	}
 	
 	// Get query term
-	$term 	= $argv[1];
-	$params = null;
+	$term 		= $argv[1];
+	$params 	= null;
+	$globals 	= null;
 	
 	// Get query parameters
 	if (count($argv) >= 3)
 	{
 		$params = @json_decode( $argv[2], true );
 		
-		if (!$params)
+		if (is_null($params))
 			throw new Exception("Cannot decode parameters - parameters should be encoded as JSON");
+	}
+	
+	// Get global query parameters
+	if (count($argv) >= 4)
+	{
+		$globals = @json_decode( $argv[3], true );
+		
+		if (is_null($globals))
+			throw new Exception("Cannot decode global parameters - global parameters should be encoded as JSON");
 	}
 	
 	// Create database object
@@ -43,8 +54,12 @@ try
 	
 	$db->connect();
 	
+	if ($globals)
+		foreach ($globals as $name => $value)
+			$db->param($name, $value);
+	
 	// Run query and return result as JSON
-	echo json_encode( $db->query($term)->run($params) );
+	echo TinyQueries\Api::jsonEncode( $db->query($term)->run($params) );
 }
 catch (Exception $e)
 {

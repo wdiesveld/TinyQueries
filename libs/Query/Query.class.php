@@ -70,7 +70,7 @@ class Query
 			foreach ($this->params as $name => $def)
 				if (array_key_exists($name, $paramValues))
 					$this->paramValues[$name] = $paramValues[$name];
-				
+			
 			return $this;
 		}
 		

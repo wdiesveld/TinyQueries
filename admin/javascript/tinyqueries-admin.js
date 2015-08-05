@@ -121,11 +121,12 @@ admin.factory('$api', ['$http', function($http)
 			});
 		},
 		
-		runQuery: function(call, params)
+		runQuery: function(call, params, globals)
 		{
 			var apiParams = 
 			{
-				_profiling: 1
+				_profiling: 1,
+				_globals: globals
 			};
 
 			for (p in call)
@@ -526,20 +527,23 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		
 		$scope.saveParams();
 		
-		var params = {}; 
-		// Merge params & globals
+		var params 	= {}; 
+		var globals = {};
+		
+		// Leave out defaultParam for REST, since this param is already sent through the URL
 		for (var name in $scope.params)
-			// Leaf out defaultParam for REST, since this param is already sent through the URL
 			if ($scope.view != 'rest' && name != $scope.defaultParam)
 				params[ name ] = $scope.params[ name ];
+		
+		// Just make a Angular-objects-free copy of globals
 		for (var name in $scope.globals)
-			params[ name ] = $scope.globals[ name ];
+			globals[ name ] = $scope.globals[ name ].value;
 			
 		var call = ($scope.view == 'rest')
 			? { _path: $scope.query.path }
 			: { query: $scope.queryTerm };
 		
-		$api.runQuery( call, params ).success( function(data)
+		$api.runQuery( call, params, globals ).success( function(data)
 		{
 			$scope.errorRun	= null;
 			$scope.output 	= data.result;

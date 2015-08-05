@@ -57,7 +57,16 @@ class AdminApi extends TinyQueries\Api
 	 */
 	protected function processRequest()
 	{
-		$method	= self::getRequestVar('_method', '/^[\w\.]+$/');
+		$method		= self::getRequestVar('_method', '/^[\w\.]+$/');
+		$globals	= self::getRequestVar('_globals');
+		
+		// Set global query params
+		if ($globals)
+		{
+			$globals = json_decode( $globals );
+			foreach ($globals as $name => $value)
+				$this->db->param($name, $value);
+		}
 		
 		// If no method is send, just do the default request handler for queries
 		if (!$method)

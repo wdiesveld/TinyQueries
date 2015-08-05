@@ -504,15 +504,15 @@ class Api extends HttpTools
 	 *
 	 * @param {object} $object
 	 */
-	public function jsonEncode($object)
+	public static function jsonEncode($object)
 	{
 		if (is_object($object))
 			$object = Arrays::objectToArray($object);
 		
 		if (is_array($object))
-			array_walk_recursive($object, array($this, 'toUTF8'));
+			array_walk_recursive($object, array('TinyQueries\Api', 'toUTF8'));
 		else
-			$object = $this->toUTF8($object);
+			$object = self::toUTF8($object);
 		
 		return json_encode( $object );
 	}
@@ -522,7 +522,7 @@ class Api extends HttpTools
 	 *
 	 * @param {mixed} $item If item is not a string, it is untouched
 	 */
-	public function toUTF8(&$item) 
+	public static function toUTF8(&$item) 
 	{ 
 		if (is_string($item) && mb_detect_encoding($item, 'UTF-8', true))
 			return $item;	
