@@ -113,7 +113,8 @@ class QueryFilter extends Query
 			// Execute query
 			$rows1 = $query->select($params, $query->keyField($key), false );
 			
-			$j=0;
+			$j = 0;
+			$keyValues = array();
 			
 			// Do an intersection of $rows & $rows1
 			while ($j<count($rows))
@@ -127,8 +128,8 @@ class QueryFilter extends Query
 						$rows[$j][$name] = $value;
 					$j++;
 					
-					// Remove the entry (needed for next loop)
-					unset( $rows1[ $keyValue ] );
+					// Remember value (needed for next loop)
+					$keyValues[] = $keyValue;
 				}
 				else
 				{
@@ -140,7 +141,8 @@ class QueryFilter extends Query
 			// Add fields to $rows which were not in $rows yet
 			// (in general this will not occur, but there are some exceptions, like aggregate queries)
 			foreach ($rows1 as $keyValue => $record)
-				$rows[] = $record;
+				if (!in_array($keyValue, $keyValues))
+					$rows[] = $record;
 		}
 		
 		return $rows;
