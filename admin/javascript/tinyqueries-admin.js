@@ -36,6 +36,8 @@ admin.config(['$routeProvider',
  */
 admin.factory('$api', ['$http', function($http)
 {
+	var url = adminConfig.apiUrl;
+	
 	/**
 	 * Returns the interface for the api object
 	 */
@@ -43,17 +45,17 @@ admin.factory('$api', ['$http', function($http)
 	
 		testApi: function()
 		{
-			return $http.get('api/?_method=testApi');
+			return $http.get( url + '?_method=testApi');
 		},
 	
 		compile: function()
 		{
-			return $http.get('api/?_method=compile');
+			return $http.get( url + '?_method=compile');
 		},
 		
 		deleteQuery: function(queryID)
 		{
-			return $http.get('api/?_method=deleteQuery&query=' + queryID);
+			return $http.get( url + '?_method=deleteQuery&query=' + queryID);
 		},
 		
 		renameQuery: function(queryIDold, queryIDnew, source)
@@ -62,7 +64,7 @@ admin.factory('$api', ['$http', function($http)
 			return $http(
 			{
 				method: 'POST',
-				url: 'api/', 
+				url: url, 
 				data: $.param(
 				{ 
 					_method: 'renameQuery', 
@@ -79,19 +81,19 @@ admin.factory('$api', ['$http', function($http)
 	
 		getProject:	function()
 		{
-			return $http.get('api/?_method=getProject');
+			return $http.get( url + '?_method=getProject');
 		},
 		
 		getQuery: function(queryID)
 		{
-			return $http.get('api/?_method=getInterface&query=' + queryID);
+			return $http.get( url + '?_method=getInterface&query=' + queryID);
 		},
 		
 		getSource: function(sourceID)
 		{
 			return $http({
 				method: 'GET',
-				url: 'api/?_method=getSource&sourceID=' + sourceID,
+				url: url + '?_method=getSource&sourceID=' + sourceID,
 				responseType: 'text',
 				transformResponse: null // disable automatic JSON parsing
 			});
@@ -99,7 +101,7 @@ admin.factory('$api', ['$http', function($http)
 		
 		getSQL: function(queryID)
 		{
-			return $http.get('api/?_method=getSQL&query=' + queryID);
+			return $http.get( url + '?_method=getSQL&query=' + queryID);
 		},
 		
 		saveSource: function(sourceID, source)
@@ -107,7 +109,7 @@ admin.factory('$api', ['$http', function($http)
 			return $http(
 			{
 				method: 'POST',
-				url: 'api/', 
+				url: url, 
 				data: $.param(
 				{ 
 					_method: 'saveSource', 
@@ -151,12 +153,12 @@ admin.factory('$api', ['$http', function($http)
 					: ( (p.value || p.value===0) ? p.value : '');
 			}
 			
-			return $http.get('api/', { params: apiParams }); 
+			return $http.get( url, { params: apiParams }); 
 		},
 		
 		getTermParams: function(term)
 		{
-			return $http.get('api/?_method=getTermParams&query=' + removeWhitespace(term));
+			return $http.get( url + '?_method=getTermParams&query=' + removeWhitespace(term));
 		}
 		
 	};
