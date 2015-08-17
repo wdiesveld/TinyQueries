@@ -342,7 +342,7 @@ class QueryDB
 		{
 			$error = $sth->errorInfo();
 			if ($error && is_array($error) && count($error)>=3)
-				throw new \Exception($error[2]);
+				throw new \Exception($error[1] . " - " . $error[2]);
 			throw new \Exception('unknown error during execution of query');
 		}
 		
