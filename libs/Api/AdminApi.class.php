@@ -83,7 +83,7 @@ class AdminApi extends Api
 			case 'testApi':			return array( "message" => "Api is working" );
 		}
 		
-		throw new Exception('Unknown method');
+		throw new \Exception('Unknown method');
 	}
 	
 	/**
@@ -113,7 +113,7 @@ class AdminApi extends Api
 		$r = @unlink( $path );
 		
 		if (!$r)
-			throw new Exception("Could not delete $file");
+			throw new \Exception("Could not delete $file");
 	}
 	
 	/**
@@ -125,7 +125,7 @@ class AdminApi extends Api
 		$queryID = self::getRequestVar('query', self::REG_EXP_SOURCE_ID);
 		
 		if (!$queryID)
-			throw new Exception("No queryID");
+			throw new \Exception("No queryID");
 		
 		$this->deleteFile( $this->getSourceFilename('query') );
 		
@@ -144,10 +144,10 @@ class AdminApi extends Api
 		$sourceID = self::getRequestVar($requestVar);
 		
 		if (is_null($sourceID) || ($sourceID === ''))
-			throw new Exception("You have to give a name to the query");
+			throw new \Exception("You have to give a name to the query");
 
 		if (!preg_match(self::REG_EXP_SOURCE_ID, $sourceID))
-			throw new Exception("Name of the query can only contain the characters: a-z A-Z _ 0-9 . -");
+			throw new \Exception("Name of the query can only contain the characters: a-z A-Z _ 0-9 . -");
 			
 		return $sourceID;
 	}
@@ -165,7 +165,7 @@ class AdminApi extends Api
 		$queryIDnew = self::checkUserDefinedSourceID('query_new');
 		
 		if (!$queryIDold)
-			throw new Exception("param query_old is missing");
+			throw new \Exception("param query_old is missing");
 		
 		$filenameSourceOld = $this->getSourceFilename('query_old');
 		$filenameSourceNew = $this->getSourceFilename('query_new');
@@ -178,12 +178,12 @@ class AdminApi extends Api
 			);
 		
 		if (file_exists($filenameSourceNew))
-			throw new Exception("Cannot rename: queryID already exists");
+			throw new \Exception("Cannot rename: queryID already exists");
 			
 		$r = @rename($filenameSourceOld, $filenameSourceNew);
 		
 		if (!$r)
-			throw new Exception("Error during renaming");
+			throw new \Exception("Error during renaming");
 		
 		return array
 		(
@@ -204,9 +204,9 @@ class AdminApi extends Api
 		{
 			$project = $this->compiler->querySet->project();
 		}
-		catch (Exception $e)
+		catch (\Exception $e)
 		{
-			$project = new StdClass();
+			$project = new \StdClass();
 			$project->loadError = $e->getMessage();
 		}
 		
@@ -220,7 +220,7 @@ class AdminApi extends Api
 		$project->mode						= ($config->compiler->api_key) ? 'edit' : 'view';
 
 		if (!property_exists($project, 'queries'))
-			$project->queries = new StdClass();
+			$project->queries = new \StdClass();
 		
 		// Set runnable = true for all compiled queries & add id
 		foreach ($project->queries as $queryID => $def)
@@ -253,7 +253,7 @@ class AdminApi extends Api
 		foreach ($sourceIDs as $sourceID)		
 			if (!property_exists( $project->queries, $sourceID ))
 			{
-				$queryDef = new StdClass();
+				$queryDef = new \StdClass();
 				$queryDef->id			= $sourceID;
 				$queryDef->expose 		= 'hide';
 				$queryDef->type			= null;
@@ -276,12 +276,12 @@ class AdminApi extends Api
 		$sourceID = self::getRequestVar($requestVar, self::REG_EXP_SOURCE_ID);
 		
 		if (!$sourceID)
-			throw new Exception("sourceID not known");
+			throw new \Exception("sourceID not known");
 			
 		$config	= new Config();
 			
 		if (!$config->compiler->input)
-			throw new Exception("No input folder specified");
+			throw new \Exception("No input folder specified");
 		
 		return $config->compiler->input . "/" . $sourceID . ".json";
 	}
@@ -350,7 +350,7 @@ class AdminApi extends Api
 		$sql = $this->compiler->querySet->sql($queryID);
 		
 		if (!$sql)
-			throw new Exception("Could not read SQL file");
+			throw new \Exception("Could not read SQL file");
 	
 		// NOTE: regular api output is overruled - just the file itself is sent
 		header( 'Content-type:  text/plain' );
