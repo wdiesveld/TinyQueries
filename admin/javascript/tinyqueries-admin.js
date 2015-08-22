@@ -534,7 +534,7 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		
 		// Leave out defaultParam for REST, since this param is already sent through the URL
 		for (var name in $scope.params)
-			if ($scope.view != 'rest' && name != $scope.defaultParam)
+			if ($scope.view != 'rest' || ($scope.view == 'rest' && name != $scope.defaultParam))
 				params[ name ] = $scope.params[ name ];
 		
 		// Just make a Angular-objects-free copy of globals
