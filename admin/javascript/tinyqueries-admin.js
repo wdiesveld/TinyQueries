@@ -172,6 +172,7 @@ admin.factory('$api', ['$http', function($http)
 admin.controller('main', ['$scope', '$api', '$cookies', '$routeParams', function($scope, $api, $cookies, $routeParams)
 {
 	// Set scope vars
+	$scope.awake				= true;
 	$scope.view					= 'queries';
 	$scope.nav 					= 'queries';
 	$scope.tab					= 'run';
