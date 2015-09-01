@@ -627,8 +627,10 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		// Load source file for existing queries
 		if ($scope.editmode && queryID && !$scope.query.source)
 		{
+			$scope.loadpush();
 			$api.getSource( $scope.query.id ).success( function(data)
 			{
+				$scope.loadpop();
 				$scope.query.source = data;
 			}).error( $scope.errorHandler );
 		}
