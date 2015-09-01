@@ -78,6 +78,13 @@
 	bottom: 240px;
 }
 
+#spinner
+{
+	position: absolute;
+	top: 20px;
+	right: 20px;
+}
+
 #toolbar
 {
 	position: absolute;

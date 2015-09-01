@@ -186,10 +186,26 @@ admin.controller('main', ['$scope', '$api', '$cookies', '$routeParams', function
 	$scope.newQueryIndex		= 0;
 	$scope.sourceIDselected		= null;
 	$scope.apiWorking			= false;
+	$scope.loading				= 0;
+	
+	$scope.loadpush = function()
+	{
+		$scope.loading++;
+	};
+	
+	$scope.loadpop = function()
+	{
+		if ($scope.loading > 0)
+			$scope.loading--;
+	};
+	
+	$scope.loadpush();
 	
 	// Basic check if api is working
 	$api.testApi().success( function(data)
 	{
+		$scope.loadpop();
+		
 		if (data.message)
 		{
 			$scope.apiWorking = true;
@@ -235,8 +251,11 @@ admin.controller('main', ['$scope', '$api', '$cookies', '$routeParams', function
 		if (!$scope.apiWorking)
 			return;
 			
+		$scope.loadpush();
+		
 		$api.getProject().success( function(data)
 		{
+			$scope.loadpop();
 			$scope.project = data;
 			$scope.editmode = (data.mode == 'edit');
 			$scope.mode = data.mode;
@@ -617,9 +636,13 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 		if (!$scope.query.runnable)
 			return;
 			
+		$scope.loadpush();
+		
 		// Load compiled query interface-file & sql
 		$api.getQuery( queryID ).success( function(data)
 		{
+			$scope.loadpop();
+			
 			var query = reformatQueryDef( data );
 			
 			// Override query props
@@ -642,9 +665,12 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 			if ($scope.query.term)
 				return;
 			
+			$scope.loadpush();
+			
 			// Load SQL
 			$api.getSQL( queryID ).success( function(data)
 			{
+				$scope.loadpop();
 				$scope.query.sql = data;
 				
 			}).error( $scope.errorHandler );
@@ -654,15 +680,17 @@ admin.controller('query', ['$scope', '$api', '$cookies', '$routeParams', functio
 	
 	$scope.errorHandler = function(data, status)
 	{
-		$scope.error = errorMessage( data, status );
+		$scope.error 		= errorMessage( data, status );
+		$scope.loadpop();
 	};
 	
 	$scope.errorHandlerRun = function(data, status)
 	{
-		$scope.errorRun = errorMessage( data, status );
-		$scope.output 	= data;
-		$scope.nRows 	= null;
-		$scope.profiling = {};
+		$scope.errorRun 	= errorMessage( data, status );
+		$scope.output 		= data;
+		$scope.nRows 		= null;
+		$scope.profiling 	= {};
+		$scope.loadpop();
 	};
 }]);
 

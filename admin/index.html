@@ -26,7 +26,9 @@
 	<div id="toolbar">
 	
 		<a href="#" id="logo">&nbsp;</a>
-	
+		
+		<span id="spinner" ng-show="loading">Loading...</span>
+		
 		<div class="form-group">
 
 			<button ng-show="editmode" ng-click="compile()" type="button" class="btn btn-primary">
@@ -52,6 +54,7 @@
 			</span>
 			
 		</div>		
+		
 	
 	</div>
 

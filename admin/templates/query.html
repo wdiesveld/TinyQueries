@@ -89,11 +89,11 @@
 					<input id="input-query-path" type="text" class="form-control" ng-model="query.path" ng-blur="updateParams()" required >
 				</div>
 				<div class="col-sm-4">
-					<button ng-click="run()" type="submit" class="btn btn-primary">
+					<button ng-click="run()" type="submit" class="btn btn-primary" ng-disabled="loading" >
 						<span class="glyphicon glyphicon-play-circle"></span>
 						Run
 					</button>
-					<button ng-click="updateParams()" type="submit" class="btn">
+					<button ng-click="updateParams()" type="submit" class="btn" ng-disabled="loading" >
 						Update Params
 					</button>
 				</div>
