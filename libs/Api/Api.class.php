@@ -185,17 +185,28 @@ class Api extends HttpTools
 			exit;
 		}
 
-		// Do contentType specific encoding and output to stdout
+		$this->sendResponseBody($response);
+	}
+	
+	/**
+	 * Do contentType specific encoding and output to stdout
+	 *
+	 */
+	protected function sendResponseBody(&$response)
+	{
 		switch ($this->contentType)
 		{
 			case 'text/csv': 
 				header('Content-Disposition: attachment; filename="' . $this->createFilename( $this->request['query'] ) . '.csv"');
 				$this->csvEncode( $response );
-				break; 
+				break;
 				
 			case 'application/json':
-			default:
 				echo $this->jsonEncode( $response );
+				break;
+				
+			default:
+				// Do nothing - for custom content-types you should override this method
 				break;
 		}
 	}
@@ -548,7 +559,7 @@ class Api extends HttpTools
 	 *
 	 * @param {int} $code
 	 */
-	private function setHttpResponseCode($code = NULL) 
+	protected function setHttpResponseCode($code = NULL) 
 	{
 		if (is_null($code))
 			return (isset($GLOBALS['http_response_code'])) 
