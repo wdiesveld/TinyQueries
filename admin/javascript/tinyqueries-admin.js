@@ -887,5 +887,8 @@ function errorMessage( data, status )
 	if (data && data.error)
 		return data.error;
 		
-	return "An error occurred; no details available";
+	console.log("Response coming from server:");
+	console.log(data);
+		
+	return "An error occurred; see console for response from server - statuscode: " + status;
 }
