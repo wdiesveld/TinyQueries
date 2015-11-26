@@ -222,6 +222,9 @@ class Api extends HttpTools
 		if (!$this->db->pdo())
 			return;
 			
+		if (!$this->db->pdo()->inTransaction())
+			return;
+			
 		$this->db->pdo()->rollBack();
 	}
 	
