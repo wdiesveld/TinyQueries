@@ -328,11 +328,7 @@ class Api extends HttpTools
 			return array( $params );
 			
 		// If no params are found check if the body is a json blob
-		$body = file_get_contents('php://input');
-		
-		// Replace EOL's and tabs by a space character (these chars are forbidden to be used within json strings)
-		$body = preg_replace("/[\n\r\t]/", " ", $body);		
-		if ($json = json_decode($body, true))
+		if ($json = self::getJsonBody())
 		{
 			// Ensure the output is an array of assoc arrays
 			if (Arrays::isAssoc($json))

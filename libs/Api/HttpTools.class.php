@@ -75,6 +75,24 @@ namespace TinyQueries;
 			}
 		}
 	}
+	
+	/**
+	 * Gets the posted (or put) json blob
+	 *
+	 */
+	public static function getJsonBody()
+	{
+		// Get content of body of HTTP message
+		$body = file_get_contents('php://input');
+		
+		// Replace EOL's and tabs by a space character (these chars are forbidden to be used within json strings)
+		$body = preg_replace("/[\n\r\t]/", " ", $body);		
+		
+		if ($json = @json_decode($body, true))
+			return $json;
+			
+		return null;
+	}
 
 	public static function getURLparam($paramname, $regexp=null, $defaultvalue=null)
 	{
