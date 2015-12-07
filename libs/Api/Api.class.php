@@ -43,9 +43,13 @@ class Api extends HttpTools
 		$this->configFile 		= $configFile;
 		$this->addProfilingInfo = $addProfilingInfo;
 		$this->doTransaction	= true;
-		$this->request			= array();
 		$this->contentType		= null;
 		$this->reservedParams 	= array('query', 'param'); // + all params starting with _ are also ignored as query parameter
+		
+		// request contains the details of the request
+		$this->request = array(
+			'method' => self::getServerVar('REQUEST_METHOD', '/^\w+$/', 'GET')
+		);
 
 		// Overrule profiling setting if param _profiling is send
 		if (array_key_exists('_profiling', $_REQUEST))
@@ -350,7 +354,6 @@ class Api extends HttpTools
 		$term 	= self::getRequestVar('query', Term::CHARS ); 
 		$path 	= self::getRequestVar('_path');
 		$param	= self::getRequestVar('param');
-		$method = self::getServerVar('REQUEST_METHOD', '/^\w+$/');
 		
 		$singleRow = false;
 		
@@ -358,15 +361,14 @@ class Api extends HttpTools
 			throw new \Exception('query-param is empty'); 
 			
 		if (!$term && $path)
-			list($term, $param, $singleRow) = $this->pathToTerm($path, $method);
+			list($term, $param, $singleRow) = $this->pathToTerm($path, $this->request['method'] );
 			
 		// Convert space to + (since in URL's + is converted to space, while + is the attach operator and should be preserved)
 		$term = str_replace(" ", "+", $term);
 		
 		$params = $this->getQueryParams();
 
-		$this->request['method'] 	= $method;
-		$this->request['query']		= $term;	
+		$this->request['query']	= $term;	
 		
 		return array( $term, $params, $param, $singleRow );
 	}
