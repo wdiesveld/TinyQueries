@@ -54,7 +54,7 @@ class QueryDB
 		
 		// Import settings
 		$this->driver		= $config->database->driver; 
-		$this->host			= $config->database->host;
+		$this->host			= ($config->database->host) ? $config->database->host : 'localhost';
 		$this->dbname		= $config->database->name;
 		$this->user			= $config->database->user;
 		$this->pw 			= $config->database->password;
@@ -94,6 +94,15 @@ class QueryDB
 	public function connect()
 	{
 		$this->disconnect();
+		
+		if (!$this->driver)
+			throw new \Exception("No database driver specified in config");
+			
+		if (!$this->dbname)
+			throw new \Exception("No database name specified in config");
+		
+		if (!$this->user)
+			throw new \Exception("No database user specified in config");
 		
 		// construct PDO object
 		$dsn = $this->driver . ":dbname=" . $this->dbname . ";host=" . $this->host;
