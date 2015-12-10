@@ -34,7 +34,13 @@ class AdminApi extends Api
 	{
 		try
 		{
-			parent::init();
+			if ($this->db)
+				return;
+			
+			// Do neverAutoCompile for admin
+			$this->db = new QueryDB( null, $this->configFile, $this->profiler, true );
+			
+			$this->db->connect();
 		}
 		catch (\Exception $e)
 		{

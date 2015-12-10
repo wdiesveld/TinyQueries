@@ -86,6 +86,7 @@ class Config
 		$this->compiler->server		= ($config->compiler['server']) 	? (string) $config->compiler['server'] : self::DEFAULT_COMPILER;
 		$this->compiler->version	= ($config->compiler['version']) 	? (string) $config->compiler['version'] : null;
 		$this->compiler->logfile	= null;
+		$this->compiler->autocompile = ($config->compiler['autocompile'] && strtolower( (string) $config->compiler['autocompile'] ) == 'true') ? true : false;
 		
 		// Add "v" to version if missing
 		if ($this->compiler->version && !preg_match("/^v/", $this->compiler->version))

@@ -57,6 +57,7 @@ class Compiler
 	 * Checks if the TinyQuery code has changed; if so calls the online compiler
 	 *
 	 * @param {boolean} $force (optional) Set this to true to call the compiler anyway
+	 * @param {boolean} $doCleanUp (optional) If set to true, it will delete local sql files which are not in the compiler output
 	 */
 	public function compile($force = false, $doCleanUp = false)
 	{
@@ -238,7 +239,7 @@ class Compiler
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);	// Return the actual reponse as string
 		curl_setopt($ch, CURLOPT_POST, true);
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $postBody);
-		curl_setopt($ch, CURLOPT_URL, $this->server);
+		curl_setopt($ch, CURLOPT_URL, $this->server . '/api/compile/' );
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE); // nodig omdat er anders een ssl-error is; waarschijnlijk moet er een intermediate certificaat aan curl worden gevoed.
 		curl_setopt($ch, CURLOPT_HTTPHEADER,array("Expect:")); // To disable status 100 response 
 		

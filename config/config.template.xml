@@ -46,6 +46,8 @@
 		server		- The compiler server
 		version		- Version of the compiler
 		logfile		- Path to a logfile
+		autocompile - If set to 'true' will call compiler if a compile is needed whenever you create a QueryDB object; default = false
+					  It is recommended to use autocompile only in development environments
 		
 	-->	
 	<compiler

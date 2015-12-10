@@ -5,6 +5,7 @@ require_once('Config.class.php');
 require_once('Term.class.php');
 require_once('QuerySet.class.php');
 require_once('Profiler.class.php');
+require_once('Compiler.class.php');
 
 /**
  * QueryDB
@@ -41,8 +42,9 @@ class QueryDB
 	 * @param {PDO} $pdoHandle (optional) Use this if you already have a PDO database connection.
 	 * @param {string} $configFile (optional) Use this to specify your custom XML-configfile
 	 * @param {Profiler|boolean} $profiler (optional) If 'true' then a Profiler object is created and run is called; if 'false' the object is also created but not initialized
+	 * @param {boolean} $neverAutoCompile (optional) This can be used to overrule the setting in the config file 
 	 */
-	public function __construct( $pdoHandle = null, $configFile = null, $profiler = null )
+	public function __construct( $pdoHandle = null, $configFile = null, $profiler = null, $neverAutoCompile = false )
 	{
 		// Initialize profiler object
 		if (is_object($profiler))
@@ -60,6 +62,14 @@ class QueryDB
 		$this->pw 			= $config->database->password;
 		$this->initQuery	= $config->database->initQuery;
 		$this->nested		= $config->postprocessor->nest_fields;
+
+		// Call the compiler if autocompile is set
+		if (!$neverAutoCompile && $config->compiler->autocompile)
+		{
+			$compiler = new Compiler();
+			$compiler->compile( false, true );
+		}
+		
 		$this->queries 		= new QuerySet( $config->compiler->output );
 		$this->globals 		= array();
 		$this->primaryKey 	= 'id'; 
