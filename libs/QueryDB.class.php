@@ -21,11 +21,11 @@ class QueryDB
 	public $queries;
 	public $profiler;
 	public $globals;
+	public $driver;
+	public $host;
+	public $dbname;
+	public $user;
 	
-	private $driver;
-	private $host;
-	private $dbname;
-	private $user;
 	private $pw;
 	private $initQuery;
 	private $globalQueryParams;
