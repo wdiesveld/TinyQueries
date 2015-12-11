@@ -16,7 +16,6 @@ require_once( dirname(__FILE__) . '/../QueryDB.class.php' );
 class Api extends HttpTools
 {
 	protected $server;
-	protected $apiCallID;
 	protected $query;
 	protected $debugMode;
 	protected $configFile;
@@ -101,8 +100,6 @@ class Api extends HttpTools
 		{
  			// Catch all output which is send to stdout
 			ob_start();
-			
-			$this->apiCallID = self::getRequestVar('apicall_id', '/^[\d\w\-]+$/'); // is sent back to caller; can be used to discriminate between responses
 			
 			$this->init();
 			
@@ -426,7 +423,6 @@ class Api extends HttpTools
 			(
 				"query"			=> $term,
 				"params"		=> $params,
-				"apicall_id"	=> $this->apiCallID,
 				"result"		=> $response
 			);
 		
@@ -446,7 +442,6 @@ class Api extends HttpTools
 		$response = array
 		(
 			"query"			=> (array_key_exists('queryID', $this->request)) ? $this->request['queryID'] : null,
-			"apicall_id"	=> $this->apiCallID,
 			"error"			=> $errorMessage
 		);
 		
