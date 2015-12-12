@@ -66,7 +66,27 @@ class Compiler
 		
 		try
 		{
-			$this->callCompiler($doCleanUp);
+			$this->callCompiler($doCleanUp, 'POST');
+		}
+		catch (\Exception $e)
+		{
+			$this->log( $e->getMessage() );
+			if ($this->curlOutput)
+				$this->log( $this->curlOutput );
+				
+			throw $e;
+		}
+	}
+	
+	/**
+	 * Checks the online compiler if sql-code can be downloaded (only applies if client granted permission to save code on the server)
+	 *
+	 */
+	public function download()
+	{
+		try
+		{
+			$this->callCompiler(true, 'GET');
 		}
 		catch (\Exception $e)
 		{
@@ -191,7 +211,7 @@ class Compiler
 	 * Calls the online TinyQueries compiler and updates the local SQL-cache
 	 *
 	 */
-	private function callCompiler($doCleanUp)
+	private function callCompiler($doCleanUp, $method = 'POST')
 	{
 		// Reset array
 		$this->filesWritten = array();
@@ -213,18 +233,20 @@ class Compiler
 
 		// Read project files and add them to the postBody
 		list($dummy, $sourceFiles, $sourceIDs) = $this->getFolder( self::SOURCE_FILES );
-		
-		for ($i=0; $i<count($sourceFiles); $i++)
-		{
-			$content = @file_get_contents( $sourceFiles[ $i ] );
-		
-			if (!$content) 	
-				throw new \Exception('Cannot read ' . $file);
-				
-			$sourceID = $sourceIDs[ $i ];
-				
-			$postBody .= "code[$sourceID]=" . urlencode( $content ) . "&";
-		}
+
+		// Only add source files for POST calls
+		if ($method == 'POST')
+			for ($i=0; $i<count($sourceFiles); $i++)
+			{
+				$content = @file_get_contents( $sourceFiles[ $i ] );
+			
+				if (!$content) 	
+					throw new \Exception('Cannot read ' . $file);
+					
+				$sourceID = $sourceIDs[ $i ];
+					
+				$postBody .= "code[$sourceID]=" . urlencode( $content ) . "&";
+			}
 			
 		// Catch curl output
 		$curlOutputFile = "qpl-call.txt";
@@ -237,11 +259,19 @@ class Compiler
 		curl_setopt($ch, CURLOPT_VERBOSE, true);
 		curl_setopt($ch, CURLOPT_HEADER, true); 		// Return the headers
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);	// Return the actual reponse as string
-		curl_setopt($ch, CURLOPT_POST, true);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $postBody);
-		curl_setopt($ch, CURLOPT_URL, $this->server . '/api/compile/' );
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE); // nodig omdat er anders een ssl-error is; waarschijnlijk moet er een intermediate certificaat aan curl worden gevoed.
 		curl_setopt($ch, CURLOPT_HTTPHEADER,array("Expect:")); // To disable status 100 response 
+		
+		$compilerURL =  $this->server . '/api/compile/';
+		
+		if ($method == 'GET')
+			$compilerURL .= '?' . $postBody;
+		else	
+			curl_setopt($ch, CURLOPT_POSTFIELDS, $postBody);
+	
+		curl_setopt($ch, CURLOPT_URL, $compilerURL);
+		
 		
 		// Execute the API call
 		$raw_data = curl_exec($ch); 

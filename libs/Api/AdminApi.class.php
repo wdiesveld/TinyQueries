@@ -17,6 +17,7 @@ class AdminApi extends Api
 	
 	protected $compiler;
 	protected $dbError;
+	protected $jsonPcallback;
 	
 	/**
 	 * Constructor 
@@ -62,6 +63,8 @@ class AdminApi extends Api
 		$method		= self::getRequestVar('_method', '/^[\w\.]+$/');
 		$globals	= self::getRequestVar('_globals');
 		
+		$this->jsonPcallback = self::getJsonpCallback();
+		
 		// Set global query params
 		if ($globals)
 		{
@@ -83,13 +86,52 @@ class AdminApi extends Api
 			case 'getProject':		return $this->getProject();
 			case 'getSource':		return $this->getSource();
 			case 'getSQL':			return $this->getSQL();
+			case 'getStatus':		return $this->getStatus();
 			case 'getTermParams': 	return $this->getTermParams();
+			case 'downloadQueries':	return $this->downloadQueries();
 			case 'renameQuery':		return $this->renameQuery();
 			case 'saveSource':		return $this->saveSource();
 			case 'testApi':			return array( "message" => "Api is working" );
 		}
 		
 		throw new \Exception('Unknown method');
+	}
+	
+	/**
+	 * Overrides parent::sendResponse
+	 *
+	 */
+	public function sendResponse($contentType = 'application/json')
+	{
+		if (!$this->jsonPcallback)
+			return parent::sendResponse($contentType);
+			
+		return parent::sendResponse('application/javascript');
+	}
+	
+	/**
+	 * Overrides parent::sendResponseBody
+	 *
+	 */
+	protected function sendResponseBody(&$response)
+	{
+		if (!$this->jsonPcallback)
+			return parent::sendResponseBody($response);
+			
+		echo $this->jsonPcallback . '(' . $this->jsonEncode( $response ) . ');';
+	}
+	
+	/**
+	 * Overrides parent::createErrorResponse
+	 *
+	 */
+	public static function setHttpResponseCode($code = NULL) 
+	{
+		// Don't set the response code for JSONP; the response code must always be 200 
+		if (self::getJsonpCallback())
+			return;
+			
+		parent::setHttpResponseCode($code);
 	}
 	
 	/**
@@ -105,6 +147,44 @@ class AdminApi extends Api
 		(
 			'message' => 'Compiled at ' . date('Y-m-d H:i:s')
 		);
+	}
+	
+	/**
+	 * Downloads the queries from the tinyqueries server (only available if code is stored on server)
+	 *
+	 */
+	public function downloadQueries()
+	{
+		$this->compiler->download();
+		
+		return array
+		(
+			'message' => 'Queries downloaded at ' . date('Y-m-d H:i:s')
+		);
+	}
+	
+	/**
+	 * Returns some info about the status of this api
+	 *
+	 */
+	public function getStatus()
+	{
+		return array(
+			'version_libs'	=> Config::VERSION_LIBS,
+			'dbError' 		=> $this->dbError,
+			'dbStatus'		=> ($this->db && $this->db->connected()) 
+				? 'Connected with ' . $this->db->dbname . ' at ' . $this->db->host
+				: 'Not connected'
+		);
+	}
+	
+	/**
+	 * Gets the name of the callback function for the JSONP response
+	 *
+	 */
+	private static function getJsonpCallback()
+	{
+		return self::getRequestVar('_jsonpcallback', '/^[\w\.]+$/');
 	}
 	
 	/**
