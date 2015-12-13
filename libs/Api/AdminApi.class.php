@@ -143,8 +143,7 @@ class AdminApi extends Api
 		// Call compiler with settings Force compile & do clean up
 		$this->compiler->compile( true, true );
 		
-		return array
-		(
+		return array(
 			'message' => 'Compiled at ' . date('Y-m-d H:i:s')
 		);
 	}
@@ -157,8 +156,7 @@ class AdminApi extends Api
 	{
 		$this->compiler->download();
 		
-		return array
-		(
+		return array(
 			'message' => 'Queries downloaded at ' . date('Y-m-d H:i:s')
 		);
 	}
@@ -215,8 +213,7 @@ class AdminApi extends Api
 		
 		$this->deleteFile( $this->getSourceFilename('query') );
 		
-		return array
-		(
+		return array(
 			'message' => 'Query is removed'
 		);
 	}
@@ -271,8 +268,7 @@ class AdminApi extends Api
 		if (!$r)
 			throw new \Exception("Error during renaming");
 		
-		return array
-		(
+		return array(
 			'message' => 'Query is renamed'
 		);
 	}
@@ -402,8 +398,7 @@ class AdminApi extends Api
 		if (!$r) 
 			throw new \Exception('Error writing ' . $filename . ' -  are the permissions set correctly?' );			
 			
-		return array
-		(
+		return array(
 			'message' => 'Source is saved'
 		);
 	}
@@ -454,8 +449,7 @@ class AdminApi extends Api
 		
 		$query = $this->db->query($term);
 		
-		return array
-		(
+		return array(
 			'params' => $query->params
 		);
 	}
