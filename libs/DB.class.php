@@ -8,14 +8,14 @@ require_once('Profiler.class.php');
 require_once('Compiler.class.php');
 
 /**
- * QueryDB
+ * DB
  *
  * PDO based DB layer which can be used to call predefined SQL queries
  *
  * @author 	Wouter Diesveld <wouter@tinyqueries.com>
  * @package TinyQueries
  */
-class QueryDB
+class DB
 {
 	public $dbh;	// PDO database handle
 	public $nested; // Default setting whether or not query output should be nested - more info see Query::nested(.)
@@ -35,7 +35,7 @@ class QueryDB
 	/**
 	 * Constructor
 	 *
-	 * If no parameters are specified, database-parameters like username/passwd are read from the default configfile QueryDB.xml
+	 * If no parameters are specified, database-parameters like username/passwd are read from the default configfile config.xml
 	 * The connection should be explicitly set up by calling the connect-method after the DB-object is constructed.
 	 * If you specify a $pdoHandle, this method should not be called.
 	 *
@@ -89,7 +89,7 @@ class QueryDB
 		if ($value == -99999999)
 		{
 			if (!array_key_exists($name, $this->globals))
-				throw new \Exception("QueryDB::param - global parameter '".$name."' does not exist");
+				throw new \Exception("DB::param - global parameter '".$name."' does not exist");
 				
 			return $this->globals[ $name ];
 		}
@@ -225,7 +225,7 @@ class QueryDB
 	public function insert($table, $record, $updateOnDuplicateKey = false)
 	{
 		if (!is_array($record) || count($record)==0)
-			throw new \Exception("QueryDB::insert - record is empty");
+			throw new \Exception("DB::insert - record is empty");
 	
 		$keys 	= array_keys($record);
 		$values	= array_values($record);
@@ -291,7 +291,7 @@ class QueryDB
 	public function update($table, $IDfields, $record)
 	{
 		if (!is_array($record) || count($record)==0)
-			throw new \Exception("QueryDB::update - record is empty");
+			throw new \Exception("DB::update - record is empty");
 	
 		// Convert to primary key selection
 		if (!is_array($IDfields))
@@ -331,7 +331,7 @@ class QueryDB
 	public function execute($query, $params = array())
 	{
 		if (!$this->dbh) 
-			throw new \Exception("QueryDB::execute called but there is no connection to the DB - call connect first");
+			throw new \Exception("DB::execute called but there is no connection to the DB - call connect first");
 	
 		$this->profiler->begin('db::execute');
 		

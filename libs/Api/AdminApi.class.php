@@ -41,7 +41,7 @@ class AdminApi extends Api
 				return;
 			
 			// Do neverAutoCompile for admin
-			$this->db = new QueryDB( null, $this->configFile, $this->profiler, true );
+			$this->db = new DB( null, $this->configFile, $this->profiler, true );
 			
 			$this->db->connect();
 		}

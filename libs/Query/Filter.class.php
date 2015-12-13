@@ -19,7 +19,7 @@ class QueryFilter extends Query
 	/**
 	 * Constructor
 	 *
-	 * @param {QueryDB} $db Handle to database
+	 * @param {DB} $db Handle to database
 	 * @param {string} $terms (optional) 
 	 */
 	public function __construct($db, $terms = array())

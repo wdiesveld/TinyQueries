@@ -14,7 +14,7 @@
  * 
  */
 
-require_once( dirname(__FILE__) . '/../libs/QueryDB.class.php' ); 
+require_once( dirname(__FILE__) . '/../libs/DB.class.php' ); 
 require_once( dirname(__FILE__) . '/../libs/Api/Api.class.php' ); 
 
 try
@@ -50,7 +50,7 @@ try
 	}
 	
 	// Create database object
-	$db = new TinyQueries\QueryDB();
+	$db = new TinyQueries\DB();
 	
 	$db->connect();
 	

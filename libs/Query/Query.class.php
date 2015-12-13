@@ -1,7 +1,7 @@
 <?php
 namespace TinyQueries;
 
-require_once( dirname(__FILE__) . '/../QueryDB.class.php' );
+require_once( dirname(__FILE__) . '/../DB.class.php' );
 
 /**
  * Query
@@ -35,7 +35,7 @@ class Query
 	/**
 	 * Constructor
 	 *
-	 * @param {QueryDB} $db Handle to database
+	 * @param {DB} $db Handle to database
 	 */
 	public function __construct($db)
 	{

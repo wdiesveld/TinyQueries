@@ -3,12 +3,12 @@ namespace TinyQueries;
 
 require_once( 'HttpTools.class.php' );
 require_once( 'UserFeedback.class.php' );
-require_once( dirname(__FILE__) . '/../QueryDB.class.php' ); 
+require_once( dirname(__FILE__) . '/../DB.class.php' ); 
 
 /**
  * Api
  *
- * This is a simple JSON API which can be used on top of QueryDB
+ * This is a simple JSON API which can be used on top of DB
  *
  * @author 	Wouter Diesveld <wouter@tinyqueries.com>
  * @package TinyQueries
@@ -67,7 +67,7 @@ class Api extends HttpTools
 		if ($this->db)
 			return;
 		
-		$this->db = new QueryDB( null, $this->configFile, $this->profiler );
+		$this->db = new DB( null, $this->configFile, $this->profiler );
 		
 		$this->db->connect();
 	}

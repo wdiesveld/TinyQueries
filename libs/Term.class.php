@@ -27,7 +27,7 @@ class Term
 	 * First tries to parse a structure like "( ... )" or "prefix.( ... )"
 	 * ( the second form is needed for parsing terms like a:(b|c) - a is passed as prefix to (b|c), like a.(b|c) )
 	 *
-	 * @param {QueryDB} $db
+	 * @param {DB} $db
 	 * @param {string} $term
 	 */
 	public static function parse($db, $term)
@@ -84,7 +84,7 @@ class Term
 	/**
 	 * Parses a merge term, like a|b|c
 	 *
-	 * @param {QueryDB} $db
+	 * @param {DB} $db
 	 * @param {string} $term 
 	 */
 	private static function parseMerge($db, $term = null, $prefix = null)
@@ -105,7 +105,7 @@ class Term
 	/**
 	 * Parses a attach term, like a+b+c
 	 *
-	 * @param {QueryDB} $db
+	 * @param {DB} $db
 	 * @param {string} $term
 	 */
 	private static function parseAttach($db, $term)
@@ -122,7 +122,7 @@ class Term
 	/**
 	 * Parses a filter term, like a:b:c
 	 *
-	 * @param {QueryDB} $db
+	 * @param {DB} $db
 	 * @param {string} $term
 	 */
 	private static function parseChain($db, $term)
@@ -139,7 +139,7 @@ class Term
 	/**
 	 * Parses a ID tree structure and sets the ID of this query and creates child queries
 	 *
-	 * @param {QueryDB} $db
+	 * @param {DB} $db
 	 * @param {string} $term
 	 */
 	private static function parseTree($db, $term)
@@ -189,7 +189,7 @@ class Term
 	/**
 	 * Checks which type of query corresponds with $id and returns a new instance of the corresponding query object
 	 *
-	 * @param {QueryDB} $db
+	 * @param {DB} $db
 	 * @param {string} $id
 	 */
 	private static function atomic($db, $id)

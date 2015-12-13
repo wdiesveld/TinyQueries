@@ -18,7 +18,7 @@ class QueryTree extends Query
 	/**
 	 * Constructor
 	 *
-	 * @param {QueryDB} $db Handle to database
+	 * @param {DB} $db Handle to database
 	 * @param {string} $id ID of parent query - $id should refer to an atomic query
 	 * @param {string} $terms Query terms corresponding to the child queries of the tree
 	 */
