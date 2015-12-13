@@ -1,9 +1,9 @@
 <?php
 namespace TinyQueries;
 
-require_once( 'HttpTools.class.php' );
-require_once( 'UserFeedback.class.php' );
-require_once( dirname(__FILE__) . '/../DB.class.php' ); 
+require_once( 'HttpTools.php' );
+require_once( 'UserFeedback.php' );
+require_once( dirname(__FILE__) . '/../DB.php' ); 
 
 /**
  * Api

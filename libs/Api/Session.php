@@ -1,7 +1,7 @@
 <?php
 namespace TinyQueries;
 
-require_once('HttpTools.class.php');
+require_once('HttpTools.php');
 
 /**
  * Session

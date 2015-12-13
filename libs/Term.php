@@ -1,11 +1,11 @@
 <?php
 namespace TinyQueries;
 
-require_once('Query/Attach.class.php');
-require_once('Query/Filter.class.php');
-require_once('Query/Merge.class.php');
-require_once('Query/SQL.class.php');
-require_once('Query/Tree.class.php');
+require_once('Query/Attach.php');
+require_once('Query/Filter.php');
+require_once('Query/Merge.php');
+require_once('Query/SQL.php');
+require_once('Query/Tree.php');
 
 /**
  * Term

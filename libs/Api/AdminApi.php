@@ -2,8 +2,8 @@
 namespace TinyQueries;
 
 // Include libs  
-require_once( dirname(__FILE__) . '/Api.class.php' );
-require_once( dirname(__FILE__) . '/../Compiler.class.php' );
+require_once( dirname(__FILE__) . '/Api.php' );
+require_once( dirname(__FILE__) . '/../Compiler.php' );
 
 /**
  * API for the admin tool

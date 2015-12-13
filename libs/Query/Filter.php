@@ -1,7 +1,7 @@
 <?php
 namespace TinyQueries;
 
-require_once('Query.class.php');
+require_once('Query.php');
 
 /**
  * Filter

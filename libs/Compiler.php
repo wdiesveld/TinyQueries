@@ -1,8 +1,8 @@
 <?php
 namespace TinyQueries;
 
-require_once("Config.class.php");
-require_once("QuerySet.class.php");
+require_once("Config.php");
+require_once("QuerySet.php");
 
 /**
  * Compiler

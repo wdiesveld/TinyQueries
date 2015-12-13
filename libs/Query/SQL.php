@@ -1,8 +1,8 @@
 <?php
 namespace TinyQueries;
 
-require_once( 'Query.class.php' );
-require_once( dirname(__FILE__) . '/../Arrays.class.php' );
+require_once( 'Query.php' );
+require_once( dirname(__FILE__) . '/../Arrays.php' );
 
 /**
  * SQL

@@ -1,11 +1,11 @@
 <?php
 namespace TinyQueries;
 
-require_once('Config.class.php');
-require_once('Term.class.php');
-require_once('QuerySet.class.php');
-require_once('Profiler.class.php');
-require_once('Compiler.class.php');
+require_once('Config.php');
+require_once('Term.php');
+require_once('QuerySet.php');
+require_once('Profiler.php');
+require_once('Compiler.php');
 
 /**
  * DB

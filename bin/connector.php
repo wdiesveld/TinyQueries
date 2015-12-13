@@ -14,8 +14,8 @@
  * 
  */
 
-require_once( dirname(__FILE__) . '/../libs/DB.class.php' ); 
-require_once( dirname(__FILE__) . '/../libs/Api/Api.class.php' ); 
+require_once( dirname(__FILE__) . '/../libs/DB.php' ); 
+require_once( dirname(__FILE__) . '/../libs/Api/Api.php' ); 
 
 try
 {

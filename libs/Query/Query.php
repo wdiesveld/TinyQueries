@@ -1,7 +1,7 @@
 <?php
 namespace TinyQueries;
 
-require_once( dirname(__FILE__) . '/../DB.class.php' );
+require_once( dirname(__FILE__) . '/../DB.php' );
 
 /**
  * Query

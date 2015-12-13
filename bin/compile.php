@@ -5,7 +5,7 @@
  *
  */
 
-require_once( dirname(__FILE__) . '/../libs/Compiler.class.php' );
+require_once( dirname(__FILE__) . '/../libs/Compiler.php' );
 
 try
 {
