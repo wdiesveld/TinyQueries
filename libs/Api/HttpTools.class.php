@@ -137,19 +137,6 @@ namespace TinyQueries;
 		return $servername;
 	}
 	
-	/**
-	 * Converts the input string to latin encoding if it not already in latin
-	 *
-	 * @param string
-	 */
-	public static function toLatin($string)
-	{
-		if (mb_detect_encoding($string, 'UTF-8', true))
-			return utf8_decode($string);
-			
-		return $string;
-	}
-	
 	public static function urlEncode($parameters)
 	{
 		$paramValues = array();

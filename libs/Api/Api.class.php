@@ -73,15 +73,6 @@ class Api extends HttpTools
 	}
 	
 	/**
-	 * Returns the DB object
-	 *
-	 */
-	public function getDB()
-	{
-		return $this->db;
-	}
-	
-	/**
 	 * Processes the request and sends the response to the stdout
 	 *
 	 * @param {string} $contentType (optional)
