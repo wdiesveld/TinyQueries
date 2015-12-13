@@ -21,6 +21,7 @@ class AdminApi extends Api
 	
 	/**
 	 * Constructor 
+	 *
 	 */
 	public function __construct()
 	{
@@ -29,7 +30,8 @@ class AdminApi extends Api
 	}
 	
 	/**
-	 * Initializer
+	 * Overrides parent::init
+	 *
 	 */
 	public function init()
 	{
@@ -56,14 +58,28 @@ class AdminApi extends Api
 	}
 	
 	/**
-	 *  
+	 * Overrides parent::processRequest
+	 *
 	 */
 	protected function processRequest()
 	{
+		// Get request params
+		$apiKey		= self::getRequestVar('_api_key', '/^\w+$/');
 		$method		= self::getRequestVar('_method', '/^[\w\.]+$/');
 		$globals	= self::getRequestVar('_globals');
 		
+		// Get the function-name for the jsonp callback
 		$this->jsonPcallback = self::getJsonpCallback();
+		
+		// Check api-key
+		if (!$apiKey)
+			throw new UserFeedback("You need to provide an api-key to use this API");
+			
+		if (!$this->compiler->apiKey)
+			throw new UserFeedback("You need to set the api-key in your TinyQueries config-file");
+			
+		if ($apiKey != $this->compiler->apiKey)
+			throw new UserFeedback("api-key does not match");
 		
 		// Set global query params
 		if ($globals)
@@ -94,7 +110,7 @@ class AdminApi extends Api
 			case 'testApi':			return array( "message" => "Api is working" );
 		}
 		
-		throw new \Exception('Unknown method');
+		throw new \Exception('Unknown API method');
 	}
 	
 	/**

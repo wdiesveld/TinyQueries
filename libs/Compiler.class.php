@@ -20,9 +20,9 @@ class Compiler
 	const INTERFACE_FILES 	= 'interface';
 	const SOURCE_FILES 		= 'source';
 	
+	public $apiKey;
 	public $querySet;
 	
-	private $apiKey;
 	private $folderInput;
 	private $folderOutput;
 	private $server;
