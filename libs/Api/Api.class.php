@@ -435,19 +435,13 @@ class Api extends HttpTools
 	 */
 	protected function createErrorResponse($errorMessage, $showToUser, $httpCode = 400, $altoMessage = "Cannot process request" )
 	{
-		$errorMessage = ($showToUser) 
-							? $errorMessage 
-							: $altoMessage;
-	
-		$response = array
-		(
-			"query"			=> (array_key_exists('queryID', $this->request)) ? $this->request['queryID'] : null,
-			"error"			=> $errorMessage
-		);
-		
 		$this->setHttpResponseCode($httpCode);
 		
-		return $response;
+		return array(
+			"error"	=> ($showToUser) 
+				? $errorMessage 
+				: $altoMessage
+		);
 	}
 
 	/**
