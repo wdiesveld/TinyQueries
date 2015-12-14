@@ -23,10 +23,13 @@ class AdminApi extends Api
 	 * Constructor 
 	 *
 	 */
-	public function __construct()
+	public function __construct($configFile = null)
 	{
+		// Get the function-name for the jsonp callback
+		$this->jsonPcallback = self::getJsonpCallback();
+		
 		// Set debug mode = true
-		parent::__construct(null, true);
+		parent::__construct($configFile, true);
 	}
 	
 	/**
@@ -58,6 +61,14 @@ class AdminApi extends Api
 	}
 	
 	/**
+	 * Sets up the TinyQueries environment
+	 *
+	 */
+	public function setup()
+	{
+	}
+	
+	/**
 	 * Overrides parent::processRequest
 	 *
 	 */
@@ -67,9 +78,6 @@ class AdminApi extends Api
 		$apiKey		= self::getRequestVar('_api_key', '/^\w+$/');
 		$method		= self::getRequestVar('_method', '/^[\w\.]+$/');
 		$globals	= self::getRequestVar('_globals');
-		
-		// Get the function-name for the jsonp callback
-		$this->jsonPcallback = self::getJsonpCallback();
 		
 		// Check api-key
 		if (!$apiKey)
