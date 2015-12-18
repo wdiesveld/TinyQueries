@@ -24,6 +24,7 @@ class Api extends HttpTools
 	protected $request;
 	protected $outputFormat;
 	protected $reservedParams;
+	protected $params = array();
 	
 	public $db;
 	public $profiler;
@@ -239,6 +240,59 @@ class Api extends HttpTools
 			
 		// Replace all query term special chars with underscore
 		return preg_replace('/[\+\(\)\,\s\:\|]/', '_', $queryTerm);
+	}
+	
+	/**
+	 * Checks if the given endpoint matches the endpoint as coming from the webserver.
+	 * Furthermore it sets the keys of the $params property corresponding to the variables in the path prefixed with :
+	 *
+	 * @example
+	 *    if ($this->endpoint('GET /users/:userID'))
+	 *			return $this->getUser();
+	 *
+	 * This will set $this->params['userID'] to the value in the URL if there is a match
+	 *
+	 * @param {string} $endpoint
+	 */
+	public function endpoint($endpoint)
+	{
+		// Split into two
+		list($method, $pathVars) = explode(' ', $endpoint);
+		
+		// Check if request method matches
+		if ($method != $this->request['method'])
+			return false;
+
+		// Get path which is coming from the request
+		$path = self::getRequestVar('_path');
+		
+		// Add pre- and post slashes if not present
+		if (substr($path,0,1)  != '/') $path = '/' . $path;
+		if (substr($path,-1,1) != '/') $path = $path . '/';
+		if (substr($pathVars,0,1)  != '/') $pathVars = '/' . $pathVars;
+		if (substr($pathVars,-1,1) != '/') $pathVars = $pathVars . '/';
+			
+		// Get variable names from $pathVars
+		preg_match_all( "/\:(\w+)\//", $pathVars, $vars );
+			
+		// Create a regexp based on pathVars
+		$pathRexExp = str_replace('/', '\/', $pathVars);
+		$pathRexExp = str_replace('.', '\.', $pathRexExp);
+		
+		// Replace the :vars with \w+ 
+		if ($vars)
+			foreach ($vars[1] as $var)
+				$pathRexExp = str_replace(':'.$var, "(\\w+)", $pathRexExp);
+
+		// Check if there is a match
+		if (!preg_match_all('/^' . $pathRexExp . '$/', $path, $values))
+			return false;
+			
+		// Set the parameters
+		foreach ($vars[1] as $i => $var)
+			$this->params[ $var ] = $values[$i+1][0];
+			
+		return true;
 	}
 	
 	/**
