@@ -380,6 +380,12 @@ class DB
 		if (!$this->dbh) 
 			throw new \Exception("toSQL called before creation of dbh-object");
 			
+		if (is_array($string))
+			throw new \Exception("toSQL: Array passed while expecting a string or a number");
+			
+		if (is_object($string))
+			throw new \Exception("toSQL: Object passed while expecting a string or a number");
+			
 		if (is_null($string))
 			return "NULL";
 		
