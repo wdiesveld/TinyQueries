@@ -10,6 +10,16 @@
 
 	<!--
 	
+		Project id
+		Pick a name for your project. The label should contain only regular word characters and dashes.
+	
+	-->
+	<project
+		label = "my-project"
+	/>
+
+	<!--
+	
 		Database credentials
 		
 		REQUIRED FIELDS:

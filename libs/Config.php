@@ -15,6 +15,7 @@ class Config
 
 	public $compiler;
 	public $database;
+	public $project;
 	public $postprocessor;
 	
 	private $configFile;
@@ -62,12 +63,18 @@ class Config
 		
 		// Check required fields
 		if (!$config)						throw new \Exception("Cannot read configfile " . $this->configFile);
+		if (!$config->project)				throw new \Exception("Tag 'project' not found in " . $this->configFile);
+		if (!$config->project['label'])		throw new \Exception("Field label not found in project tag of " . $this->configFile);
 		if (!$config->database)				throw new \Exception("Tag 'database' not found in " . $this->configFile);
 		if (!$config->database['name'])		throw new \Exception("Field 'name' not found in database tag of " . $this->configFile);
 		if (!$config->database['user'])		throw new \Exception("Field 'user' not found in database tag of " . $this->configFile);
 		if (!$config->database['password'])	throw new \Exception("Field 'password' not found in database tag of " . $this->configFile);
 		if (!$config->compiler)				throw new \Exception("Tag 'compiler' not found in " . $this->configFile);
 		if (!$config->compiler['output'])	throw new \Exception("Field 'output' not found in compiler tag of " . $this->configFile);
+		
+		// Import project fields
+		$this->project = new \StdClass();
+		$this->project->label		= (string) $config->project['label'];
 		
 		// Import database fields
 		$this->database = new \StdClass();

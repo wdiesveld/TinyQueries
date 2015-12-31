@@ -31,6 +31,7 @@ class Compiler
 	private $verbose;
 	private $curlOutput;
 	private $filesWritten;
+	private $projectLabel;
 	
 	/**
 	 * Constructor
@@ -42,6 +43,7 @@ class Compiler
 		$config = new Config( $configFile );
 		
 		// Import settings
+		$this->projectLabel	= $config->project->label;
 		$this->apiKey		= $config->compiler->api_key;
 		$this->folderInput 	= $config->compiler->input;
 		$this->folderOutput	= $config->compiler->output;
@@ -228,8 +230,9 @@ class Compiler
 		
 		// Set post message 
 		$postBody = 
-			"api_key=" . urlencode( $this->apiKey ) 	. "&" .
-			"version=" . urlencode( $this->version )	. "&" ;
+			"api_key=" 	. urlencode( $this->apiKey ) 		. "&" .
+			"label="	. urlencode( $this->projectLabel ) 	. "&" .
+			"version=" 	. urlencode( $this->version )		. "&" ;
 
 		// Read project files and add them to the postBody
 		list($dummy, $sourceFiles, $sourceIDs) = $this->getFolder( self::SOURCE_FILES );
