@@ -22,10 +22,10 @@ class Compiler
 	
 	public $apiKey;
 	public $querySet;
+	public $server;
 	
 	private $folderInput;
 	private $folderOutput;
-	private $server;
 	private $version;
 	private $logfile;
 	private $verbose;
