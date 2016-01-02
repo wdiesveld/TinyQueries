@@ -231,7 +231,7 @@ class Compiler
 		// Set post message 
 		$postBody = 
 			"api_key=" 	. urlencode( $this->apiKey ) 		. "&" .
-			"label="	. urlencode( $this->projectLabel ) 	. "&" .
+			"project="	. urlencode( $this->projectLabel ) 	. "&" .
 			"version=" 	. urlencode( $this->version )		. "&" ;
 
 		// Read project files and add them to the postBody
