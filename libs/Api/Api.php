@@ -199,6 +199,7 @@ class Api extends HttpTools
 				break;
 				
 			default:
+				throw new \Exception('No handler for contentType: ' . $this->contentType);
 				// Do nothing - for custom content-types you should override this method
 				break;
 		}
