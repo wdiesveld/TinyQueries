@@ -11,8 +11,9 @@ namespace TinyQueries;
  */
 class QuerySet
 {
-	const PATH_SQL 			= '/sql';
 	const PATH_INTERFACE 	= '/interface';
+	const PATH_SOURCE		= '/tiny';
+	const PATH_SQL 			= '/sql';
 	
 	private $project;
 	private $pathQueries;

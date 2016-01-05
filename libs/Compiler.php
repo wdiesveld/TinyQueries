@@ -101,6 +101,27 @@ class Compiler
 	}
 	
 	/**
+	 * Returns the timestamp of newest SQL file in the queries folder
+	 *
+	 */
+	public function getTimestampSQL()
+	{
+		list($sqlPath, $sqlFiles)  = $this->getFolder( self::SQL_FILES );
+		
+		$sqlChanged = null;
+		
+		// Get max time of all sql files
+		foreach ($sqlFiles as $file)
+		{
+			$mtime = filemtime($file);
+			if ($mtime > $sqlChanged)
+				$sqlChanged = $mtime;
+		}
+		
+		return $sqlChanged;
+	}
+	
+	/**
 	 * Checks whether there are changes made in either the model or the queries file
 	 *
 	 */
@@ -129,7 +150,7 @@ class Compiler
 			return true;
 		
 		list($dummy, $sourceFiles, $sourceIDs) = $this->getFolder( self::SOURCE_FILES );
-		list($sqlPath, $sqlFiles)  = $this->getFolder( self::SQL_FILES );
+		list($sqlPath, $dummy)  = $this->getFolder( self::SQL_FILES );
 		
 		// Get max time of all source files
 		foreach ($sourceFiles as $file)
@@ -138,14 +159,8 @@ class Compiler
 			if ($mtime > $qplChanged)
 				$qplChanged = $mtime;
 		}
-
-		// Get max time of all sql files
-		foreach ($sqlFiles as $file)
-		{
-			$mtime = filemtime($file);
-			if ($mtime > $sqlChanged)
-				$sqlChanged = $mtime;
-		}
+		
+		$sqlChanged = $this->getTimestampSQL();
 
 		if ($qplChanged > $sqlChanged)
 			return true;
@@ -313,10 +328,10 @@ class Compiler
 		}
 		
 		// Unfortunately, the xml-code needs to be parsed twice in order to handle the CDATA-blocks
-		$queryIDs 	= @simplexml_load_string( $response[1] ); 
-		$queryCode	= @simplexml_load_string( $response[1] , 'SimpleXMLElement', LIBXML_NOCDATA ); 
+		$ids 	= @simplexml_load_string( $response[1] ); 
+		$code	= @simplexml_load_string( $response[1] , 'SimpleXMLElement', LIBXML_NOCDATA ); 
 		
-		if ($queryIDs===false || $queryCode===false) 
+		if ($ids===false || $code===false) 
 		{
 			$errorMsg = 'Error parsing xml coming from the TinyQueryCompiler - please visit www.tinyqueries.com for support.';
 			
@@ -327,23 +342,37 @@ class Compiler
 		}
 
 		// Update sql & interface-files
-		for ($i=0;$i<count($queryIDs->query);$i++)
+		for ($i=0;$i<count($ids->query);$i++)
 		{
-			$queryID = $queryIDs->query[$i]->attributes()->id;
+			$queryID = $ids->query[$i]->attributes()->id;
 			
-			$this->writeInterface( $queryID, $queryCode->query[$i]->{'interface'} );
+			$this->writeInterface( $queryID, $code->query[$i]->{'interface'} );
 			
-			if (property_exists($queryCode->query[$i], 'sql'))
-				$this->writeSQLfile( $queryID, $queryCode->query[$i]->sql );
+			if (property_exists($code->query[$i], 'sql'))
+				$this->writeSQLfile( $queryID, $code->query[$i]->sql );
 		}
 		
 		// Write _project file
-		if ($queryCode->{'interface'})
-			$this->writeInterface( '_project', (string) $queryCode->{'interface'} );
+		if ($code->{'interface'})
+			$this->writeInterface( '_project', (string) $code->{'interface'} );
+			
+		$cleanUpTypes = array(self::SQL_FILES, self::INTERFACE_FILES);
+
+		// Write source code if present
+		if ($code->source)
+		{
+			for ($i=0;$i<count($ids->source);$i++)
+			{
+				$sourceID = $ids->source[$i]->attributes()->id;
+				$this->writeSource($sourceID, $code->source[$i]->code);
+			}
+			
+			$cleanUpTypes[] = self::SOURCE_FILES;
+		}
 			
 		// Clean up files which were not in the compiler output
 		if ($doCleanUp)
-			foreach (array(self::SQL_FILES, self::INTERFACE_FILES) as $filetype)
+			foreach ($cleanUpTypes as $filetype)
 			{
 				list($path, $files) = $this->getFolder( $filetype );
 				foreach ($files as $file)
@@ -373,6 +402,19 @@ class Compiler
 		@file_put_contents( $this->logfile, $message, FILE_APPEND);
 	}
 
+	/**
+	 * Writes the source file
+	 *
+	 * @param {string} $fileID 
+	 * @param {string} $code
+	 */
+	private function writeSource($fileID, $code)
+	{
+		$filename = $this->folderInput . "/" . $fileID . ".json";
+			
+		$this->writeFile( $filename, $code );
+	}
+	
 	/**
 	 * Writes the interface file
 	 *

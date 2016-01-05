@@ -198,6 +198,7 @@ class AdminApi extends Api
 	{
 		return array(
 			'version_libs'	=> Config::VERSION_LIBS,
+			'timestampSQL'	=> date ("Y-m-d H:i:s", $this->compiler->getTimestampSQL()),
 			'dbError' 		=> $this->dbError,
 			'dbStatus'		=> ($this->db && $this->db->connected()) 
 				? 'Connected with ' . $this->db->dbname . ' at ' . $this->db->host
