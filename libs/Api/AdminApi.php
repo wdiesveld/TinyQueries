@@ -196,9 +196,11 @@ class AdminApi extends Api
 	 */
 	public function getStatus()
 	{
+		$timestamp = $this->compiler->getTimestampSQL();
+		
 		return array(
 			'version_libs'	=> Config::VERSION_LIBS,
-			'timestampSQL'	=> date ("Y-m-d H:i:s", $this->compiler->getTimestampSQL()),
+			'timestampSQL'	=> ($timestamp) ? date ("Y-m-d H:i:s", $timestamp) : null,
 			'dbError' 		=> $this->dbError,
 			'dbStatus'		=> ($this->db && $this->db->connected()) 
 				? 'Connected with ' . $this->db->dbname . ' at ' . $this->db->host
