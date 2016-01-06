@@ -283,7 +283,7 @@ class Api extends HttpTools
 		// Replace the :vars with \w+ 
 		if ($vars)
 			foreach ($vars[1] as $var)
-				$pathRexExp = str_replace(':'.$var, "(\\w+)", $pathRexExp);
+				$pathRexExp = str_replace(':'.$var, "([\\w\\-]+)", $pathRexExp);
 
 		// Check if there is a match
 		if (!preg_match_all('/^' . $pathRexExp . '$/', $path, $values))
