@@ -24,6 +24,7 @@ class Compiler
 	public $querySet;
 	public $server;
 	
+	private $enabled;
 	private $folderInput;
 	private $folderOutput;
 	private $version;
@@ -44,6 +45,7 @@ class Compiler
 		
 		// Import settings
 		$this->projectLabel	= $config->project->label;
+		$this->enabled		= $config->compiler->enable;
 		$this->apiKey		= $config->compiler->api_key;
 		$this->folderInput 	= $config->compiler->input;
 		$this->folderOutput	= $config->compiler->output;
@@ -230,6 +232,9 @@ class Compiler
 	 */
 	private function callCompiler($doCleanUp, $method = 'POST')
 	{
+		if (!$this->enabled)
+			throw new \Exception('Compiling is not enabled on this instance - set field compiler > enable in config.xml to enable compiling');
+	
 		// Reset array
 		$this->filesWritten = array();
 		

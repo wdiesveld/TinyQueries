@@ -70,6 +70,7 @@ class Config
 		if (!$config->database['user'])		throw new \Exception("Field 'user' not found in database tag of " . $this->configFile);
 		if (!$config->database['password'])	throw new \Exception("Field 'password' not found in database tag of " . $this->configFile);
 		if (!$config->compiler)				throw new \Exception("Tag 'compiler' not found in " . $this->configFile);
+		if (!$config->compiler['enable'])	throw new \Exception("Field 'enable' not found in compiler tag of " . $this->configFile);
 		if (!$config->compiler['output'])	throw new \Exception("Field 'output' not found in compiler tag of " . $this->configFile);
 		
 		// Import project fields
@@ -93,6 +94,7 @@ class Config
 		$this->compiler->server		= ($config->compiler['server']) 	? (string) $config->compiler['server'] : self::DEFAULT_COMPILER;
 		$this->compiler->version	= ($config->compiler['version']) 	? (string) $config->compiler['version'] : null;
 		$this->compiler->logfile	= null;
+		$this->compiler->enable 	= ($config->compiler['enable'] && strtolower( (string) $config->compiler['enable'] ) == 'true') ? true : false;
 		$this->compiler->autocompile = ($config->compiler['autocompile'] && strtolower( (string) $config->compiler['autocompile'] ) == 'true') ? true : false;
 		
 		// Add "v" to version if missing

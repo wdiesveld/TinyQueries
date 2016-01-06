@@ -45,6 +45,8 @@
 		Compiler settings
 		
 		REQUIRED FIELDS:
+		enable		- true/false ; specify if you want to enable compiling on this instance. 
+					  It is adviced to enable compiling on development environments only
 		output		- Path to folder where the compiled files should be put 
 					  Normally the folder is called 'queries'. 
 					  It is assumed that this folder has two subfolders 'sql' and 'interface'
@@ -61,6 +63,7 @@
 		
 	-->	
 	<compiler
+		enable		= "true"
 		api_key 	= ""
 		input		= "/path/to/queries/tiny"
 		output		= "/path/to/queries"
