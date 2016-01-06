@@ -45,13 +45,13 @@
 		Compiler settings
 		
 		REQUIRED FIELDS:
-		enable		- true/false ; specify if you want to enable compiling on this instance. 
-					  It is adviced to enable compiling on development environments only
 		output		- Path to folder where the compiled files should be put 
 					  Normally the folder is called 'queries'. 
 					  It is assumed that this folder has two subfolders 'sql' and 'interface'
 		
 		OPTIONAL:
+		enable		- true/false ; specify if you want to enable compiling on this instance. Default = false
+					  It is adviced to enable compiling on development environments only
 		api_key 	- Your TinyQueries API key
 		input		- Path to folder where you want to put your TinyQueries source files 
 					  Normally the folder is called 'queries/tiny'

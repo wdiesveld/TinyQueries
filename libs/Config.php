@@ -70,7 +70,6 @@ class Config
 		if (!$config->database['user'])		throw new \Exception("Field 'user' not found in database tag of " . $this->configFile);
 		if (!$config->database['password'])	throw new \Exception("Field 'password' not found in database tag of " . $this->configFile);
 		if (!$config->compiler)				throw new \Exception("Tag 'compiler' not found in " . $this->configFile);
-		if (!$config->compiler['enable'])	throw new \Exception("Field 'enable' not found in compiler tag of " . $this->configFile);
 		if (!$config->compiler['output'])	throw new \Exception("Field 'output' not found in compiler tag of " . $this->configFile);
 		
 		// Import project fields

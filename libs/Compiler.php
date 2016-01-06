@@ -233,7 +233,7 @@ class Compiler
 	private function callCompiler($doCleanUp, $method = 'POST')
 	{
 		if (!$this->enabled)
-			throw new \Exception('Compiling is not enabled on this instance - set field compiler > enable in config.xml to enable compiling');
+			throw new \Exception('Compiling is not enabled on this instance - set field compiler > enable = "true" in config.xml to enable compiling');
 	
 		// Reset array
 		$this->filesWritten = array();
