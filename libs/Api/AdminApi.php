@@ -38,6 +38,9 @@ class AdminApi extends Api
 	 */
 	public function init()
 	{
+		if (!Config::exists( $this->configFile ))
+			return;
+	
 		try
 		{
 			if ($this->db)
@@ -220,11 +223,14 @@ class AdminApi extends Api
 	 */
 	public function getStatus()
 	{
-		$timestamp = $this->compiler->getTimestampSQL();
+		$timestamp = ($this->compiler)
+			? $this->compiler->getTimestampSQL()
+			: null;
 		
 		return array(
 			'version_libs'	=> Config::VERSION_LIBS,
 			'timestampSQL'	=> ($timestamp) ? date ("Y-m-d H:i:s", $timestamp) : null,
+			'configExists'	=> Config::exists( $this->configFile ),
 			'dbError' 		=> $this->dbError,
 			'dbStatus'		=> ($this->db && $this->db->connected()) 
 				? 'Connected with ' . $this->db->dbname . ' at ' . $this->db->host
