@@ -27,11 +27,32 @@ class Config
 	 */
 	public function __construct($configFile = null)
 	{
-		$this->configFile = ($configFile)
+		$this->configFile = self::file($configFile);
+		
+		$this->load();
+	}
+	
+	/**
+	 * Checks if the given config file exists
+	 * If no file is given, checks if the default config file exists
+	 *
+	 * @param {string} $configFile
+	 */
+	public static function exists($configFile = null)
+	{
+		return file_exists( self::file($configFile) );
+	}
+	
+	/**
+	 * Returns the config file
+	 * If no file is given, return the default file
+	 *
+	 */
+	private static function file($configFile = null)
+	{
+		return ($configFile)
 			? $configFile
 			: dirname(__FILE__) . "/" . self::DEFAULT_CONFIGFILE;
-			
-		$this->load();
 	}
 	
 	/**
@@ -58,6 +79,10 @@ class Config
 	 */
 	private function load()
 	{
+		// Check if file exists
+		if (!self::exists( $this->configFile ))
+			throw new \Exception('Config file \'' . $this->configFile . '\' does not exist');
+	
 		// Load XML file
 		$config = @simplexml_load_file( $this->configFile );
 		

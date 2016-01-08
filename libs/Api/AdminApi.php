@@ -61,14 +61,6 @@ class AdminApi extends Api
 	}
 	
 	/**
-	 * Sets up the TinyQueries environment
-	 *
-	 */
-	public function setup()
-	{
-	}
-	
-	/**
 	 * Overrides parent::processRequest
 	 *
 	 */
@@ -79,23 +71,25 @@ class AdminApi extends Api
 		$method		= self::getRequestVar('_method', '/^[\w\.]+$/');
 		$globals	= self::getRequestVar('_globals');
 		$server 	= self::getRequestVar('_compiler'); // the compiler which is calling this api
+
+		$configExists = Config::exists( $this->configFile );
 		
 		// Check api-key
 		if (!$apiKey)
 			throw new UserFeedback("You need to provide an api-key to use this API");
 			
-		if (!$this->compiler->apiKey)
+		if ($configExists && !$this->compiler->apiKey)
 			throw new UserFeedback("You need to set the api-key in your TinyQueries config-file");
 			
-		if ($apiKey != $this->compiler->apiKey)
+		if ($configExists && $apiKey != $this->compiler->apiKey)
 			throw new UserFeedback("api-key does not match");
 			
 		// Ensure that there is only one compiler which is speaking with this api, otherwise queries might get mixed up
-		if ($server && strpos($this->compiler->server, $server) === false)
+		if ($configExists && $server && strpos($this->compiler->server, $server) === false)
 			throw new UserFeedback('Compiler which is calling this api does not match with compiler in config');
 			
 		// Set global query params
-		if ($globals)
+		if ($this->db && $globals)
 		{
 			$globals = json_decode( $globals );
 			foreach ($globals as $name => $value)
@@ -120,6 +114,7 @@ class AdminApi extends Api
 			case 'getTermParams': 	return $this->getTermParams();
 			case 'renameQuery':		return $this->renameQuery();
 			case 'saveSource':		return $this->saveSource();
+			case 'setup':			return $this->setup();
 			case 'testApi':			return array( "message" => "Api is working" );
 		}
 		
@@ -161,6 +156,35 @@ class AdminApi extends Api
 			return;
 			
 		parent::setHttpResponseCode($code);
+	}
+	
+	/**
+	 * Sets up the TinyQueries environment
+	 *
+	 */
+	public function setup()
+	{
+		$setupFile = dirname(__FILE__) . '/../config/setup.php';
+		
+		// Don't throw error, but just return informative message
+		if (!file_exists($setupFile))
+			return array(
+				'message' => 'Nothing to do - No setup script found'
+			);
+			
+		include( $setupFile );
+		
+		if (!function_exists('TinyQueries\\setup'))
+			throw new \Exception('There is no function \'TinyQueries\\setup\' defined in setup.php');
+		
+		$result = setup();
+		
+		if (Arrays::isAssoc($result))
+			return $result;
+			
+		return array(
+			'message' => 'TinyQueries setup complete'
+		);
 	}
 	
 	/**
