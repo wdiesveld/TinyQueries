@@ -109,6 +109,7 @@ class AdminApi extends Api
 			case 'compile': 		return $this->compile();
 			case 'deleteQuery':		return $this->deleteQuery();
 			case 'downloadQueries':	return $this->downloadQueries();
+			case 'getDbScheme':		return $this->getDbScheme();
 			case 'getInterface':	return $this->getInterface();
 			case 'getProject':		return $this->getProject();
 			case 'getSource':		return $this->getSource();
@@ -333,6 +334,35 @@ class AdminApi extends Api
 		return array(
 			'message' => 'Query is renamed'
 		);
+	}
+
+	/**
+	 * Returns the database scheme
+	 *
+	 */
+	private function getDbScheme()
+	{
+		$scheme = array();
+		
+		// Currently only available for MySQL
+		if ($this->db->driver != 'mysql')
+			return $scheme;
+			
+		$tables = $this->db->selectAllFirst('show tables');
+		
+		foreach ($tables as $table)
+		{
+			$columns = $this->db->selectAllAssoc('show columns from `' . $table . '`');
+			
+			foreach ($columns as $column)
+				$scheme[$table]['fields'][ $column['Field'] ] = array(
+					'type' 	=> $column['Type'],
+					'key'	=> ($column['Key']) ? $column['Key'] : null,
+					'null'	=> ($column['Null'] == 'YES') ? true : false
+				);
+		}
+		
+		return $scheme;
 	}
 	
 	/**
