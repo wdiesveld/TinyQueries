@@ -16,7 +16,6 @@ class QuerySQL extends Query
 {
 	public $id;
 	
-	private $nested;
 	private $sql;
 	protected $_interface;
 
@@ -31,9 +30,6 @@ class QuerySQL extends Query
 		parent::__construct($db);
 		
 		$this->id = $id;
-		
-		// Take default setting from db
-		$this->nested = $this->db->nested;
 		
 		$this->load();
 	}
@@ -63,20 +59,6 @@ class QuerySQL extends Query
 	public function name()
 	{
 		return $this->id;
-	}
-	
-	/**
-	 * Sets the nested flag to indicate that the output of the query should be nested.
-	 * This means that for example sql output fields named 'user.name' and 'user.email' will be converted to 
-	 * a nested structure 'user' having fields 'name' and 'email' 
-	 *
-	 * @param {boolean} $nested
-	 */
-	public function nested( $nested = true )
-	{
-		$this->nested = $nested;
-		
-		return $this;
 	}
 	
 	/**
@@ -315,7 +297,7 @@ class QuerySQL extends Query
 	private function nestDottedFields(&$rows)
 	{
 		// If nesting is not set, we are ready
-		if (!$this->nested)
+		if (!$this->output->nested)
 			return;
 		
 		// If there are no rows we are ready		

@@ -50,7 +50,7 @@ class Query
 		$this->output->group	= false;
 		$this->output->rows 	= "all";
 		$this->output->columns 	= "all";
-		$this->output->nested 	= true;
+		$this->output->nested 	= null;
 		$this->output->fields 	= new \StdClass();
 	}
 
@@ -203,6 +203,23 @@ class Query
 		}
 		
 		return $values;
+	}
+	
+	/**
+	 * Sets the nested flag to indicate that the output of the query should be nested.
+	 * This means that for example sql output fields named 'user.name' and 'user.email' will be converted to 
+	 * a nested structure 'user' having fields 'name' and 'email' 
+	 *
+	 * @param {boolean} $nested
+	 */
+	public function nested( $nested = true )
+	{
+		$this->output->nested = $nested;
+		
+		foreach ($this->children as $child)
+			$child->nested( $nested );
+
+		return $this;
 	}
 	
 	/**
@@ -417,8 +434,12 @@ class Query
 			{
 				$fields = array('key', 'group', 'rows', 'columns', 'nested', 'fields', 'rows2columns');
 				foreach ($fields as $field)
-					if (property_exists($query->output, $field) && $query->output->$field)
+					if (property_exists($query->output, $field) && !is_null($query->output->$field) && $query->output->$field !== '')
 						$this->output->$field = $query->output->$field;
+				
+				// Take default setting from db if nested is not specified
+				if (is_null($this->output->nested))
+					$this->output->nested = $this->db->nested;
 			}
 			else
 				// This means, the query is an insert, update or delete
