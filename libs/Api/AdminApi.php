@@ -107,6 +107,7 @@ class AdminApi extends Api
 		switch ($method)
 		{
 			case 'compile': 		return $this->compile();
+			case 'createView':		return $this->createView();
 			case 'deleteQuery':		return $this->deleteQuery();
 			case 'downloadQueries':	return $this->downloadQueries();
 			case 'getDbScheme':		return $this->getDbScheme();
@@ -262,6 +263,29 @@ class AdminApi extends Api
 		if (!$r)
 			throw new \Exception("Could not delete $file");
 	}
+
+	/**
+	 * Creates or replaces an SQL-view which corresponds to the query
+	 *
+	 */
+	public function createView()
+	{
+		$queryID = self::getRequestVar('query', self::REG_EXP_SOURCE_ID);
+		
+		if (!$queryID)
+			throw new \Exception("No queryID");
+			
+		$sql = $this->compiler->querySet->sql($queryID);
+		
+		if (!$sql)
+			throw new \Exception("Could not read SQL file");
+			
+		$this->db->execute( 'create or replace view `' . $queryID . '` as ' . $sql );
+		
+		return array(
+			'message' => 'Created / updated view "' . $queryID . '"'
+		);
+	}
 	
 	/**
 	 * Deletes the source, sql and interface file of a query
@@ -335,6 +359,63 @@ class AdminApi extends Api
 			'message' => 'Query is renamed'
 		);
 	}
+	
+	/**
+	 * Converts a DB type to a TQ type
+	 *
+	 */
+	private function convertDbType($dbType)
+	{
+		$match = null;
+		$details = null;
+		
+		if (preg_match("/^(\w+)$/", $dbType, $match))
+			$baseType = $match[1];
+		elseif (preg_match("/^(\w+)\((.+)\)$/", $dbType, $match))
+		{
+			$baseType = $match[1];
+			$details = $match[2];
+		}
+		else
+			return 'string';
+			
+		switch ($baseType)
+		{
+			case 'enum':
+				$values = array();
+				foreach (explode(',', $details) as $element)
+					$values[] = substr($element, 1, strlen($element)-2);
+				return array(
+					'enum' => $values
+				);
+
+			case 'smallint':
+			case 'mediumint':
+			case 'tinyint':
+			case 'bigint':
+			case 'int':
+				return 'int';
+				
+			case 'date':
+				return 'date';
+				
+			case 'datetime':
+			case 'timestamp':
+				return 'datetime';
+				
+			case 'decimal':
+			case 'float':
+			case 'real':
+			case 'double':
+				return 'float';
+				
+			case 'boolean':
+				return 'boolean';
+				
+			default:
+				return 'string';
+		}
+	}
 
 	/**
 	 * Returns the database scheme
@@ -356,7 +437,7 @@ class AdminApi extends Api
 			
 			foreach ($columns as $column)
 				$scheme[$table]['fields'][ $column['Field'] ] = array(
-					'type' 	=> $column['Type'],
+					'type' 	=> $this->convertDbType( $column['Type'] ),
 					'key'	=> ($column['Key']) ? $column['Key'] : null,
 					'null'	=> ($column['Null'] == 'YES') ? true : false
 				);
