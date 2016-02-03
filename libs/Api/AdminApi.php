@@ -371,7 +371,7 @@ class AdminApi extends Api
 		
 		if (preg_match("/^(\w+)$/", $dbType, $match))
 			$baseType = $match[1];
-		elseif (preg_match("/^(\w+)\((.+)\)$/", $dbType, $match))
+		elseif (preg_match("/^(\w+)\((.+)\)/", $dbType, $match))
 		{
 			$baseType = $match[1];
 			$details = $match[2];
