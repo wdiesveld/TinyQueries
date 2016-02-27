@@ -60,7 +60,7 @@ class AdminApi extends Api
 		}
 		
 		// Initialize compiler
-		$this->compiler = new Compiler();
+		$this->compiler = new Compiler( $this->configFile );
 	}
 	
 	/**
