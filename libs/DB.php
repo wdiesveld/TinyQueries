@@ -26,8 +26,8 @@ class DB
 	public $host;
 	public $dbname;
 	public $user;
-	public $pw;
 	
+	private $pw;
 	private $initQuery;
 	private $globalQueryParams;
 	private $primaryKey;
