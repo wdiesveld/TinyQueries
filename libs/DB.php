@@ -66,7 +66,7 @@ class DB
 		// Call the compiler if autocompile is set
 		if (!$neverAutoCompile && $config->compiler->autocompile)
 		{
-			$compiler = new Compiler();
+			$compiler = new Compiler( $configFile );
 			$compiler->compile( false, true );
 		}
 		
