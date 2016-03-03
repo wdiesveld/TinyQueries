@@ -510,7 +510,7 @@ class Query
 				
 			case 'childDefs':
 				foreach ($rows[0] as $field => $value)
-					if (is_null($value) && property_exists($this->output->fields, $field) && property_exists($this->output->fields->$field, 'child'))
+					if (is_null($value) && $this->output->fields && property_exists($this->output->fields, $field) && property_exists($this->output->fields->$field, 'child'))
 						$columnsToRemove[] = $field;
 						
 				break;
