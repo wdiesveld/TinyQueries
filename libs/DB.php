@@ -24,6 +24,7 @@ class DB
 	public $globals;
 	public $driver;
 	public $host;
+	public $port;
 	public $dbname;
 	public $user;
 	
@@ -57,6 +58,7 @@ class DB
 		// Import settings
 		$this->driver		= $config->database->driver; 
 		$this->host			= ($config->database->host) ? $config->database->host : 'localhost';
+		$this->port			= $config->database->port;
 		$this->dbname		= $config->database->name;
 		$this->user			= $config->database->user;
 		$this->pw 			= $config->database->password;
@@ -116,6 +118,10 @@ class DB
 		
 		// construct PDO object
 		$dsn = $this->driver . ":dbname=" . $this->dbname . ";host=" . $this->host;
+		
+		if ($this->port)
+			$dsn .= ';port=' . $this->port;
+		
 		$this->dbh = new \PDO($dsn, $this->user, $this->pw);
 		
 		// throw exception for each error

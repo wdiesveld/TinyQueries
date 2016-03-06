@@ -105,6 +105,7 @@ class Config
 		$this->database = new \StdClass();
 		$this->database->driver		= ($config->database['driver']) ? (string) $config->database['driver'] : 'mysql';
 		$this->database->host		= ($config->database['host']) ? (string) $config->database['host'] : 'localhost';
+		$this->database->port		= ($config->database['port']) ? (string) $config->database['port'] : null;
 		$this->database->name		= (string) $config->database['name'];
 		$this->database->user		= (string) $config->database['user'];
 		$this->database->password	= (string) $config->database['password'];

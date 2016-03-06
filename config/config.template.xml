@@ -35,6 +35,7 @@
 	<database
 		driver		= "mysql"
 		host 		= "localhost"
+		port		= ""
 		name		= ""
 		user		= ""
 		password	= ""
