@@ -242,6 +242,9 @@ class Compiler
 		$this->log('Compiler being called..');
 
 		// Init CURL
+		if (!function_exists('curl_init'))
+			throw new \Exception('Cannot compile queries - curl extension for PHP is not installed');
+
 		$this->curlOutput = null;
 		$ch = curl_init();
 
