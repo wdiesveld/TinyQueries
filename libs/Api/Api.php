@@ -25,6 +25,7 @@ class Api extends HttpTools
 	protected $outputFormat;
 	protected $reservedParams;
 	protected $params = array();
+	protected $endpoints = array();
 	
 	public $db;
 	public $profiler;
@@ -71,6 +72,12 @@ class Api extends HttpTools
 		$this->db = new DB( null, $this->configFile, $this->profiler );
 		
 		$this->db->connect();
+		
+		// Check for Swagger specs
+		$config = new Config( $this->configFile );
+		
+		if ($config->api->swagger)
+			$this->importSwagger(  $config->api->swagger );
 	}
 	
 	/**
@@ -273,24 +280,30 @@ class Api extends HttpTools
 		if (substr($pathVars,0,1)  != '/') $pathVars = '/' . $pathVars;
 		if (substr($pathVars,-1,1) != '/') $pathVars = $pathVars . '/';
 			
-		// Get variable names from $pathVars
-		preg_match_all( "/\:(\w+)\//", $pathVars, $vars );
+		// Get variable names from $pathVars (both format :varname and {varname})
+		preg_match_all( "/\:(\w+)\//", $pathVars, $varsDotted );
+		preg_match_all( "/\{(\w+)\}\//", $pathVars, $varsCurly );
+		
+		$vars =  ($varsDotted) ? $varsDotted[1] : array();
+		$vars += ($varsCurly) ? $varsCurly[1] : array();
 			
 		// Create a regexp based on pathVars
 		$pathRexExp = str_replace('/', '\/', $pathVars);
 		$pathRexExp = str_replace('.', '\.', $pathRexExp);
 		
-		// Replace the :vars with \w+ 
-		if ($vars)
-			foreach ($vars[1] as $var)
-				$pathRexExp = str_replace(':'.$var, "([\\w\\-]+)", $pathRexExp);
+		// Replace the :vars and {vars} with \w+ 
+		foreach ($vars as $var)
+		{
+			$pathRexExp = str_replace(':'.$var, 	"([\\w\\-]+)", $pathRexExp);
+			$pathRexExp = str_replace('{'.$var.'}', "([\\w\\-]+)", $pathRexExp);
+		}
 
 		// Check if there is a match
 		if (!preg_match_all('/^' . $pathRexExp . '$/', $path, $values))
 			return false;
 			
 		// Set the parameters
-		foreach ($vars[1] as $i => $var)
+		foreach ($vars as $i => $var)
 			$this->params[ $var ] = $values[$i+1][0];
 			
 		return true;
@@ -417,7 +430,57 @@ class Api extends HttpTools
 	}
 	
 	/**
+	 * Imports endpoints from swagger definition file
+	 *
+	 */
+	protected function importSwagger( $swaggerFile )
+	{
+		$swagger = @file_get_contents( $swaggerFile );
+		
+		if (!$swagger)
+			throw new \Exception('Cannot read swagger file');
+			
+		$specs = @json_decode( $swagger, true ); 
+		
+		if (!$specs)
+			throw new \Exception('Cannot decode swagger specs');
+			
+		foreach ($specs['paths'] as $path => $methods)
+			foreach ($methods as $method => $def)
+			{
+				$spec = array();
+				
+				if (array_key_exists('x-tq-query', $def))
+					$spec['query'] = $def['x-tq-query'];
+				
+				if (array_key_exists('x-tq-handler', $def))
+					$spec['handler'] = $def['x-tq-handler'];
+				
+				$this->endpoints[ strtoupper($method) . ' ' . $path ] = $spec;
+			}
+	}
+	
+	/**
+	 * Checks if the endpoint which is called is in the list of endpoints and executes the corresponding query
+	 *
+	 */
+	protected function processEndpoint()
+	{
+		// Set parameters which are posted in body
+		if ($posted = self::getJsonBody())
+			$this->params = $posted;	
+	
+		// Check which of the endpoints is called and if there is a query defined for it
+		foreach ($this->endpoints as $path => $def)
+			if ($this->endpoint( $path ) && array_key_exists('query', $def))
+				return $this->db->query( $def['query'] )->run( $this->params );
+			
+		throw new UserFeedback('No valid API-call');	
+	}
+	
+	/**
 	 * Processes the api request, e.g. executes the query/queries and returns the output
+	 *
 	 */
 	protected function processRequest()
 	{
@@ -426,7 +489,12 @@ class Api extends HttpTools
 
 		if (!$this->db->connected())
 			throw new \Exception('There is no database connection');
+		
+		// If there are endpoints defined process the endpoint
+		if ($this->endpoints)
+			return $this->processEndpoint();
 			
+		// If there are no endpoints defined check for 'query' and '_path' parameters 
 		list($term, $paramsSet, $param, $singleRow) = self::requestedQuery();
 		
 		$multipleCalls 	= (count($paramsSet) > 1) ? true : false;

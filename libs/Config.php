@@ -16,6 +16,7 @@ class Config
 	public $compiler;
 	public $database;
 	public $project;
+	public $api;
 	public $postprocessor;
 	
 	private $configFile;
@@ -100,6 +101,10 @@ class Config
 		// Import project fields
 		$this->project = new \StdClass();
 		$this->project->label		= (string) $config->project['label'];
+		
+		// Import api fields
+		$this->api = new \StdClass();
+		$this->api->swagger			= ($config->api && $config->api['swagger']) ? self::pathAbs( (string) $config->api['swagger'] ) : null;
 		
 		// Import database fields
 		$this->database = new \StdClass();

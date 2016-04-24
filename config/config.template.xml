@@ -17,6 +17,15 @@
 	<project
 		label = "my-project"
 	/>
+	
+	<!--
+	
+		Swagger definition file (optional)
+	
+	-->
+	<api
+		swagger	= "/path/to/swagger.json"
+	/>
 
 	<!--
 	
