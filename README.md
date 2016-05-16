@@ -16,13 +16,13 @@ TinyQueries can be regarded as an alternative for Object Relation Mapping. It's 
 
 1. If you use Composer then update or create your composer.json file as follows
 
-```
-{
-	"require": {
-		"tiny-queries/tiny-queries": "*" 	
+	```
+	{
+		"require": {
+			"tiny-queries/tiny-queries": "*" 	
+		}
 	}
-}
-```
+	```
 
 1. Do the composer command, either ```composer install``` or ```php composer.phar install```
 
