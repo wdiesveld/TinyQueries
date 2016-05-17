@@ -14,6 +14,9 @@ TinyQueries can be regarded as an alternative for Object Relation Mapping. It's 
 
 ## Installation
 
+NOTE: This package is especially usefull if you want to integrate TinyQueries with an existing PHP application. However if
+you want to start from scratch it's recommended to use [TinyQueries API version] instead which requires less configuration.
+
 1. If you use Composer then update or create your composer.json file as follows. Alternatively, instead of using Composer you could just download the ZIP-file and put the content in the folder where you put your libs.
 
 	```
@@ -65,6 +68,6 @@ TinyQueries can be regarded as an alternative for Object Relation Mapping. It's 
 	```
 
 Your project is now ready to be compiled. You can choose to compile using the online IDE or compile from the commandline.
-Please check [http://docs.tinyqueries.com] for more info.
+Please check http://docs.tinyqueries.com for more info.
 
- 
+[TinyQueries API version]:https://github.com/wdiesveld/tiny-queries-php-api
