@@ -14,8 +14,12 @@
  * 
  */
 
-require_once( dirname(__FILE__) . '/../libs/DB.php' ); 
-require_once( dirname(__FILE__) . '/../libs/Api/Api.php' ); 
+register_shutdown_function( 'shutdown' );
+
+error_reporting(0);
+
+require_once( dirname(__FILE__) . '/../libs/QueryDB.class.php' ); 
+require_once( dirname(__FILE__) . '/../libs/Api/Api.class.php' ); 
 
 try
 {
@@ -26,6 +30,9 @@ try
 		exit(0);
 	}
 	
+	// Catch all output which is send to stdout
+	ob_start();
+
 	// Get query term
 	$term 		= $argv[1];
 	$params 	= null;
@@ -50,7 +57,7 @@ try
 	}
 	
 	// Create database object
-	$db = new TinyQueries\DB();
+	$db = new TinyQueries\QueryDB();
 	
 	$db->connect();
 	
@@ -59,12 +66,43 @@ try
 			$db->param($name, $value);
 	
 	// Run query and return result as JSON
-	echo TinyQueries\Api::jsonEncode( $db->query($term)->run($params) );
+	$json = TinyQueries\Api::jsonEncode( $db->query($term)->run($params) );
+	
+	$textOutput = ob_get_contents();
+
+	if ($textOutput)
+		throw new \Exception($textOutput);
+		
+	// reset output buffer
+	ob_clean();
+	
+	echo $json;
 }
 catch (Exception $e)
 {
+	// reset output buffer
+	ob_clean();
+
 	echo json_encode( array( "error" => $e->getMessage() ) );
 	exit(1);
 }
 
 exit(0);
+
+/**
+ * This is needed to catch fatal errors
+ *
+ */
+function shutdown()
+{
+	$error = error_get_last();
+
+	if ($error !== NULL)
+	{
+		echo json_encode( array( "error" => "PHP fatal error:  " . $error["message"] ) );
+		exit(1);
+	}
+	
+	exit(0);
+}
+
