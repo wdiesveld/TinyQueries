@@ -14,7 +14,8 @@
  * 
  */
 
-register_shutdown_function( 'shutdown' );
+// This will be used to catch PHP fatal errors
+register_shutdown_function( '_shutdown' );
 
 error_reporting(0);
 
@@ -93,11 +94,11 @@ exit(0);
  * This is needed to catch fatal errors
  *
  */
-function shutdown()
+function _shutdown()
 {
 	$error = error_get_last();
 
 	if ($error !== NULL)
-		echo json_encode( array( "error" => "PHP fatal error:  " . $error["message"] ) );
+		echo json_encode( array( 'error' => 'PHP error: ' . $error['message'] . ' in ' . $error['file'] . ' line ' . $error['line'] ) );
 }
 
