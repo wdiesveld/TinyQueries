@@ -98,11 +98,6 @@ function shutdown()
 	$error = error_get_last();
 
 	if ($error !== NULL)
-	{
 		echo json_encode( array( "error" => "PHP fatal error:  " . $error["message"] ) );
-		exit(1);
-	}
-	
-	exit(0);
 }
 
