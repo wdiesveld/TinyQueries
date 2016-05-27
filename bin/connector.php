@@ -19,7 +19,7 @@ register_shutdown_function( '_shutdown' );
 
 error_reporting(0);
 
-require_once( dirname(__FILE__) . '/../libs/QueryDB.class.php' ); 
+require_once( dirname(__FILE__) . '/../libs/DB.class.php' ); 
 require_once( dirname(__FILE__) . '/../libs/Api/Api.class.php' ); 
 
 try
