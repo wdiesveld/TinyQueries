@@ -42,7 +42,7 @@
 		
 	-->
 	<database
-		driver		= "mysql"
+		driver		= ""
 		host 		= "localhost"
 		port		= ""
 		name		= ""
@@ -75,8 +75,8 @@
 	<compiler
 		enable		= "true"
 		api_key 	= ""
-		input		= "/path/to/queries/tiny"
-		output		= "/path/to/queries"
+		input		= "../../queries/tiny"
+		output		= "../../queries"
 	/>
 	
 	<!--
