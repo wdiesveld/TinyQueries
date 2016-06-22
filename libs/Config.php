@@ -108,9 +108,9 @@ class Config
 		
 		// Import database fields
 		$this->database = new \StdClass();
-		$this->database->driver		= ($config->database['driver']) ? (string) $config->database['driver'] : 'mysql';
-		$this->database->host		= ($config->database['host']) ? (string) $config->database['host'] : 'localhost';
-		$this->database->port		= ($config->database['port']) ? (string) $config->database['port'] : null;
+		$this->database->driver		= ((string) $config->database['driver']) ? (string) $config->database['driver'] : 'mysql';
+		$this->database->host		= ((string) $config->database['host']) ? (string) $config->database['host'] : 'localhost';
+		$this->database->port		= ((string) $config->database['port']) ? (string) $config->database['port'] : null;
 		$this->database->name		= (string) $config->database['name'];
 		$this->database->user		= (string) $config->database['user'];
 		$this->database->password	= (string) $config->database['password'];
@@ -119,10 +119,10 @@ class Config
 		// Import compiler fields
 		$this->compiler = new \StdClass();
 		$this->compiler->api_key	= (string) $config->compiler['api_key'];
-		$this->compiler->input 		= ($config->compiler['input']) ? self::pathAbs( $config->compiler['input'] ) : null;
+		$this->compiler->input 		= ((string) $config->compiler['input']) ? self::pathAbs( $config->compiler['input'] ) : null;
 		$this->compiler->output		= self::pathAbs( (string) $config->compiler['output'] );
-		$this->compiler->server		= ($config->compiler['server']) 	? (string) $config->compiler['server'] : self::DEFAULT_COMPILER;
-		$this->compiler->version	= ($config->compiler['version']) 	? (string) $config->compiler['version'] : null;
+		$this->compiler->server		= ((string) $config->compiler['server']) 	? (string) $config->compiler['server'] : self::DEFAULT_COMPILER;
+		$this->compiler->version	= ((string) $config->compiler['version']) 	? (string) $config->compiler['version'] : null;
 		$this->compiler->logfile	= null;
 		$this->compiler->enable 	= ($config->compiler['enable'] && strtolower( (string) $config->compiler['enable'] ) == 'true') ? true : false;
 		$this->compiler->autocompile = ($config->compiler['autocompile'] && strtolower( (string) $config->compiler['autocompile'] ) == 'true') ? true : false;
