@@ -30,7 +30,7 @@ class Term
 	 * @param {DB} $db
 	 * @param {string} $term
 	 */
-	public static function parse($db, $term)
+	public static function parse(&$db, $term)
 	{
 		if (!$term)
 			return;
@@ -87,7 +87,7 @@ class Term
 	 * @param {DB} $db
 	 * @param {string} $term 
 	 */
-	private static function parseMerge($db, $term = null, $prefix = null)
+	private static function parseMerge(&$db, $term = null, $prefix = null)
 	{
 		$list = self::split($term, '|');
 
@@ -108,7 +108,7 @@ class Term
 	 * @param {DB} $db
 	 * @param {string} $term
 	 */
-	private static function parseAttach($db, $term)
+	private static function parseAttach(&$db, $term)
 	{
 		$list = self::split($term, '+', ';');
 		
@@ -125,7 +125,7 @@ class Term
 	 * @param {DB} $db
 	 * @param {string} $term
 	 */
-	private static function parseChain($db, $term)
+	private static function parseChain(&$db, $term)
 	{
 		$list = self::split($term, ':', '#');
 		
@@ -142,7 +142,7 @@ class Term
 	 * @param {DB} $db
 	 * @param {string} $term
 	 */
-	private static function parseTree($db, $term)
+	private static function parseTree(&$db, $term)
 	{
 		list( $id, $children ) = self::parseID( $term );
 
@@ -192,7 +192,7 @@ class Term
 	 * @param {DB} $db
 	 * @param {string} $id
 	 */
-	private static function atomic($db, $id)
+	private static function atomic(&$db, $id)
 	{
 		$interface = $db->queries->getInterface( $id );
 

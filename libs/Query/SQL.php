@@ -25,7 +25,7 @@ class QuerySQL extends Query
 	 * @param {DB} $db Handle to database
 	 * @param {string} $id (optional) ID of the query
 	 */
-	public function __construct($db, $id = null)
+	public function __construct(&$db, $id = null)
 	{
 		parent::__construct($db);
 		

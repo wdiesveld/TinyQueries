@@ -22,7 +22,7 @@ class QueryFilter extends Query
 	 * @param {DB} $db Handle to database
 	 * @param {string} $terms (optional) 
 	 */
-	public function __construct($db, $terms = array())
+	public function __construct(&$db, $terms = array())
 	{
 		parent::__construct($db);
 

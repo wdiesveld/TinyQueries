@@ -22,7 +22,7 @@ class QueryTree extends Query
 	 * @param {string} $id ID of parent query - $id should refer to an atomic query
 	 * @param {string} $terms Query terms corresponding to the child queries of the tree
 	 */
-	public function __construct($db, $id, $terms = array())
+	public function __construct(&$db, $id, $terms = array())
 	{
 		parent::__construct($db);
 		

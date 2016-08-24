@@ -37,7 +37,7 @@ class Query
 	 *
 	 * @param {DB} $db Handle to database
 	 */
-	public function __construct($db)
+	public function __construct(&$db)
 	{
 		$this->db 				= $db;
 		$this->orderBy			= array();
