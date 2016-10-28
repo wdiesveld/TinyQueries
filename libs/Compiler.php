@@ -30,7 +30,6 @@ class Compiler
 	private $version;
 	private $logfile;
 	private $verbose;
-	private $curlOutput;
 	private $filesWritten;
 	private $projectLabel;
 	
@@ -75,8 +74,6 @@ class Compiler
 		catch (\Exception $e)
 		{
 			$this->log( $e->getMessage() );
-			if ($this->curlOutput)
-				$this->log( $this->curlOutput );
 				
 			throw $e;
 		}
@@ -95,8 +92,6 @@ class Compiler
 		catch (\Exception $e)
 		{
 			$this->log( $e->getMessage() );
-			if ($this->curlOutput)
-				$this->log( $this->curlOutput );
 				
 			throw $e;
 		}
@@ -245,7 +240,6 @@ class Compiler
 		if (!function_exists('curl_init'))
 			throw new \Exception('Cannot compile queries - curl extension for PHP is not installed');
 
-		$this->curlOutput = null;
 		$ch = curl_init();
 
 		if (!$ch) 
@@ -275,14 +269,19 @@ class Compiler
 			}
 			
 		// Catch curl output
-		$curlOutputFile = "qpl-call.txt";
+		$handleLogfile = null;
 		
-		$handle = @fopen($curlOutputFile, "w+");
+		if ($this->logfile)
+		{
+			$handleLogfile = @fopen($this->logfile, 'a');
 
-		if ($handle)
-			curl_setopt($ch, CURLOPT_STDERR, $handle);	
+			if ($handleLogfile)
+			{
+				curl_setopt($ch, CURLOPT_VERBOSE, true);
+				curl_setopt($ch, CURLOPT_STDERR, $handleLogfile);	
+			}
+		}
 
-		curl_setopt($ch, CURLOPT_VERBOSE, true);
 		curl_setopt($ch, CURLOPT_HEADER, true); 		// Return the headers
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);	// Return the actual reponse as string
 		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
@@ -304,13 +303,9 @@ class Compiler
 
 		curl_close($ch);
 		
-		// Read temp file for curl output
-		if ($handle)
-		{
-			fclose($handle);
-			$this->curlOutput = file_get_contents($curlOutputFile);
-			@unlink($curlOutputFile);
-		}
+		// Close logfile
+		if ($handleLogfile)
+			fclose($handleLogfile);
 		
 		$status = null;
 		
@@ -403,7 +398,8 @@ class Compiler
 	 */
 	private function log($message)
 	{
-		if (!$this->logfile) return;
+		if (!$this->logfile) 
+			return;
 		
 		$message = "[" . date('Y-m-d H:i:s') . "] " . $message . "\n";
 		
