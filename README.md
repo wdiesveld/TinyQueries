@@ -5,6 +5,13 @@ It's based on two components:
 * A query compiler - it's like a Less for SQL, so you create SQL queries by compiling them.
 * A simple and powerful syntax to combine the output of queries into nested structures.
 
+## Why
+
+Although you can create REST API's with ORM frameworks as well, TinyQueries has several advantages:
+* It's much faster than ORM.
+* As a developer you are not bothered by setting up a complex object hierarchy. If you only need a REST API you don't need to have the objects.
+* TinyQueries can be connected to any *existing* database, which is much harder with ORM.
+
 ## System Requirements
 
 * PHP 5.3 or higher
