@@ -21,7 +21,7 @@ you want to start from scratch it's recommended to use [TinyQueries API version]
 	```json
 	{
 		"require": {
-			"tiny-queries/tiny-queries": "*" 	
+			"tiny-queries/tiny-queries": "^3.*" 	
 		}
 	}
 	```
