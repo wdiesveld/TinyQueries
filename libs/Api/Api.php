@@ -35,9 +35,9 @@ class Api extends HttpTools
 	/**
 	 * Constructor
 	 *
-	 * @param {string} $configFile (optional) Path to DB settings file
-	 * @param {boolean} $debugMode (optional) Sets debug mode
-	 * @param {boolean} $addProfilingInfo (optional) Adds profiling info to api response
+	 * @param string $configFile (optional) Path to DB settings file
+	 * @param boolean $debugMode (optional) Sets debug mode
+	 * @param boolean $addProfilingInfo (optional) Adds profiling info to api response
 	 */
 	public function __construct($configFile = null, $debugMode = false, $addProfilingInfo = false)
 	{
@@ -85,7 +85,7 @@ class Api extends HttpTools
 	/**
 	 * Processes the request and sends the response to the stdout
 	 *
-	 * @param {string} $contentType (optional)
+	 * @param string $contentType (optional)
 	 */
 	public function sendResponse($contentType = 'application/json')
 	{
@@ -233,7 +233,7 @@ class Api extends HttpTools
 	/**
 	 * Overload this function if you want some post processing of the response before it is sent to the client
 	 *
-	 * @param {mixed} $response
+	 * @param mixed $response
 	 */
 	protected function postProcessResponse( &$response )
 	{
@@ -269,8 +269,8 @@ class Api extends HttpTools
 	 * All parameters which are in the URL path or in the body will be passed to the endpoint handler.
 	 * If you want to use a custom handler you should set your handler using the 'handler' method
 	 *
-	 * @param {array} $endpoints 
-	 * @returns {Api} $this
+	 * @param array $endpoints 
+	 * @return Api $this
 	 */
 	public function endpoints( $endpoints )
 	{
@@ -305,8 +305,8 @@ class Api extends HttpTools
 	 * 
 	 * For an example check the docs of 'endpoints'
 	 *
-	 * @param {object} $handler This should be an initialized object containing your own custom methods. 
-	 * @returns {Api} $this
+	 * @param object $handler This should be an initialized object containing your own custom methods. 
+	 * @return Api $this
 	 */
 	public function handler( $handler )
 	{
@@ -325,7 +325,7 @@ class Api extends HttpTools
 	 *
 	 * This will set $this->params['userID'] to the value in the URL if there is a match
 	 *
-	 * @param {string} $endpoint
+	 * @param string $endpoint
 	 */
 	public function endpoint($endpoint)
 	{
@@ -378,7 +378,7 @@ class Api extends HttpTools
 	 * Converts a URI-path to a term + paramvalue + [output should be single row] true/false
 	 *
 	 * @param {$string} $path The resource path
-	 * @param {string} $method The HTTP method
+	 * @param string $method The HTTP method
 	 */
 	private function pathToTerm($path, $method)
 	{
@@ -563,7 +563,7 @@ class Api extends HttpTools
 	/**
 	 * Calls the method from the custom handler
 	 *
-	 * @param {string} $methodName 
+	 * @param string $methodName 
 	 */
 	private function invokeCustomMethod($methodName)
 	{
@@ -679,7 +679,7 @@ class Api extends HttpTools
 	/**
 	 * CSV encoder function; outputs to stdout
 	 *
-	 * @param {assoc|array} $response
+	 * @param assoc|array $response
 	 */
 	public function csvEncode($response)
 	{
@@ -735,7 +735,7 @@ class Api extends HttpTools
 	/**
 	 * JSON encoder function (Also does the UTF8 encoding)
 	 *
-	 * @param {object} $object
+	 * @param object $object
 	 */
 	public static function jsonEncode($object)
 	{
@@ -753,7 +753,7 @@ class Api extends HttpTools
 	/**
 	 * Converts a string to UTF8, if it is not yet in UTF8
 	 *
-	 * @param {mixed} $item If item is not a string, it is untouched
+	 * @param mixed $item If item is not a string, it is untouched
 	 */
 	public static function toUTF8(&$item) 
 	{ 

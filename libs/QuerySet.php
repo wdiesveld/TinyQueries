@@ -23,7 +23,7 @@ class QuerySet
 	/**
 	 * Constructor
 	 *
-	 * @param {string} $pathQueries
+	 * @param string $pathQueries
 	 */
 	public function __construct($pathQueries)
 	{
@@ -36,7 +36,7 @@ class QuerySet
 	/**
 	 * Gets/sets the label for the query set
 	 *
-	 * @param {string} $label
+	 * @param string $label
 	 */
 	public function label($label = -1)
 	{
@@ -54,8 +54,8 @@ class QuerySet
 	/**
 	 * Gets/sets a callback function for a query
 	 *
-	 * @param {string} $queryID
-	 * @param {function} $callback
+	 * @param string $queryID
+	 * @param function $callback
 	 */
 	public function callback($queryID, $callback = null)
 	{
@@ -70,7 +70,7 @@ class QuerySet
 	/**
 	 * Gets/sets the path to the queries
 	 *
-	 * @param {string} $path
+	 * @param string $path
 	 */
 	public function path($path = null)
 	{
@@ -85,7 +85,7 @@ class QuerySet
 	/**
 	 * Loads the content of a file
 	 *
-	 * @param {string} $filename
+	 * @param string $filename
 	 */
 	public static function load($filename, $parseAsJSON = false)
 	{
@@ -114,7 +114,7 @@ class QuerySet
 	/**
 	 * Gets all meta data related to the given query
 	 *
-	 * @param {string} $queryID
+	 * @param string $queryID
 	 */
 	public function getInterface($queryID)
 	{
@@ -134,7 +134,7 @@ class QuerySet
 	/**
 	 * Gets the JSON file for the given query
 	 *
-	 * @param {string} $queryID
+	 * @param string $queryID
 	 */
 	public function json($queryID)
 	{
@@ -146,7 +146,7 @@ class QuerySet
 	/**
 	 * Returns the SQL-code which is associated with the given queryID
 	 *
-	 * @param {string} $queryID ID of the query
+	 * @param string $queryID ID of the query
 	 */
 	public function sql($queryID)
 	{

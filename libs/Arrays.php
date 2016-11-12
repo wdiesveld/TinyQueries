@@ -12,7 +12,7 @@ class Arrays
 	/**
 	 * Checks if an array is an assocative array
 	 *
-	 * @param {mixed} $array
+	 * @param mixed $array
 	 */
 	public static function isAssoc(&$array)
 	{
@@ -24,8 +24,8 @@ class Arrays
 	/**
 	 * Converts a nummerical array to an associative array, based on the given key
 	 *
-	 * @param {array} $rows
-	 * @param {string} $key;
+	 * @param array $rows
+	 * @param string $key;
 	 */
 	public static function toAssoc($rows, $key)
 	{
@@ -45,9 +45,9 @@ class Arrays
 	/**
 	 * Groups the rows on the given key
 	 *
-	 * @param {array} $rows
-	 * @param {string} $key
-	 * @param {boolean} $deleteKey If true, removes the key-column from the result
+	 * @param array $rows
+	 * @param string $key
+	 * @param boolean $deleteKey If true, removes the key-column from the result
 	 */
 	public static function groupBy($rows, $key, $deleteKey = false)
 	{
@@ -79,7 +79,7 @@ class Arrays
 	/**
 	 * Converts a associative array to an numerical array
 	 *
-	 * @param {array} $rows
+	 * @param array $rows
 	 */
 	public static function toIndexed($assoc)
 	{
@@ -95,8 +95,8 @@ class Arrays
 	 *
 	 * @param &$array {array} Array which will be modified by adding element of the next array:
 	 * @param $arrayToAdd {array}
-	 * @param {string} $orderBy (optional) Name of the field which should be used for ordering the merged result
-	 * @param {string} $orderType (optional) 'asc' or 'desc'; default is 'asc'
+	 * @param string $orderBy (optional) Name of the field which should be used for ordering the merged result
+	 * @param string $orderType (optional) 'asc' or 'desc'; default is 'asc'
 	 */
 	public static function mergeArrays(&$array, $arrayToAdd, $orderBy = null, $orderType = 'asc')
 	{ 
@@ -158,9 +158,9 @@ class Arrays
 	 * Simple case is that $value is just a string or int
 	 * But it can also be the case that $value is an assoc and that $assoc[$key] is also an assoc
 	 *
-	 * @param {assoc} $assoc
-	 * @param {string} $key
-	 * @param {string|int|assoc} $value
+	 * @param assoc $assoc
+	 * @param string $key
+	 * @param string|int|assoc $value
 	 */
 	public static function mergeField( &$assoc, $key, $value )
 	{
@@ -274,7 +274,7 @@ class Arrays
 	/**
 	 * Recursive function to remove structures like { a: null, b: null, c: { d: null, e: null } }
 	 *
-	 * @param {assoc} $fields
+	 * @param assoc $fields
 	 */
 	public static function reduceNulls(&$fields)
 	{
@@ -299,10 +299,10 @@ class Arrays
 	/**
 	 * Transforms rows to columns
 	 *
-	 * @param {array} $array Array of associative arrays
-	 * @param {string} $key 
-	 * @param {string} $name
-	 * @param {string} $value
+	 * @param array $array Array of associative arrays
+	 * @param string $key 
+	 * @param string $name
+	 * @param string $value
 	 */
 	public static function rows2columns(&$array, $key, $name, $value)
 	{
@@ -327,7 +327,7 @@ class Arrays
 	/**
 	 * Makes an array of $any if it is not yet an array
 	 *
-	 * @param {mixed} $any
+	 * @param mixed $any
 	 */
 	public static function toArray( $any )
 	{

@@ -35,7 +35,7 @@ class Query
 	/**
 	 * Constructor
 	 *
-	 * @param {DB} $db Handle to database
+	 * @param DB $db Handle to database
 	 */
 	public function __construct(&$db)
 	{
@@ -57,9 +57,9 @@ class Query
 	/**
 	 * Sets the query parameter values
 	 *
-	 * @param {mixed} $paramValues
+	 * @param mixed $paramValues
 	 *
-	 * @return {Query}
+	 * @return Query
 	 */
 	public function params( $paramValues )
 	{
@@ -115,8 +115,8 @@ class Query
 	/**
 	 * Set the order 
 	 *
-	 * @param {string} $orderBy
-	 * @param {string} $orderType
+	 * @param string $orderBy
+	 * @param string $orderType
 	 */
 	public function order( $orderBy, $orderType = 'asc')
 	{
@@ -129,9 +129,9 @@ class Query
 	/**
 	 * Sets the fieldname which can be used as a key (for example for merging)
 	 *
-	 * @param {string} $keyField
+	 * @param string $keyField
 	 *
-	 * @return {Query}
+	 * @return Query
 	 */
 	public function key( $keyField )
 	{
@@ -143,7 +143,7 @@ class Query
 	/**
 	 * Returns the field name in the select-part which corresponds to $key;
 	 *
-	 * @param {string} $key
+	 * @param string $key
 	 */
 	protected function keyField($key)
 	{
@@ -158,8 +158,8 @@ class Query
 	/**
 	 * Collects the values from $rows corresponding to the $key
 	 *
-	 * @param {string} $key
-	 * @param {array} $rows
+	 * @param string $key
+	 * @param array $rows
 	 */
 	protected function keyValues($key, &$rows)
 	{
@@ -210,7 +210,7 @@ class Query
 	 * This means that for example sql output fields named 'user.name' and 'user.email' will be converted to 
 	 * a nested structure 'user' having fields 'name' and 'email' 
 	 *
-	 * @param {boolean} $nested
+	 * @param boolean $nested
 	 */
 	public function nested( $nested = true )
 	{
@@ -226,7 +226,7 @@ class Query
 	 * Sets whether the output should be grouped by the key
 	 * so you get a structure like: { a: [..], b: [..] }
 	 *
-	 * @param {boolean} $value
+	 * @param boolean $value
 	 */
 	public function group($value = true)
 	{
@@ -238,7 +238,7 @@ class Query
 	/**
 	 * Set the maximum number of results which should be returned (only applies to merge queries)
 	 *
-	 * @param {int} $maxResults
+	 * @param int $maxResults
 	 */
 	public function max( $maxResults )
 	{
@@ -281,8 +281,8 @@ class Query
 	/**
 	 * Adds a parameter binding to the query
 	 *
-	 * @param {string} $paramName
-	 * @param {string} $fieldName 
+	 * @param string $paramName
+	 * @param string $fieldName 
 	 */
 	public function bind($paramName, $fieldName = null)
 	{
@@ -292,7 +292,7 @@ class Query
 	/**
 	 * Generic run function 
 	 *
-	 * @param {assoc} $paramValues
+	 * @param assoc $paramValues
 	 */
 	public function run($paramValues = null)
 	{
@@ -312,7 +312,7 @@ class Query
 	/**
 	 * Executes the query and returns the result
 	 *
-	 * @param {assoc} $paramValues
+	 * @param assoc $paramValues
 	 */
 	public function execute($paramValues = null)
 	{
@@ -325,9 +325,9 @@ class Query
 	/**
 	 * Generic select function
 	 *
-	 * @param {mixed} $paramValues
-	 * @param {string} $key (optional) Key field which can be used to group the output
-	 * @param {boolean} $cleanUp Do clean up of columns in query output
+	 * @param mixed $paramValues
+	 * @param string $key (optional) Key field which can be used to group the output
+	 * @param boolean $cleanUp Do clean up of columns in query output
 	 */
 	public function select($paramValues = null, $key = null, $cleanUp = true)
 	{
@@ -370,9 +370,9 @@ class Query
 	/**
 	 * Generic select function; selects the first row
 	 *
-	 * @param {mixed} $paramValues
-	 * @param {string} $key (optional) Key field which can be used to group the output
-	 * @param {boolean} $cleanUp Do clean up of columns in query output
+	 * @param mixed $paramValues
+	 * @param string $key (optional) Key field which can be used to group the output
+	 * @param boolean $cleanUp Do clean up of columns in query output
 	 */
 	public function select1($paramValues = null, $key = null, $cleanUp = true)
 	{
@@ -389,8 +389,8 @@ class Query
 	/**
 	 * Executes the query and attaches the fields to the given object
 	 *
-	 * @param {object} $object
-	 * @param {assoc} $queryParams
+	 * @param object $object
+	 * @param assoc $queryParams
 	 */
 	public function selectToObject(&$object, $queryParams = null)
 	{
@@ -417,7 +417,7 @@ class Query
 	/**
 	 * Imports (a part of) a query definition
 	 *
-	 * @param {object} $query
+	 * @param object $query
 	 */
 	public function import($query)
 	{
@@ -478,9 +478,9 @@ class Query
 	/**
 	 * Cleans up columns which should not be in the query output
 	 *
-	 * @param {mixed} $data Query output
-	 * @param {string} $type Type of cleaning 'keys' or 'childDefs'
-	 * @param {string} $key Key field which should be excluded from clean up
+	 * @param mixed $data Query output
+	 * @param string $type Type of cleaning 'keys' or 'childDefs'
+	 * @param string $key Key field which should be excluded from clean up
 	 */
 	protected function cleanUp(&$rows, $type, $key = null)
 	{
@@ -552,8 +552,8 @@ class Query
 	/**
 	 * Links a list of terms to this query
 	 *
-	 * @param {array} $terms
-	 * @param {boolean} $firstAsRoot
+	 * @param array $terms
+	 * @param boolean $firstAsRoot
 	 */
 	protected function linkList($terms, $firstAsRoot)
 	{
@@ -588,9 +588,9 @@ class Query
 	/**
 	 * Connects a query to this query
 	 *
-	 * @param {string} $term
+	 * @param string $term
 	 *
-	 * @return {Query}
+	 * @return Query
 	 */
 	protected function link($term)
 	{
@@ -605,7 +605,7 @@ class Query
 	 * Checks if the given queries match based on common keys.
 	 * If one query is passed, then it is compared with this query
 	 *
-	 * @param {array|Query} $queries
+	 * @param array|Query $queries
 	 */
 	protected function match(&$queries)
 	{

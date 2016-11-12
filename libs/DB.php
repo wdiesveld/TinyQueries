@@ -40,10 +40,10 @@ class DB
 	 * The connection should be explicitly set up by calling the connect-method after the DB-object is constructed.
 	 * If you specify a $pdoHandle, this method should not be called.
 	 *
-	 * @param {PDO} $pdoHandle (optional) Use this if you already have a PDO database connection.
-	 * @param {string} $configFile (optional) Use this to specify your custom XML-configfile
-	 * @param {Profiler|boolean} $profiler (optional) If 'true' then a Profiler object is created and run is called; if 'false' the object is also created but not initialized
-	 * @param {boolean} $neverAutoCompile (optional) This can be used to overrule the setting in the config file 
+	 * @param PDO $pdoHandle (optional) Use this if you already have a PDO database connection.
+	 * @param string $configFile (optional) Use this to specify your custom XML-configfile
+	 * @param Profiler|boolean $profiler (optional) If 'true' then a Profiler object is created and run is called; if 'false' the object is also created but not initialized
+	 * @param boolean $neverAutoCompile (optional) This can be used to overrule the setting in the config file 
 	 */
 	public function __construct( $pdoHandle = null, $configFile = null, $profiler = null, $neverAutoCompile = false )
 	{
@@ -83,8 +83,8 @@ class DB
 	/**
 	 * Get/set method for global query parameters. If value is not specified, the value of the global is returned
 	 *
-	 * @param {string} $name
-	 * @param {mixed} $value
+	 * @param string $name
+	 * @param mixed $value
 	 */
 	public function param($name, $value = -99999999)
 	{
@@ -152,7 +152,7 @@ class DB
 	}
 	
 	/**
-	 * @return {PDO} The PDO DB handle
+	 * @return PDO The PDO DB handle
 	 */
 	public function pdo()
 	{
@@ -162,7 +162,7 @@ class DB
 	/**
 	 * Creates and returns a new Query object 
 	 *
-	 * @param {string} $term A query term like "a" or "a:b+c(d|e)"
+	 * @param string $term A query term like "a" or "a:b+c(d|e)"
 	 */
 	public function query($term)
 	{
@@ -172,8 +172,8 @@ class DB
 	/**
 	 * Creates a query based on $term, executes it and returns the query output
 	 *
-	 * @param {string} $term
-	 * @param {mixed} $paramValues
+	 * @param string $term
+	 * @param mixed $paramValues
 	 */
 	public function get($term, $paramValues = null)
 	{
@@ -183,8 +183,8 @@ class DB
 	/**
 	 * Creates a query based on $term, executes it and returns the first row of the query output
 	 *
-	 * @param {string} $term
-	 * @param {mixed} $paramValues
+	 * @param string $term
+	 * @param mixed $paramValues
 	 */
 	public function get1($term, $paramValues = null)
 	{
@@ -194,8 +194,8 @@ class DB
 	/**
 	 * Creates a basic select query for the given table and IDfields
 	 *
-	 * @param {string} $table
-	 * @param {int|array} $IDfields If an integer is supplied, it is assumed to be the primary key. 
+	 * @param string $table
+	 * @param int|array $IDfields If an integer is supplied, it is assumed to be the primary key. 
 	 *                            If it is an array, it is assumed to be an assoc array of fields which should all be matched
 	 */
 	private function createSelect($table, $IDfields)
@@ -210,8 +210,8 @@ class DB
 	/**
 	 * Selects a single record from the given table
 	 *
-	 * @param {string} $table
-	 * @param {int|array} $IDfields If an integer is supplied, it is assumed to be the primary key. 
+	 * @param string $table
+	 * @param int|array $IDfields If an integer is supplied, it is assumed to be the primary key. 
 	 *                            If it is an array, it is assumed to be an assoc array of fields which should all be matched
 	 */
 	public function getRecord($table, $IDfields)
@@ -222,8 +222,8 @@ class DB
 	/**
 	 * Selects records from the given table
 	 *
-	 * @param {string} $table
-	 * @param {int|array} $IDfields If an integer is supplied, it is assumed to be the primary key. 
+	 * @param string $table
+	 * @param int|array $IDfields If an integer is supplied, it is assumed to be the primary key. 
 	 *                            If it is an array, it is assumed to be an assoc array of fields which should all be matched
 	 */
 	public function getRecordSet($table, $IDfields)
@@ -234,9 +234,9 @@ class DB
 	/**
 	 * Selects a single record from the given table
 	 *
-	 * @param {string} $field Fieldname which is used for selection
-	 * @param {string} $table
-	 * @param {int|string} $value Fieldvalue
+	 * @param string $field Fieldname which is used for selection
+	 * @param string $table
+	 * @param int|string $value Fieldvalue
 	 */
 	public function getRecordBy($field, $table, $value)
 	{
@@ -246,9 +246,9 @@ class DB
 	/**
 	 * Selects records from the given table
 	 *
-	 * @param {string} $field Fieldname which is used for selection
-	 * @param {string} $table
-	 * @param {int|string} $value Fieldvalue
+	 * @param string $field Fieldname which is used for selection
+	 * @param string $table
+	 * @param int|string $value Fieldvalue
 	 */
 	public function getRecordSetBy($field, $table, $value)
 	{
@@ -258,9 +258,9 @@ class DB
 	/**
 	 * Inserts a record in the given table
 	 *
-	 * @param {string} $table
-	 * @param {assoc} $record
-	 * @param {boolean} $updateOnDuplicateKey If the insert fails due to a duplicate key error, then try to do an update (MySQL only)
+	 * @param string $table
+	 * @param assoc $record
+	 * @param boolean $updateOnDuplicateKey If the insert fails due to a duplicate key error, then try to do an update (MySQL only)
 	 */
 	public function insert($table, $record, $updateOnDuplicateKey = false)
 	{
@@ -312,8 +312,8 @@ class DB
 	 * Saves (either inserts or updates) a record in the given table (MySQL only)
 	 * NOTE: for this function to work correctly, the field(s) which correspond to a unique DB-key should be present in $record
 	 *
-	 * @param {string} $table
-	 * @param {assoc} $record
+	 * @param string $table
+	 * @param assoc $record
 	 */
 	public function save($table, $record)
 	{
@@ -323,10 +323,10 @@ class DB
 	/**
 	 * Updates a record in the given table
 	 *
-	 * @param {string} $table
-	 * @param {int|array} $IDfields If an integer is supplied, it is assumed to be the primary key. 
+	 * @param string $table
+	 * @param int|array $IDfields If an integer is supplied, it is assumed to be the primary key. 
 	 *                            If it is an array, it is assumed to be an assoc array of fields which should all be matched
-	 * @param {assoc} $record
+	 * @param assoc $record
 	 */
 	public function update($table, $IDfields, $record)
 	{
@@ -347,8 +347,8 @@ class DB
 	/**
 	 * Deletes a record from the given table
 	 *
-	 * @param {string} $table
-	 * @param {int|array} $IDfields If an integer is supplied, it is assumed to be the primary key. 
+	 * @param string $table
+	 * @param int|array $IDfields If an integer is supplied, it is assumed to be the primary key. 
 	 *                            If it is an array, it is assumed to be an assoc array of fields which should all be matched
 	 */
 	public function delete($table, $IDfields)
@@ -365,8 +365,8 @@ class DB
 	/**
 	 * Executes the given query
 	 *
-	 * @param {string} $query SQL query
-	 * @param {assoc} $params Query parameters
+	 * @param string $query SQL query
+	 * @param assoc $params Query parameters
 	 */
 	public function execute($query, $params = array())
 	{
@@ -411,9 +411,9 @@ class DB
 	/**
 	 * Escapes a string such that it can be used in a query
 	 *
-	 * @param {string} $string
-	 * @param {boolean} $addquotes (optional)
-	 * @param {boolean} $useNULLforEmptyValue (optional)
+	 * @param string $string
+	 * @param boolean $addquotes (optional)
+	 * @param boolean $useNULLforEmptyValue (optional)
 	 */
 	public function toSQL($string, $addquotes = false, $useNULLforEmptyValue = false)
 	{
@@ -449,7 +449,7 @@ class DB
 	/**
 	 * Same as toSQL, except that integers & tuples like (1,2,3) are not quoted
 	 *
-	 * @param {string} $string
+	 * @param string $string
 	 */
 	public function encode($string)
 	{
@@ -462,8 +462,8 @@ class DB
 	/**
 	 * Executes query and returns numeric array of numeric arrays
 	 *
-	 * @param {string} $query SQL-query
-	 * @param {assoc} $params Query parameters
+	 * @param string $query SQL-query
+	 * @param assoc $params Query parameters
 	 */
 	public function selectAll($query, $params = array())
 	{
@@ -473,8 +473,8 @@ class DB
 	/**
 	 * Executes query and returns numeric array of associative arrays
 	 *
-	 * @param {string} $query SQL-query
-	 * @param {assoc} $params Query parameters
+	 * @param string $query SQL-query
+	 * @param assoc $params Query parameters
 	 */
 	public function selectAllAssoc($query, $params = array())
 	{
@@ -484,8 +484,8 @@ class DB
 	/**
 	 * Executes query and returns first record as numeric array
 	 *
-	 * @param {string} $query SQL-query
-	 * @param {assoc} $params Query parameters
+	 * @param string $query SQL-query
+	 * @param assoc $params Query parameters
 	 */
 	public function selectRow($query, $params = array())
 	{
@@ -495,8 +495,8 @@ class DB
 	/**
 	 * Executes query and returns first record as associative array
 	 *
-	 * @param {string} $query SQL-query
-	 * @param {assoc} $params Query parameters
+	 * @param string $query SQL-query
+	 * @param assoc $params Query parameters
 	 */
 	public function selectAssoc($query, $params = array())
 	{
@@ -506,8 +506,8 @@ class DB
 	/**
 	 * Executes query and returns first field of first record
 	 *
-	 * @param {string} $query SQL-query
-	 * @param {assoc} $params Query parameters
+	 * @param string $query SQL-query
+	 * @param assoc $params Query parameters
 	 */
 	public function selectFirst($query, $params = array()) 
 	{
@@ -519,8 +519,8 @@ class DB
 	/**
 	 * Executes query and returns numeric array containing first field of each row
 	 *
-	 * @param {string} $query SQL-query
-	 * @param {assoc} $params Query parameters
+	 * @param string $query SQL-query
+	 * @param assoc $params Query parameters
 	 */
 	public function selectAllFirst($query, $params = array()) 
 	{
@@ -535,9 +535,9 @@ class DB
 	/**
 	 * Create a concatenation of `fieldname` = "value" strings
 	 *
-	 * @param {assoc} $fields
-	 * @param {string} $glue
-	 * @param {boolean} $isOnNull If true, it uses 'is' for NULL values
+	 * @param assoc $fields
+	 * @param string $glue
+	 * @param boolean $isOnNull If true, it uses 'is' for NULL values
 	 */
 	private function fieldList($fields, $glue, $isOnNull = false)
 	{

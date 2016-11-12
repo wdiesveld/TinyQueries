@@ -40,9 +40,9 @@ namespace TinyQueries;
 	/**
 	 * Converts encoding to latin, trims the value, and checks it against the regular expression
 	 *
-	 * @param {mixed} $value Can be an array or a string - if it is an array, sanitize is called recursively for each array element
-	 * @param {string} $regexp
-	 * @param {string} $defaultvalue
+	 * @param mixed $value Can be an array or a string - if it is an array, sanitize is called recursively for each array element
+	 * @param string $regexp
+	 * @param string $defaultvalue
 	 */
 	private static function sanitize(&$value, $regexp, $defaultvalue)
 	{
@@ -162,7 +162,7 @@ namespace TinyQueries;
 	/**
 	 * Sets the HTTP status code
 	 *
-	 * @param {int} $code
+	 * @param int $code
 	 */
 	public static function setHttpResponseCode($code = NULL) 
 	{

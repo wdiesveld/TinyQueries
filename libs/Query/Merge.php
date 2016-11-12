@@ -16,8 +16,8 @@ class QueryMerge extends Query
 	/**
 	 * Constructor
 	 *
-	 * @param {DB} $db Handle to database
-	 * @param {string} $terms (optional) 
+	 * @param DB $db Handle to database
+	 * @param string $terms (optional) 
 	 */
 	public function __construct(&$db, $terms = array())
 	{
@@ -29,7 +29,7 @@ class QueryMerge extends Query
 	/**
 	 * Merges the output of the child queries
 	 *
-	 * @param {assoc} $paramValues
+	 * @param assoc $paramValues
 	 */
 	public function execute($paramValues = null)
 	{
@@ -68,8 +68,8 @@ class QueryMerge extends Query
 	/**
 	 * Adds a parameter binding to the query
 	 *
-	 * @param {string} $paramName
-	 * @param {string} $fieldName 
+	 * @param string $paramName
+	 * @param string $fieldName 
 	 */
 	public function bind($paramName, $fieldName = null)
 	{
@@ -100,7 +100,7 @@ class QueryMerge extends Query
 	/**
 	 * Merges the output of the child queries by using a common key
 	 *
-	 * @param {string} $key
+	 * @param string $key
 	 */
 	private function mergeByKey($key, $orderBy)
 	{

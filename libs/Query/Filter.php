@@ -19,8 +19,8 @@ class QueryFilter extends Query
 	/**
 	 * Constructor
 	 *
-	 * @param {DB} $db Handle to database
-	 * @param {string} $terms (optional) 
+	 * @param DB $db Handle to database
+	 * @param string $terms (optional) 
 	 */
 	public function __construct(&$db, $terms = array())
 	{
@@ -39,9 +39,9 @@ class QueryFilter extends Query
 	/**
 	 * Sets the query parameter values
 	 *
-	 * @param {mixed} $paramValues
+	 * @param mixed $paramValues
 	 *
-	 * @return {Query}
+	 * @return Query
 	 */
 	public function params( $paramValues )
 	{
@@ -70,7 +70,7 @@ class QueryFilter extends Query
 	/**
 	 * Filters the output of the child queries
 	 *
-	 * @param {assoc} $paramValues
+	 * @param assoc $paramValues
 	 */
 	public function execute($paramValues = null)
 	{
@@ -151,8 +151,8 @@ class QueryFilter extends Query
 	/**
 	 * Adds a parameter binding to the query
 	 *
-	 * @param {string} $paramName
-	 * @param {string} $fieldName 
+	 * @param string $paramName
+	 * @param string $fieldName 
 	 */
 	public function bind($paramName, $fieldName = null)
 	{

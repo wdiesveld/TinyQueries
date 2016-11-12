@@ -24,7 +24,7 @@ class Config
 	/**
 	 * Constructor
 	 *
-	 * @param {string} $configFile Optionally you can provide a config file
+	 * @param string $configFile Optionally you can provide a config file
 	 */
 	public function __construct($configFile = null)
 	{
@@ -37,7 +37,7 @@ class Config
 	 * Checks if the given config file exists
 	 * If no file is given, checks if the default config file exists
 	 *
-	 * @param {string} $configFile
+	 * @param string $configFile
 	 */
 	public static function exists($configFile = null)
 	{
@@ -59,7 +59,7 @@ class Config
 	/**
 	 * Returns the absolute path 
 	 *
-	 * @param {string} $path
+	 * @param string $path
 	 */
 	public static function pathAbs($path)
 	{

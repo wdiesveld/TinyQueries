@@ -18,9 +18,9 @@ class QueryTree extends Query
 	/**
 	 * Constructor
 	 *
-	 * @param {DB} $db Handle to database
-	 * @param {string} $id ID of parent query - $id should refer to an atomic query
-	 * @param {string} $terms Query terms corresponding to the child queries of the tree
+	 * @param DB $db Handle to database
+	 * @param string $id ID of parent query - $id should refer to an atomic query
+	 * @param string $terms Query terms corresponding to the child queries of the tree
 	 */
 	public function __construct(&$db, $id, $terms = array())
 	{
@@ -66,8 +66,8 @@ class QueryTree extends Query
 	/**
 	 * Adds a parameter binding to the query
 	 *
-	 * @param {string} $paramName
-	 * @param {string} $fieldName 
+	 * @param string $paramName
+	 * @param string $fieldName 
 	 */
 	public function bind($paramName, $fieldName = null)
 	{
@@ -80,7 +80,7 @@ class QueryTree extends Query
 	/**
 	 * Executes the query
 	 *
-	 * @param {assoc} $paramValues
+	 * @param assoc $paramValues
 	 */
 	public function execute($paramValues = null)
 	{
@@ -96,9 +96,9 @@ class QueryTree extends Query
 	/**
 	 * Connects a query to this query
 	 *
-	 * @param {string} $term
+	 * @param string $term
 	 *
-	 * @return {Query}
+	 * @return Query
 	 */
 	protected function link($term)
 	{
@@ -167,7 +167,7 @@ class QueryTree extends Query
 	/**
 	 * Binds the child queries to the query output
 	 *
-	 * @param {array} $rows The rows/row as returned by QuerySQL
+	 * @param array $rows The rows/row as returned by QuerySQL
 	 */
 	private function bindChildren(&$rows)
 	{
@@ -191,8 +191,8 @@ class QueryTree extends Query
 	/**
 	 * Executes the child query and ties the result to the output of the parent query
 	 *
-	 * @param {array} $parentRows Query output of the parent query
-	 * @param {object} $child
+	 * @param array $parentRows Query output of the parent query
+	 * @param object $child
 	 */
 	private function bindChild(&$parentRows, &$child)
 	{

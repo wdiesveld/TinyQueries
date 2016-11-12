@@ -27,8 +27,8 @@ class Term
 	 * First tries to parse a structure like "( ... )" or "prefix.( ... )"
 	 * ( the second form is needed for parsing terms like a:(b|c) - a is passed as prefix to (b|c), like a.(b|c) )
 	 *
-	 * @param {DB} $db
-	 * @param {string} $term
+	 * @param DB $db
+	 * @param string $term
 	 */
 	public static function parse(&$db, $term)
 	{
@@ -59,8 +59,8 @@ class Term
 	 * Checks if the 'root' element of each terms should be replaced by an alias
 	 * For example "a(b,c)" and alias "a" => "d" will result in "d(b,c)"
 	 *
-	 * @param {array} $terms
-	 * @param {assoc} $aliases
+	 * @param array $terms
+	 * @param assoc $aliases
 	 */
 	public static function convertAliases($terms, $aliases)
 	{
@@ -84,8 +84,8 @@ class Term
 	/**
 	 * Parses a merge term, like a|b|c
 	 *
-	 * @param {DB} $db
-	 * @param {string} $term 
+	 * @param DB $db
+	 * @param string $term 
 	 */
 	private static function parseMerge(&$db, $term = null, $prefix = null)
 	{
@@ -105,8 +105,8 @@ class Term
 	/**
 	 * Parses a attach term, like a+b+c
 	 *
-	 * @param {DB} $db
-	 * @param {string} $term
+	 * @param DB $db
+	 * @param string $term
 	 */
 	private static function parseAttach(&$db, $term)
 	{
@@ -122,8 +122,8 @@ class Term
 	/**
 	 * Parses a filter term, like a:b:c
 	 *
-	 * @param {DB} $db
-	 * @param {string} $term
+	 * @param DB $db
+	 * @param string $term
 	 */
 	private static function parseChain(&$db, $term)
 	{
@@ -139,8 +139,8 @@ class Term
 	/**
 	 * Parses a ID tree structure and sets the ID of this query and creates child queries
 	 *
-	 * @param {DB} $db
-	 * @param {string} $term
+	 * @param DB $db
+	 * @param string $term
 	 */
 	private static function parseTree(&$db, $term)
 	{
@@ -164,7 +164,7 @@ class Term
 	/**
 	 * Gets the ID part and children-part out of a tree structure, so "a(b(c),d)" will return "a" & "b(c),d"
 	 *
-	 * @param {string} $idTree
+	 * @param string $idTree
 	 */
 	private static function parseID($idTree)
 	{
@@ -189,8 +189,8 @@ class Term
 	/**
 	 * Checks which type of query corresponds with $id and returns a new instance of the corresponding query object
 	 *
-	 * @param {DB} $db
-	 * @param {string} $id
+	 * @param DB $db
+	 * @param string $id
 	 */
 	private static function atomic(&$db, $id)
 	{
@@ -206,9 +206,9 @@ class Term
 	/**
 	 * Splits the string by the separator, respecting possible nested parenthesis structures
 	 *
-	 * @param {string} $string
-	 * @param {string} $separator1 Must be a single char!
-	 * @param {string} $separator2 (optional) Must be a single char!
+	 * @param string $string
+	 * @param string $separator1 Must be a single char!
+	 * @param string $separator2 (optional) Must be a single char!
 	 */
 	private static function split($string, $separator1, $separator2=null)
 	{

@@ -12,8 +12,8 @@ class UserFeedback extends \Exception
 	/**
 	 * Constructor
 	 *
-	 * @param {string} $message
-	 * @param {int} $httpCode
+	 * @param string $message
+	 * @param int $httpCode
 	 */
 	public function __construct($message = null, $httpCode = 400)
 	{

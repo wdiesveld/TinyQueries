@@ -18,7 +18,7 @@ class Profiler
 	/**
 	 * Constructor
 	 *
-	 * @param {boolean} $run Do profiling or not
+	 * @param boolean $run Do profiling or not
 	 */
 	public function __construct($run = true)
 	{
@@ -44,7 +44,7 @@ class Profiler
 	/**
 	 * Create a new node
 	 *
-	 * @param {string} $node
+	 * @param string $node
 	 */
 	public function begin($node)
 	{

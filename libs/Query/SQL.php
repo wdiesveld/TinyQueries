@@ -22,8 +22,8 @@ class QuerySQL extends Query
 	/**
 	 * Constructor
 	 *
-	 * @param {DB} $db Handle to database
-	 * @param {string} $id (optional) ID of the query
+	 * @param DB $db Handle to database
+	 * @param string $id (optional) ID of the query
 	 */
 	public function __construct(&$db, $id = null)
 	{
@@ -64,7 +64,7 @@ class QuerySQL extends Query
 	/**
 	 * Executes the query
 	 *
-	 * @param {assoc} $queryParams
+	 * @param assoc $queryParams
 	 */
 	public function execute($paramValues = null)
 	{
@@ -139,7 +139,7 @@ class QuerySQL extends Query
 	/**
 	 *
 	 *
-	 * @param {assoc} $queryParams
+	 * @param assoc $queryParams
 	 */
 	public function selectAllAssoc($queryParams = null)
 	{
@@ -155,7 +155,7 @@ class QuerySQL extends Query
 	/**
 	 *
 	 *
-	 * @param {assoc} $queryParams
+	 * @param assoc $queryParams
 	 */
 	public function selectAssoc($queryParams = null)
 	{
@@ -171,7 +171,7 @@ class QuerySQL extends Query
 	/**
 	 *
 	 *
-	 * @param {assoc} $queryParams
+	 * @param assoc $queryParams
 	 */
 	public function selectAllFirst($queryParams = null)
 	{
@@ -187,7 +187,7 @@ class QuerySQL extends Query
 	/**
 	 *
 	 *
-	 * @param {assoc} $queryParams
+	 * @param assoc $queryParams
 	 */
 	public function selectFirst($queryParams = null)
 	{
@@ -203,7 +203,7 @@ class QuerySQL extends Query
 	/**
 	 * Does all post processing for the output of a query
 	 *
-	 * @param {array} $rows The rows as returned by the database
+	 * @param array $rows The rows as returned by the database
 	 */
 	private function postProcess(&$rows)
 	{
@@ -233,7 +233,7 @@ class QuerySQL extends Query
 	/**
 	 * Sets the type of the output fields, according to the type specification in the json file
 	 *
-	 * @param {array} $rows
+	 * @param array $rows
 	 */
 	private function applyTyping(&$rows)
 	{
@@ -246,8 +246,8 @@ class QuerySQL extends Query
 	/**
 	 * Do type casting for the given field
 	 *
-	 * @param {string} $field
-	 * @param {string} $type
+	 * @param string $field
+	 * @param string $type
 	 */
 	private function setType(&$field, $type)
 	{
@@ -292,7 +292,7 @@ class QuerySQL extends Query
 	/**
 	 * Converts dot-notation fields to a nested structure.
 	 * 
-	 * @param {array} $rows
+	 * @param array $rows
 	 */
 	private function nestDottedFields(&$rows)
 	{
@@ -345,9 +345,9 @@ class QuerySQL extends Query
 	/**
 	 * Helper function for nestDottedFields
 	 *
-	 * @param {assoc} $row
-	 * @param {array} $fieldComponents
-	 * @param {string} $value
+	 * @param assoc $row
+	 * @param array $fieldComponents
+	 * @param string $value
 	 */
 	private function nestField(&$row, $fieldComponents, $value)
 	{
@@ -406,7 +406,7 @@ class QuerySQL extends Query
 	 * Reads query-file and fills in the IN-parameters - 
 	 * other params will be converted to PDO params which can be passed to the select methods (which is faster)
 	 *
-	 * @param {array} $params query parameters
+	 * @param array $params query parameters
 	 */
 	public function getSql($params = array())
 	{
@@ -485,9 +485,9 @@ class QuerySQL extends Query
 	/**
 	 * Helper function to convert parameters which are arrays into a format suitable to be used in the query
 	 *
-	 * @param {string} $sql
-	 * @param {string} $name Parameter name
-	 * @param {array} $value Parameter value
+	 * @param string $sql
+	 * @param string $name Parameter name
+	 * @param array $value Parameter value
 	 */
 	private function setArrayParam(&$sql, $name, $value)
 	{
@@ -506,9 +506,9 @@ class QuerySQL extends Query
 	/**
 	 * Helper function to convert parameters which are arrays of tuples into a format suitable to be used in the query
 	 *
-	 * @param {string} $sql
-	 * @param {string} $name Parameter name
-	 * @param {array} $value Parameter value
+	 * @param string $sql
+	 * @param string $name Parameter name
+	 * @param array $value Parameter value
 	 */
 	private function setTupleParam(&$sql, $name, $value)
 	{
@@ -546,9 +546,9 @@ class QuerySQL extends Query
 	/**
 	 * Replace the ":param" string with the value
 	 *
-	 * @param {string} $sql
-	 * @param {string} $name Parameter name
-	 * @param {mixed} $value SQL encoded parameter value or array of SQL encoded parameter values
+	 * @param string $sql
+	 * @param string $name Parameter name
+	 * @param mixed $value SQL encoded parameter value or array of SQL encoded parameter values
 	 */
 	private function setParam(&$sql, $name, $value)
 	{

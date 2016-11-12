@@ -36,7 +36,7 @@ class Compiler
 	/**
 	 * Constructor
 	 *
-	 * @param {string} $configFile Optionally you can provide a config file
+	 * @param string $configFile Optionally you can provide a config file
 	 */
 	public function __construct($configFile = null)
 	{
@@ -59,8 +59,8 @@ class Compiler
 	/**
 	 * Checks if the TinyQuery code has changed; if so calls the online compiler
 	 *
-	 * @param {boolean} $force (optional) Set this to true to call the compiler anyway
-	 * @param {boolean} $doCleanUp (optional) If set to true, it will delete local sql files which are not in the compiler output
+	 * @param boolean $force (optional) Set this to true to call the compiler anyway
+	 * @param boolean $doCleanUp (optional) If set to true, it will delete local sql files which are not in the compiler output
 	 */
 	public function compile($force = false, $doCleanUp = false)
 	{
@@ -394,7 +394,7 @@ class Compiler
 	/**
 	 * Writes a message to the logfile (if present)
 	 *
-	 * @param {string} $message
+	 * @param string $message
 	 */
 	private function log($message)
 	{
@@ -409,8 +409,8 @@ class Compiler
 	/**
 	 * Writes the source file
 	 *
-	 * @param {string} $fileID 
-	 * @param {string} $code
+	 * @param string $fileID 
+	 * @param string $code
 	 */
 	private function writeSource($fileID, $code)
 	{
@@ -422,8 +422,8 @@ class Compiler
 	/**
 	 * Writes the interface file
 	 *
-	 * @param {string} $fileID 
-	 * @param {string} $interface
+	 * @param string $fileID 
+	 * @param string $interface
 	 */
 	private function writeInterface($fileID, $interface)
 	{
@@ -435,8 +435,8 @@ class Compiler
 	/**
 	 * Creates a .sql file containing the query. The name of the file will be [$queryID].sql
 	 *
-	 * @param {string} $fileID 
-	 * @param {string} $sqlCode
+	 * @param string $fileID 
+	 * @param string $sqlCode
 	 */
 	private function writeSQLfile($fileID, $sqlCode)
 	{
@@ -448,8 +448,8 @@ class Compiler
 	/**
 	 * Writes $content to $filename
 	 *
-	 * @param {string} $filename
-	 * @param {string} $content
+	 * @param string $filename
+	 * @param string $content
 	 */
 	private function writeFile($filename, $content)
 	{

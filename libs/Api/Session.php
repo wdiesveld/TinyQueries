@@ -51,7 +51,7 @@ class Session
 	/**
 	 * Returns the user ID which is in the session
 	 *
-	 * @param {boolean} $checkIfExistsInDB Option to check if user exists in the DB. If not, the session is reset
+	 * @param boolean $checkIfExistsInDB Option to check if user exists in the DB. If not, the session is reset
 	 */
 	public function getUserID($checkIfExistsInDB = false)
 	{

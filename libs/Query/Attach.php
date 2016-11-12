@@ -16,8 +16,8 @@ class QueryAttach extends Query
 	/**
 	 * Constructor
 	 *
-	 * @param {DB} $db Handle to database
-	 * @param {string} $terms (optional) 
+	 * @param DB $db Handle to database
+	 * @param string $terms (optional) 
 	 */
 	public function __construct(&$db, $terms = array())
 	{
@@ -36,7 +36,7 @@ class QueryAttach extends Query
 	/**
 	 * 'Left joins' the child queries
 	 *
-	 * @param {assoc} $paramValues
+	 * @param assoc $paramValues
 	 */
 	public function execute($paramValues = null)
 	{
@@ -101,8 +101,8 @@ class QueryAttach extends Query
 	/**
 	 * Adds a parameter binding to the query
 	 *
-	 * @param {string} $paramName
-	 * @param {string} $fieldName 
+	 * @param string $paramName
+	 * @param string $fieldName 
 	 */
 	public function bind($paramName, $fieldName = null)
 	{
