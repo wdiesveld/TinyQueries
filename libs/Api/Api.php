@@ -18,6 +18,7 @@ class Api extends HttpTools
 	protected $server;
 	protected $query;
 	protected $debugMode;
+	protected $config;
 	protected $configFile;
 	protected $addProfilingInfo;
 	protected $doTransaction;
@@ -26,6 +27,7 @@ class Api extends HttpTools
 	protected $reservedParams;
 	protected $params = array();
 	protected $endpoints = array();
+	protected $handler;
 	
 	public $db;
 	public $profiler;
@@ -73,11 +75,11 @@ class Api extends HttpTools
 		
 		$this->db->connect();
 		
-		// Check for Swagger specs
-		$config = new Config( $this->configFile );
+		$this->config = new Config( $this->configFile );
 		
-		if ($config->api->swagger)
-			$this->importSwagger(  $config->api->swagger );
+		// Check for Swagger specs
+		if ($this->config->api->swagger)
+			$this->importSwagger(  $this->config->api->swagger );
 	}
 	
 	/**
@@ -250,21 +252,67 @@ class Api extends HttpTools
 	}
 	
 	/**
-	 * Gets / sets the endpoints
+	 * Sets the endpoints
 	 *
-	 * @param {array} $endpoints If null, returns the endpoints, otherwise sets the entpoints. 
-	 *                           Array should be assoc array like 'GET /my/path/{id}' => 'myQuery'
-	 *                           Parameters which are in the path or in the body will be passed to the query
+	 * @example 
+	 *   $api->endpoints([
+	 *      'GET /my/path/{id}' => 'myQuery1',
+	 *      'PUT /my/path/{id}' => 'myQuery2'
+	 *   ]);
+	 *
+	 * @example
+	 *   $api->handler( $myCustomHandler )->endpoints([
+	 *      'GET /my/path/{id}' => [ 'query' => 'myQuery1' ],
+	 *      'PUT /my/path/{id}' => [ 'method' => 'myCustomMethod' ]
+	 *   ]);
+	 *
+	 * All parameters which are in the URL path or in the body will be passed to the endpoint handler.
+	 * If you want to use a custom handler you should set your handler using the 'handler' method
+	 *
+	 * @param {array} $endpoints 
+	 * @returns {Api} $this
 	 */
-	public function endpoints( $endpoints = null )
+	public function endpoints( $endpoints )
 	{
 		if (is_null($endpoints))
 			return $this->endpoints;
 		
-		foreach ($endpoints as $path => $query)
-			$this->endpoints[ $path ] = array(
-				'query' => $query
-			);
+		foreach ($endpoints as $path => $handler)
+		{
+			if (is_array($handler)) 
+			{
+				if (!array_key_exists('query', $handler) && !array_key_exists('method', $handler))
+					throw new \Exception("Endpoint handler for '$path' should at least have the field 'query' or 'method'");
+				
+				if (array_key_exists('method', $handler) && !$this->handler)
+					throw new \Exception("If you use 'method' to define an endpoint, you should set your custom handler using the method 'handler'");
+					
+				$this->endpoints[ $path ] = $handler;
+			}
+			elseif (is_string($handler))
+				$this->endpoints[ $path ] = array(
+					'query' => $handler
+				);
+			else 
+				throw new \Exception("Invalid format endpoint handler for '$path'");
+		}
+			
+		return $this;
+	}
+	
+	/**
+	 * Sets a custom handler
+	 * 
+	 * For an example check the docs of 'endpoints'
+	 *
+	 * @param {object} $handler This should be an initialized object containing your own custom methods. 
+	 * @returns {Api} $this
+	 */
+	public function handler( $handler )
+	{
+		$this->handler = $handler;
+		
+		return $this;
 	}
 	
 	/**
@@ -465,15 +513,15 @@ class Api extends HttpTools
 		foreach ($specs['paths'] as $path => $methods)
 			foreach ($methods as $method => $def)
 			{
-				$spec = array();
+				$handler = array();
 				
 				if (array_key_exists('x-tq-query', $def))
-					$spec['query'] = $def['x-tq-query'];
+					$handler['query'] = $def['x-tq-query'];
 				
-				if (array_key_exists('x-tq-handler', $def))
-					$spec['handler'] = $def['x-tq-handler'];
+				if (array_key_exists('x-tq-method', $def))
+					$handler['method'] = $def['x-tq-method'];
 				
-				$this->endpoints[ strtoupper($method) . ' ' . $path ] = $spec;
+				$this->endpoints[ strtoupper($method) . ' ' . $path ] = $handler;
 			}
 	}
 	
@@ -488,9 +536,15 @@ class Api extends HttpTools
 			$this->params = $posted;	
 	
 		// Check which of the endpoints is called and if there is a query defined for it
-		foreach ($this->endpoints as $path => $def)
-			if ($this->endpoint( $path ) && array_key_exists('query', $def))
-				return $this->db->query( $def['query'] )->run( $this->params );
+		foreach ($this->endpoints as $path => $handler)
+			if ($this->endpoint( $path ))
+			{
+				if (array_key_exists('query', $handler))
+					return $this->db->query( $handler['query'] )->run( $this->params );
+				
+				if (array_key_exists('method', $handler))
+					return $this->invokeCustomMethod( $handler['method'] );
+			}
 		
 		// Catch the root if none was defined and return basic api info
 		if ($this->endpoint('GET /'))
@@ -498,12 +552,48 @@ class Api extends HttpTools
 			$endpointList = array_keys( $this->endpoints );
 			sort( $endpointList );
 			return array(
-				'message' => 'Welcome to the API',
+				'message' => 'Welcome to the API for ' . $this->config->project->label,
 				'endpoints' => $endpointList
 			);
 		}
 			
 		throw new UserFeedback('No valid API-call');	
+	}
+	
+	/**
+	 * Calls the method from the custom handler
+	 *
+	 * @param {string} $methodName 
+	 */
+	private function invokeCustomMethod($methodName)
+	{
+		if (!$this->handler)
+			throw new \Exception("Cannot invoke custom method '$methodName' - no handler defined");
+		
+		$method = new \ReflectionMethod( $this->handler, $methodName );
+		$params = $method->getParameters();
+		$args	= array();
+		
+		// Loop through method parameters and get each param value from the params in the request
+		foreach ($params as $param)
+		{
+			$name = $param->getName();
+			
+			// Get parameter value from request if present
+			if (array_key_exists($name, $this->params))
+				$val = $this->params[ $name ];
+			// Otherwise use default value if present
+			elseif ($param->isOptional())
+				$val = $param->getDefaultValue();
+			// Otherwise throw error
+			else
+				throw new \Exception("Parameter '$name' is required");
+
+			$args[] = $val;
+		}
+
+		// Call method
+		return $method->invokeArgs( $this->handler, $args );		
 	}
 	
 	/**
@@ -572,15 +662,15 @@ class Api extends HttpTools
 	}
 	
 	/**
-	 * Creates an error response in JSON
+	 * Creates an error response
 	 *
 	 */
-	protected function createErrorResponse($errorMessage, $showToUser, $httpCode = 400, $altoMessage = "Cannot process request" )
+	protected function createErrorResponse($errorMessage, $showToUser, $httpCode = 400, $altoMessage = 'Cannot process request' )
 	{
-		$this->setHttpResponseCode($httpCode);
+		$this->setHttpResponseCode( $httpCode );
 		
 		return array(
-			"error"	=> ($showToUser) 
+			'error'	=> ($showToUser) 
 				? $errorMessage 
 				: $altoMessage
 		);
