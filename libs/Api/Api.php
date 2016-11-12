@@ -8,29 +8,29 @@ require_once( dirname(__FILE__) . '/../DB.php' );
 /**
  * Api
  *
- * This is a simple JSON API which can be used on top of DB
+ * This class can be used to setup a JSON REST API which can be used on connect to the query set
  *
- * @author 	Wouter Diesveld <wouter@tinyqueries.com>
+ * @author Wouter Diesveld <wouter@tinyqueries.com>
  * @package TinyQueries
  */
 class Api extends HttpTools
 {
-	protected $server;
-	protected $query;
-	protected $debugMode;
-	protected $config;
-	protected $configFile;
-	protected $addProfilingInfo;
-	protected $doTransaction;
-	protected $request;
-	protected $outputFormat;
-	protected $reservedParams;
-	protected $params = array();
-	protected $endpoints = array();
-	protected $handler;
-	
 	public $db;
 	public $profiler;
+	
+	protected $addProfilingInfo;
+	protected $config;
+	protected $configFile;
+	protected $debugMode;
+	protected $doTransaction;
+	protected $endpoints = array();
+	protected $handler;
+	protected $outputFormat;
+	protected $params = array();
+	protected $query;
+	protected $request;
+	protected $reservedParams;
+	protected $server;
 	
 	/**
 	 * Constructor
@@ -49,7 +49,7 @@ class Api extends HttpTools
 		$this->contentType		= null;
 		$this->reservedParams 	= array('query', 'param'); // + all params starting with _ are also ignored as query parameter
 		
-		// request contains the details of the request
+		// Request contains the details of the request
 		$this->request = array(
 			'method' => self::getServerVar('REQUEST_METHOD', '/^\w+$/', 'GET')
 		);
@@ -63,23 +63,30 @@ class Api extends HttpTools
 	}
 	
 	/**
-	 * Initializes the api (connects to db)
+	 * Initializes the api
 	 *
+	 * @return Api $this
 	 */
 	public function init()
 	{
+		// If there is a db object init has already been done
 		if ($this->db)
 			return;
 		
+		// Create database object
 		$this->db = new DB( null, $this->configFile, $this->profiler );
 		
+		// Connect to db
 		$this->db->connect();
 		
+		// Read config
 		$this->config = new Config( $this->configFile );
 		
 		// Check for Swagger specs
 		if ($this->config->api->swagger)
 			$this->importSwagger(  $this->config->api->swagger );
+		
+		return $this;
 	}
 	
 	/**
@@ -142,7 +149,7 @@ class Api extends HttpTools
 		}
 		catch (\Exception $e)
 		{
-			// reset output buffer
+			// Reset output buffer
 			ob_clean();
 			
 			if ($this->doTransaction)
@@ -161,14 +168,14 @@ class Api extends HttpTools
 			$response = $this->createErrorResponse( $errorMessage, $showToUser, $httpCode );
 		}
 		
-		// add general info to response
+		// Add general info to response
 		if ($this->addProfilingInfo)
 		{
 			$response['timestamp'] 	= time();
 			$response['server'] 	= $this->server;
 		}
 		
-		// optional parameters for redirect (non ajax only)
+		// Optional parameters for redirect (non ajax only)
 		$urlSuccess	= self::getRequestVar('url-success');
 		$urlError 	= self::getRequestVar('url-error');
 		
@@ -192,6 +199,7 @@ class Api extends HttpTools
 	/**
 	 * Do contentType specific encoding and output to stdout
 	 *
+	 * @param mixed $response
 	 */
 	protected function sendResponseBody(&$response)
 	{
@@ -215,6 +223,7 @@ class Api extends HttpTools
 	
 	/**
 	 * Overload this function if you have more things to clean up when an error occors during the request-processing
+	 *
 	 */
 	protected function rollback()
 	{
@@ -241,6 +250,9 @@ class Api extends HttpTools
 	
 	/**
 	 * Returns a filename based on a queryID (term)
+	 *
+	 * @param string $queryTerm
+	 * @return string
 	 */
 	protected function createFilename( $queryTerm )
 	{
@@ -326,6 +338,7 @@ class Api extends HttpTools
 	 * This will set $this->params['userID'] to the value in the URL if there is a match
 	 *
 	 * @param string $endpoint
+	 * @param boolean
 	 */
 	public function endpoint($endpoint)
 	{
@@ -377,8 +390,9 @@ class Api extends HttpTools
 	/**
 	 * Converts a URI-path to a term + paramvalue + [output should be single row] true/false
 	 *
-	 * @param {$string} $path The resource path
+	 * @param string $path The resource path
 	 * @param string $method The HTTP method
+	 * @return array
 	 */
 	private function pathToTerm($path, $method)
 	{
@@ -428,12 +442,13 @@ class Api extends HttpTools
 	/**
 	 * Returns the request parameter values
 	 *
+	 * @return array
 	 */
 	private function getQueryParams()
 	{
 		$params = array();
 		
-		// read the query-parameters
+		// Read the query-parameters
 		foreach (array_keys($_REQUEST) as $paramname)
 			if (!in_array($paramname, $this->reservedParams) && substr($paramname, 0, 1) != '_')
 			{
@@ -469,6 +484,7 @@ class Api extends HttpTools
 	/**
 	 * Returns the requested query term + its parameter values
 	 *
+	 * @return array
 	 */
 	protected function requestedQuery()
 	{
@@ -497,6 +513,7 @@ class Api extends HttpTools
 	/**
 	 * Imports endpoints from swagger definition file
 	 *
+	 * @param string $swaggerFile
 	 */
 	protected function importSwagger( $swaggerFile )
 	{
@@ -528,6 +545,7 @@ class Api extends HttpTools
 	/**
 	 * Checks if the endpoint which is called is in the list of endpoints and executes the corresponding query
 	 *
+	 * @return mixed The response of the endpoint
 	 */
 	protected function processEndpoint()
 	{
@@ -564,6 +582,7 @@ class Api extends HttpTools
 	 * Calls the method from the custom handler
 	 *
 	 * @param string $methodName 
+	 * @return mixed The response of the method
 	 */
 	private function invokeCustomMethod($methodName)
 	{
@@ -599,6 +618,7 @@ class Api extends HttpTools
 	/**
 	 * Processes the api request, e.g. executes the query/queries and returns the output
 	 *
+	 * @return mixed The response of the request
 	 */
 	protected function processRequest()
 	{
@@ -664,6 +684,11 @@ class Api extends HttpTools
 	/**
 	 * Creates an error response
 	 *
+	 * @param string $errorMessage
+	 * @param boolean $showToUser
+	 * @param int $httpCode
+	 * @param string $altoMessage
+	 * @return array
 	 */
 	protected function createErrorResponse($errorMessage, $showToUser, $httpCode = 400, $altoMessage = 'Cannot process request' )
 	{
@@ -736,6 +761,7 @@ class Api extends HttpTools
 	 * JSON encoder function (Also does the UTF8 encoding)
 	 *
 	 * @param object $object
+	 * @return string
 	 */
 	public static function jsonEncode($object)
 	{
@@ -754,6 +780,7 @@ class Api extends HttpTools
 	 * Converts a string to UTF8, if it is not yet in UTF8
 	 *
 	 * @param mixed $item If item is not a string, it is untouched
+	 * @rerturn mixed
 	 */
 	public static function toUTF8(&$item) 
 	{ 
@@ -770,6 +797,7 @@ class Api extends HttpTools
 	 * This method can be overloaded to add your own permission checks
 	 * The overloaded method can use $this->request to check the specs of the request
 	 *
+	 * @return boolean
 	 */
 	protected function checkRequestPermissions()
 	{
