@@ -19,7 +19,7 @@ you want to start from scratch it's recommended to use [TinyQueries API version]
 
 1. If you use Composer then update or create your composer.json file as follows. Alternatively, instead of using Composer you could just download the ZIP-file and put the content in the folder where you put your libs.
 
-	```
+	```json
 	{
 		"require": {
 			"tiny-queries/tiny-queries": "*" 	
