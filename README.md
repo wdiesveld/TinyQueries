@@ -45,7 +45,7 @@ you want to start from scratch it's recommended to use [TinyQueries API version]
 
 1. Create a file ```_model.json``` inside the folder ```queries/tiny``` which has the following content:
 
-	```
+	```javascript
 	/**
 	 * Model for my project
 	 *
@@ -56,7 +56,7 @@ you want to start from scratch it's recommended to use [TinyQueries API version]
 
 1. Create a file ```_project.json``` inside the folder ```queries/tiny``` which has the following content:
 
-	```
+	```javascript
 	/**
 	 * Projectfile
 	 *
