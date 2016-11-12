@@ -9,8 +9,9 @@ It's based on two components:
 
 Although you can create REST API's with ORM frameworks as well, TinyQueries has several advantages:
 * It's much faster than ORM.
-* As a developer you are not bothered by setting up a complex object hierarchy. If you only need a REST API you don't need to have the objects.
+* As a developer you are not bothered with setting up a complex object hierarchy. 
 * TinyQueries can be connected to any *existing* database, which is much harder with ORM.
+* You still have the advantage of object oriented notation for queries.
 
 ## System Requirements
 
