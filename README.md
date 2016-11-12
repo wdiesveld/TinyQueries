@@ -1,12 +1,13 @@
 [![TinyQueries](http://tinyqueries.com/css/images/tiny-queries-logo-large.png)](http://www.tinyqueries.com/)
 
-TinyQueries can be regarded as an alternative for Object Relation Mapping. It's based on two components:
+With TinyQueries you can create a REST API in which the endpoints are mapped directly to database queries, without an intermediate object layer. The queries can be created either by plain SQL or by a compiler which compiles object oriented notation into SQL.
+It's based on two components:
 * A query compiler - it's like a Less for SQL, so you create SQL queries by compiling them.
-* A simple and powerful syntax to combine the output of SQL queries
+* A simple and powerful syntax to nest the output of SQL queries
 
 ## System Requirements
 
-* Currently TinyQueries is only available for PHP. You need at least PHP 5.3
+* PHP 5.3 or higher
 * PHP's PDO database layer should be installed
 * PHP's cURL lib should be enabled
 * A SQL database
