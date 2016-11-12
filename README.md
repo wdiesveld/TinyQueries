@@ -10,24 +10,23 @@ TinyQueries can be regarded as an alternative for Object Relation Mapping. It's 
 * PHP's PDO database layer should be installed
 * PHP's cURL lib should be enabled
 * A SQL database
-* If you want to use the IDE you need a webserver, for example Apache
 
 ## Installation
 
 NOTE: This package is especially usefull if you want to integrate TinyQueries with an existing PHP application. However if
 you want to start from scratch it's recommended to use [TinyQueries API version] instead which requires less configuration.
 
-1. If you use Composer then update or create your composer.json file as follows. Alternatively, instead of using Composer you could just download the ZIP-file and put the content in the folder where you put your libs.
+1. If you use Composer then update or create your composer.json file as shown below. Alternatively, instead of using Composer you could just download the ZIP-file and put the content in the folder where you put your libs.
 
-	```
+	```json
 	{
 		"require": {
-			"tiny-queries/tiny-queries": "*" 	
+			"tiny-queries/tiny-queries": "^3.*" 	
 		}
 	}
 	```
 
-1. Do the composer command, either ```composer install``` or ```php composer.phar install```
+1. Do the composer command, either ```composer install``` or ```php composer.phar install``` or ```composer require tiny-queries/tiny-queries:^3.*```
 
 1. Create a folder ```queries``` in your project folder. Within this folder create three subfolders ```sql```, ```interface``` and ```tiny```. So you have:
 
@@ -36,7 +35,7 @@ you want to start from scratch it's recommended to use [TinyQueries API version]
 	* ```queries/sql``` this folder will be used to store compiled SQL files
 	* ```queries/tiny``` this folder will be used to store your TinyQueries source files
 	
-	For security reasons ensure that this folder is not accessible through http (so in case you use Apache add a .htaccess file)
+	Ensure that this folder is not accessible through http (so in case you use Apache add a .htaccess file)
 
 1. Use the file ```config/config.template.xml``` to set the database credentials and save it as ```config/config.xml```.
 
@@ -46,7 +45,7 @@ you want to start from scratch it's recommended to use [TinyQueries API version]
 
 1. Create a file ```_model.json``` inside the folder ```queries/tiny``` which has the following content:
 
-	```
+	```javascript
 	/**
 	 * Model for my project
 	 *
@@ -57,13 +56,13 @@ you want to start from scratch it's recommended to use [TinyQueries API version]
 
 1. Create a file ```_project.json``` inside the folder ```queries/tiny``` which has the following content:
 
-	```
+	```javascript
 	/**
 	 * Projectfile
 	 *
 	 */
 	{
-		id: "myproject"
+		id: "my-project"
 	}
 	```
 
