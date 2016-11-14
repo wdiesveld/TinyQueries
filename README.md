@@ -30,7 +30,7 @@ you want to start from scratch it's recommended to use [TinyQueries API version]
 
 	```composer require tiny-queries/tiny-queries:^v3```
 
-Alternatively, instead of using Composer you could just download the ZIP-file and put the content in the folder where you put your libs.
+   Alternatively, instead of using Composer you could just download the ZIP-file and put the content in the folder where you put your libs.
 
 1. Create a folder ```queries``` in your project folder. Within this folder create three subfolders ```sql```, ```interface``` and ```tiny```. So you have:
 
