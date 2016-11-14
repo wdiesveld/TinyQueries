@@ -26,17 +26,9 @@ Although you can create REST API's with ORM frameworks as well, TinyQueries has 
 NOTE: This package is especially usefull if you want to integrate TinyQueries with an existing PHP application. However if
 you want to start from scratch it's recommended to use [TinyQueries API version] instead which requires less configuration.
 
-1. If you use Composer then update or create your composer.json file as shown below. Alternatively, instead of using Composer you could just download the ZIP-file and put the content in the folder where you put your libs.
+1. If you use Composer then update your composer.json file as shown below. Alternatively, instead of using Composer you could just download the ZIP-file and put the content in the folder where you put your libs.
 
-	```json
-	{
-		"require": {
-			"tiny-queries/tiny-queries": "^3.*" 	
-		}
-	}
-	```
-
-1. Do the composer command, either ```composer install``` or ```php composer.phar install``` or ```composer require tiny-queries/tiny-queries:^3.*```
+	```composer require tiny-queries/tiny-queries:^v3```
 
 1. Create a folder ```queries``` in your project folder. Within this folder create three subfolders ```sql```, ```interface``` and ```tiny```. So you have:
 
