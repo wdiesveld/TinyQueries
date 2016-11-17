@@ -364,11 +364,15 @@ class DB
 	
 	/**
 	 * Executes the given query
+	 * 
+	 * Note that when using $checkForMultipleStatements, this will only work for non-select queries
+	 * because the statement cursor is moved forward and cannot be rewinded 
 	 *
 	 * @param string $query SQL query
 	 * @param assoc $params Query parameters
+	 * @param bool $checkForMultipleStatements Checks if there is an error in multi statement queries
 	 */
-	public function execute($query, $params = array())
+	public function execute($query, $params = array(), $checkForMultipleStatements = false)
 	{
 		if (!$this->dbh) 
 			throw new \Exception("DB::execute called but there is no connection to the DB - call connect first");
@@ -396,6 +400,13 @@ class DB
 		$r = $sth->execute();
 
 		$this->profiler->end();
+		
+		if ($checkForMultipleStatements)
+		{
+			// Just by moving through the rowsets, possible exceptions are thrown per set
+			do {
+			} while ($sth->nextRowset());
+		}
 		
 		if (!$r) 
 		{

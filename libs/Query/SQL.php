@@ -115,7 +115,7 @@ class QuerySQL extends Query
 			if (!$this->output)
 			{
 				list($sql, $pdoParams) = $this->getSql( $paramValues );
-				return $this->db->execute( $sql, $pdoParams );
+				return $this->db->execute( $sql, $pdoParams, true );
 			}
 			
 			$rows = (string) $this->_interface->output->rows;
