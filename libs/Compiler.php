@@ -32,6 +32,7 @@ class Compiler
 	private $verbose;
 	private $filesWritten;
 	private $projectLabel;
+	private $swaggerFile;
 	
 	/**
 	 * Constructor
@@ -51,6 +52,7 @@ class Compiler
 		$this->server		= $config->compiler->server;
 		$this->version		= $config->compiler->version;
 		$this->logfile		= $config->compiler->logfile;
+		$this->swaggerFile 	= $config->api->swagger;
 		$this->querySet 	= new QuerySet( $this->folderOutput );
 		$this->verbose		= true;
 		$this->filesWritten	= array();
@@ -324,8 +326,8 @@ class Compiler
 		{
 			$error = @simplexml_load_string( $response[1] ); 
 			$errorMessage = ($error)
-								? $error->message
-								: 'Received status '.$status." - ". $response[1];
+				? $error->message
+				: 'Received status '.$status." - ". $response[1];
 								
 			throw new \Exception( $errorMessage );
 		}
@@ -372,6 +374,10 @@ class Compiler
 			
 			$cleanUpTypes[] = self::SOURCE_FILES;
 		}
+
+		// Write swagger file if present
+		if ($code->swagger && $this->swaggerFile)
+			$this->writeFile( $this->swaggerFile, $code->swagger );
 			
 		// Clean up files which were not in the compiler output
 		if ($doCleanUp)

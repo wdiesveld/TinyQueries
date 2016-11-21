@@ -57,9 +57,11 @@ class Config
 	}
 	
 	/**
-	 * Returns the absolute path 
+	
+	 * Returns the absolute path of a folder 
 	 *
 	 * @param string $path
+	 * @return string
 	 */
 	public static function pathAbs($path)
 	{
@@ -72,6 +74,35 @@ class Config
 			throw new \Exception("Cannot find path '" . $path . "'");
 			
 		return $pathAbs;
+	}
+
+	/**
+	 * Returns the absolute path of a file 
+	 *
+	 * @param string $pathToFile
+	 * @param string $defaultFilename Can be used in case only a folder is specified
+	 * @return string
+	 */
+	private static function pathAbsFile($pathToFile, $defaultFilename = null)
+	{
+		if (!(string) $pathToFile)
+			return null;
+
+		$path = pathinfo( (string) $pathToFile );
+		
+		if (!$path || !array_key_exists('dirname', $path))
+			throw new \Exception("Config: Path of $pathToFile does not exist");
+		
+		$dir = realpath( $path['dirname'] );
+		
+		if (!$dir)
+			throw new \Exception("Config: Path of $pathToFile does not exist");
+		
+		$filename = (array_key_exists('filename', $path))
+			? $path['filename'] . '.' . $path['extension']
+			: $defaultFilename;
+
+		return $dir . "/" . $filename;
 	}
 	
 	/**
@@ -104,7 +135,7 @@ class Config
 		
 		// Import api fields
 		$this->api = new \StdClass();
-		$this->api->swagger			= ($config->api && $config->api['swagger']) ? self::pathAbs( (string) $config->api['swagger'] ) : null;
+		$this->api->swagger			= ($config->api) ? self::pathAbsFile( $config->api['swagger'], 'swagger.json' ) : null;
 		
 		// Import database fields
 		$this->database = new \StdClass();
@@ -123,7 +154,7 @@ class Config
 		$this->compiler->output		= self::pathAbs( (string) $config->compiler['output'] );
 		$this->compiler->server		= ((string) $config->compiler['server']) 	? (string) $config->compiler['server'] : self::DEFAULT_COMPILER;
 		$this->compiler->version	= ((string) $config->compiler['version']) 	? (string) $config->compiler['version'] : null;
-		$this->compiler->logfile	= null;
+		$this->compiler->logfile	= self::pathAbsFile($config->compiler['logfile'], 'compiler.log');
 		$this->compiler->enable 	= ($config->compiler['enable'] && strtolower( (string) $config->compiler['enable'] ) == 'true') ? true : false;
 		$this->compiler->autocompile = ($config->compiler['autocompile'] && strtolower( (string) $config->compiler['autocompile'] ) == 'true') ? true : false;
 		
@@ -131,26 +162,6 @@ class Config
 		if ($this->compiler->version && !preg_match("/^v/", $this->compiler->version))
 			$this->compiler->version = "v" . $this->compiler->version;
 		
-		// Logfile needs special treatment 
-		if ((string) $config->compiler['logfile']) 
-		{
-			$path = pathinfo( (string) $config->compiler['logfile'] );
-			
-			if (!$path || !array_key_exists('dirname', $path))
-				throw new \Exception("Configfile " . $this->configFile . ": Path of logfile does not exist");
-			
-			$dir = realpath( $path['dirname'] );
-			
-			if (!$dir)
-				throw new \Exception("Configfile " . $this->configFile . ": Path of logfile does not exist");
-			
-			$filename = (array_key_exists('filename', $path))
-							? $path['filename'] . "." . $path['extension']
-							: 'compiler.log';
-
-			$this->compiler->logfile = $dir . "/" . $filename;
-		}
-
 		// Import postprocessor fields
 		$this->postprocessor = new \StdClass();
 		$this->postprocessor->nest_fields = 

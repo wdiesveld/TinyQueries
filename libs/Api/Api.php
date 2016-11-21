@@ -529,17 +529,10 @@ class Api extends HttpTools
 			
 		foreach ($specs['paths'] as $path => $methods)
 			foreach ($methods as $method => $def)
-			{
-				$handler = array();
-				
 				if (array_key_exists('x-tq-query', $def))
-					$handler['query'] = $def['x-tq-query'];
-				
-				if (array_key_exists('x-tq-method', $def))
-					$handler['method'] = $def['x-tq-method'];
-				
-				$this->endpoints[ strtoupper($method) . ' ' . $path ] = $handler;
-			}
+					$this->endpoints[ strtoupper($method) . ' ' . $path ] = array(
+						'query' => $def['x-tq-query']
+					);
 	}
 	
 	/**
