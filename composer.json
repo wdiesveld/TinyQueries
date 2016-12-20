@@ -1,5 +1,5 @@
 {
-    "name": "tiny-queries/tiny-queries",
+    "name": "querytechnology/tinyqueries",
     "description": "Highly efficient database layer as alternative for ORM - direct mapping from SQL to REST interface",
     "require": {
 		"php": ">=5.3.0",
