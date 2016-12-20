@@ -28,7 +28,7 @@ you want to start from scratch it's recommended to use [TinyQueries API version]
 
 1. If you use Composer then update your composer.json file as follows: 
 
-	```composer require querytechnology/tinyqueries:^v3```
+	```composer require query-technology/tiny-queries:^v3```
 
    Alternatively, instead of using Composer you could just download the ZIP-file and put the content in the folder where you put your libs.
 
