@@ -7,6 +7,9 @@
 		"ext-curl": "*",
 		"ext-mbstring": "*"
     },
+	"replace": {
+		"tiny-queries/tiny-queries": "self.version"
+	},
 	"keywords": [
 		"database", 
 		"pdo", 
