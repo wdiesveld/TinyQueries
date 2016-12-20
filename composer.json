@@ -1,5 +1,5 @@
 {
-    "name": "query-technology/tiny-queries",
+    "name": "tiny-queries/tiny-queries",
     "description": "Highly efficient database layer as alternative for ORM - direct mapping from SQL to REST interface",
     "require": {
 		"php": ">=5.3.0",
@@ -7,9 +7,6 @@
 		"ext-curl": "*",
 		"ext-mbstring": "*"
     },
-	"replace": {
-		"tiny-queries/tiny-queries": "self.version"
-	},
 	"keywords": [
 		"database", 
 		"pdo", 
