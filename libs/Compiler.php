@@ -202,7 +202,7 @@ class Compiler
 				
 			case self::SOURCE_FILES:
 				$path = $this->folderInput;
-				$extenstion = "json"; 
+				$extenstion = '\w+'; // Meaning *.*
 				break;
 				
 			default: 
