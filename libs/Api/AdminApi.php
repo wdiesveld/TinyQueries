@@ -198,6 +198,9 @@ class AdminApi extends Api
 	 */
 	public function compile()
 	{
+		if (!$this->compiler)
+			throw new \Exception('Cannot compile queries - Compiler is not initialized');
+
 		// Call compiler with settings Force compile & do clean up
 		$this->compiler->compile( true, true );
 		
@@ -212,6 +215,9 @@ class AdminApi extends Api
 	 */
 	public function downloadQueries()
 	{
+		if (!$this->compiler)
+			throw new \Exception('Cannot download queries - Compiler is not initialized');
+		
 		$this->compiler->download();
 		
 		return array(
