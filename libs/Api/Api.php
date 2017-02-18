@@ -104,8 +104,7 @@ class Api extends HttpTools
 
 		$response = array();
 		
-		try
-		{
+		try {
  			// Catch all output which is send to stdout
 			ob_start();
 			
@@ -113,8 +112,7 @@ class Api extends HttpTools
 			
 			$dbConnectedModus = ($this->db && $this->db->connected());
 			
-			if ($dbConnectedModus && $this->doTransaction)
-			{
+			if ($dbConnectedModus && $this->doTransaction) {
 				// Disable nested fields for CSV since CSV can only handle 'flat' data
 				if (preg_match('/\/csv$/', $this->contentType))
 					$this->db->nested = false;
@@ -135,8 +133,7 @@ class Api extends HttpTools
 			if ($textOutput)
 				throw new \Exception($textOutput);
 			
-			if ($dbConnectedModus)
-			{
+			if ($dbConnectedModus) {
 				if ($this->doTransaction)
 					$this->db->pdo()->commit();
 					
@@ -146,9 +143,7 @@ class Api extends HttpTools
 			if ($this->addProfilingInfo)
 				$response['profiling'] = $this->profiler->results();
 			
-		}
-		catch (\Exception $e)
-		{
+		} catch (\Exception $e) {
 			// Reset output buffer
 			ob_clean();
 			
@@ -169,8 +164,7 @@ class Api extends HttpTools
 		}
 		
 		// Add general info to response
-		if ($this->addProfilingInfo)
-		{
+		if ($this->addProfilingInfo) {
 			$response['timestamp'] 	= time();
 			$response['server'] 	= $this->server;
 		}
@@ -180,15 +174,13 @@ class Api extends HttpTools
 		$urlError 	= self::getRequestVar('url-error');
 		
 		// Do redirect
-		if ($urlSuccess && !array_key_exists('error', $response))
-		{
+		if ($urlSuccess && !array_key_exists('error', $response)) {
 			header('Location: ' . self::addParamsToURL($urlSuccess, $response));
 			exit;
 		}
 		
 		// Do redirect
-		if ($urlError && array_key_exists('error', $response))
-		{
+		if ($urlError && array_key_exists('error', $response)) {
 			header('Location: ' . self::addParamsToURL($urlError, $response));
 			exit;
 		}
@@ -203,8 +195,7 @@ class Api extends HttpTools
 	 */
 	protected function sendResponseBody(&$response)
 	{
-		switch ($this->contentType)
-		{
+		switch ($this->contentType) {
 			case 'text/csv': 
 				header('Content-Disposition: attachment; filename="' . $this->createFilename( $this->request['query'] ) . '.csv"');
 				$this->csvEncode( $response );
@@ -289,10 +280,8 @@ class Api extends HttpTools
 		if (is_null($endpoints))
 			return $this->endpoints;
 		
-		foreach ($endpoints as $path => $handler)
-		{
-			if (is_array($handler)) 
-			{
+		foreach ($endpoints as $path => $handler) {
+			if (is_array($handler))  {
 				if (!array_key_exists('query', $handler) && !array_key_exists('method', $handler))
 					throw new \Exception("Endpoint handler for '$path' should at least have the field 'query' or 'method'");
 				
@@ -300,8 +289,7 @@ class Api extends HttpTools
 					throw new \Exception("If you use 'method' to define an endpoint, you should set your custom handler using the method 'handler'");
 					
 				$this->endpoints[ $path ] = $handler;
-			}
-			elseif (is_string($handler))
+			} elseif (is_string($handler))
 				$this->endpoints[ $path ] = array(
 					'query' => $handler
 				);
@@ -370,8 +358,7 @@ class Api extends HttpTools
 		$pathRexExp = str_replace('.', '\.', $pathRexExp);
 		
 		// Replace the :vars and {vars} with \w+ 
-		foreach ($vars as $var)
-		{
+		foreach ($vars as $var) {
 			$pathRexExp = str_replace(':'.$var, 	"([\\w\\-]+)", $pathRexExp);
 			$pathRexExp = str_replace('{'.$var.'}', "([\\w\\-]+)", $pathRexExp);
 		}
@@ -418,8 +405,7 @@ class Api extends HttpTools
 				throw new \Exception("Path contains invalid characters");
 				
 		// Determine queryID postfix		
-		switch ($method)
-		{
+		switch ($method) {
 			case 'PUT':
 			case 'PATCH': 	$postfix = ".update"; break;
 			case 'POST': 	$postfix = ".create"; break;
@@ -450,16 +436,12 @@ class Api extends HttpTools
 		
 		// Read the query-parameters
 		foreach (array_keys($_REQUEST) as $paramname)
-			if (!in_array($paramname, $this->reservedParams) && substr($paramname, 0, 1) != '_')
-			{
+			if (!in_array($paramname, $this->reservedParams) && substr($paramname, 0, 1) != '_') {
 				// Try/catch is needed to prevent global parameters to be overwritten by api users
-				try
-				{
+				try {
 					// If param is NOT present, an error is thrown
 					$this->db->param($paramname);
-				}
-				catch (\Exception $e) 
-				{
+				} catch (\Exception $e) {
 					$params[ $paramname ] = self::getRequestVar($paramname);
 				}
 			}
@@ -468,8 +450,7 @@ class Api extends HttpTools
 			return array( $params );
 			
 		// If no params are found check if the body is a json blob
-		if ($json = self::getJsonBody())
-		{
+		if ($json = self::getJsonBody()) {
 			// Ensure the output is an array of assoc arrays
 			if (Arrays::isAssoc($json))
 				return array( $json );
@@ -548,8 +529,7 @@ class Api extends HttpTools
 	
 		// Check which of the endpoints is called and if there is a query defined for it
 		foreach ($this->endpoints as $path => $handler)
-			if ($this->endpoint( $path ))
-			{
+			if ($this->endpoint( $path )) {
 				if (array_key_exists('query', $handler))
 					return $this->db->query( $handler['query'] )->run( $this->params );
 				
@@ -558,8 +538,7 @@ class Api extends HttpTools
 			}
 		
 		// Catch the root if none was defined and return basic api info
-		if ($this->endpoint('GET /'))
-		{
+		if ($this->endpoint('GET /')) {
 			$endpointList = array_keys( $this->endpoints );
 			sort( $endpointList );
 			return array(
@@ -587,8 +566,7 @@ class Api extends HttpTools
 		$args	= array();
 		
 		// Loop through method parameters and get each param value from the params in the request
-		foreach ($params as $param)
-		{
+		foreach ($params as $param) {
 			$name = $param->getName();
 			
 			// Get parameter value from request if present
@@ -645,8 +623,7 @@ class Api extends HttpTools
 		if ($param && !$this->query->defaultParam)
 			throw new \Exception("Single parameter value passed, but query does not have a default parameter");
 
-		foreach ($paramsSet as $params)
-		{		
+		foreach ($paramsSet as $params) {		
 			// Only overwrite if $param is not null
 			if ($this->query->defaultParam)
 				if (!is_null($param) || !array_key_exists($this->query->defaultParam, $params))
@@ -664,8 +641,7 @@ class Api extends HttpTools
 		
 		// Wrap response in array if profiling is added
 		if ($this->addProfilingInfo)
-			$response = array
-			(
+			$response = array(
 				"query"			=> $term,
 				"params"		=> $params,
 				"result"		=> $response
@@ -730,8 +706,7 @@ class Api extends HttpTools
 		array_walk_recursive($response, array($this, 'toUTF8'));			
 			
 		// If output is array of assocs
-		if (count($response)>0 && Arrays::isAssoc($response[0]))
-		{
+		if (count($response)>0 && Arrays::isAssoc($response[0])) {
 			// Put array keys as first CSV line
 		    fputcsv($stdout, array_keys($response[0]), ';');
 			

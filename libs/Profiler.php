@@ -55,8 +55,7 @@ class Profiler
 			
 		$label = $this->counter . ":" . $node;	
 			
-		$this->current[ $label ] = array
-		(
+		$this->current[ $label ] = array(
 			"_start" 	=> microtime(true),
 			"_parent"	=> &$this->current
 		);
@@ -82,8 +81,7 @@ class Profiler
 		// If the current node does not have children, just set the node to the total time
 		if (count( array_keys($this->current) ) <= 2)
 			$this->current = $time;
-		else	
-		{
+		else {
 			// Otherwise add a field _total
 			$this->current[ "_total" ] = $time;
 			unset( $this->current[ "_start" ] );
@@ -108,5 +106,3 @@ class Profiler
 		return $results;
 	}
 }
-
-

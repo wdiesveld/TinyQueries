@@ -66,8 +66,7 @@ class DB
 		$this->nested		= $config->postprocessor->nest_fields;
 
 		// Call the compiler if autocompile is set
-		if (!$neverAutoCompile && $config->compiler->autocompile)
-		{
+		if (!$neverAutoCompile && $config->compiler->autocompile) {
 			$compiler = new Compiler( $configFile );
 			$compiler->compile( false, true );
 		}
@@ -88,8 +87,7 @@ class DB
 	 */
 	public function param($name, $value = -99999999)
 	{
-		if ($value == -99999999)
-		{
+		if ($value == -99999999) {
 			if (!array_key_exists($name, $this->globals))
 				throw new \Exception("DB::param - global parameter '".$name."' does not exist");
 				
@@ -270,8 +268,7 @@ class DB
 		$keys 	= array_keys($record);
 		$values	= array_values($record);
 		
-		for ($i=0;$i<count($keys);$i++)
-		{
+		for ($i=0;$i<count($keys);$i++) {
 			$keys[$i] 	= "`" . $this->toSQL($keys[$i]) . "`";
 			$values[$i] = $this->toSQL($values[$i], true);
 		}
@@ -289,8 +286,7 @@ class DB
 		$id = $this->dbh->lastInsertId();
 
 		// If an update is done and the update is not changing the record, lastInsertId will return "0"
-		if ($id == 0 && $updateOnDuplicateKey)
-		{
+		if ($id == 0 && $updateOnDuplicateKey) {
 			// Try to find the record based on $record
 			$recordForID = array();
 			foreach ($record as $key => $value)
@@ -382,14 +378,12 @@ class DB
 		$sth = $this->dbh->prepare($query);
 
 		// Bind the parameters
-		foreach ($params as $name => $props)
-		{
+		foreach ($params as $name => $props) {
 			// Do casting (otherwise the types might still not be set correctly)
 			if (is_null($props['value']))
 				$props['type'] = \PDO::PARAM_NULL;
 			else
-				switch ($props['type'])
-				{
+				switch ($props['type']) {
 					case \PDO::PARAM_INT: $props['value'] = (int) $props['value']; break;
 					case \PDO::PARAM_STR: $props['value'] = (string) $props['value']; break;
 				}
@@ -401,15 +395,13 @@ class DB
 
 		$this->profiler->end();
 		
-		if ($checkForMultipleStatements)
-		{
+		if ($checkForMultipleStatements) {
 			// Just by moving through the rowsets, possible exceptions are thrown per set
 			do {
 			} while ($sth->nextRowset());
 		}
 		
-		if (!$r) 
-		{
+		if (!$r) {
 			$error = $sth->errorInfo();
 			if ($error && is_array($error) && count($error)>=3)
 				throw new \Exception($error[1] . " - " . $error[2]);
@@ -554,8 +546,7 @@ class DB
 	{
 		$list = array();
 		
-		foreach ($fields as $name => $value)
-		{
+		foreach ($fields as $name => $value) {
 			$equalsSign = ($isOnNull && is_null($value)) 
 							? " is " 
 							: " = ";
@@ -566,4 +557,3 @@ class DB
 		return implode( $glue, $list );
 	}
 } 
-

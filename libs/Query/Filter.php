@@ -46,8 +46,7 @@ class QueryFilter extends Query
 	public function params( $paramValues )
 	{
 		// If paramValues is already an assoc, just copy it
-		if (Arrays::isAssoc($paramValues) || is_null($paramValues))
-		{
+		if (Arrays::isAssoc($paramValues) || is_null($paramValues)) {
 			$this->paramValues = $paramValues;
 			return $this;
 		}
@@ -96,8 +95,7 @@ class QueryFilter extends Query
 		$fieldBase	= $baseQuery->keyField($key);
 
 		// Attach all other queries
-		for ($i=$n-2; $i>=0; $i--)
-		{
+		for ($i=$n-2; $i>=0; $i--) {
 			// If the number of rows is 0 we can stop
 			if (count($rows) == 0)
 				return $rows;
@@ -117,12 +115,10 @@ class QueryFilter extends Query
 			$keyValues = array();
 			
 			// Do an intersection of $rows & $rows1
-			while ($j<count($rows))
-			{
+			while ($j<count($rows)) {
 				$keyValue = $rows[$j][$fieldBase];
 					
-				if (array_key_exists($keyValue, $rows1))
-				{
+				if (array_key_exists($keyValue, $rows1)) {
 					// Attach the fields of $rows1 to $rows
 					foreach ($rows1[ $keyValue ] as $name => $value)
 						$rows[$j][$name] = $value;
@@ -130,9 +126,7 @@ class QueryFilter extends Query
 					
 					// Remember value (needed for next loop)
 					$keyValues[] = $keyValue;
-				}
-				else
-				{
+				} else {
 					// Remove elements which are not in the latest query result (rows1)
 					array_splice( $rows, $j, 1 );
 				}
@@ -184,4 +178,3 @@ class QueryFilter extends Query
 		$this->defaultParam = $lastChild->defaultParam;
 	}
 }
-

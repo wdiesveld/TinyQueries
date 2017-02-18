@@ -69,8 +69,7 @@ class Term
 	
 		$terms1 = array();
 		
-		foreach ($terms as $term)
-		{
+		foreach ($terms as $term) {
 			list( $id, $children ) = self::parseID( $term );
 			
 			$terms1[] = ($id && array_key_exists($id, $aliases))
@@ -220,18 +219,15 @@ class Term
 		if ($string == '')
 			return $list;
 		
-		for ($i=0; $i<strlen($string); $i++)
-		{
+		for ($i=0; $i<strlen($string); $i++) {
 			$char = substr( $string, $i, 1 );
 			
-			switch ($char)
-			{
+			switch ($char) {
 				case '(': $stack++; break;
 				case ')': $stack--; break;
 				case $separator1: 
 				case $separator2: 
-					if ($stack == 0)
-					{
+					if ($stack == 0) {
 						$list[] = $part;
 						$part 	= '';
 						$char 	= '';

@@ -46,31 +46,22 @@ namespace TinyQueries;
 	 */
 	private static function sanitize(&$value, $regexp, $defaultvalue)
 	{
-		if (self::is_assoc($value))
-		{
-			foreach (array_keys($value) as $key)
-			{
+		if (self::is_assoc($value)) {
+			foreach (array_keys($value) as $key) {
 				self::sanitize( $value[$key], $regexp, $defaultvalue );
 			}
-		}
-		elseif (is_array($value))
-		{
-			for ($i=0;$i<count($value);$i++)
-			{
+		} elseif (is_array($value)) {
+			for ($i=0;$i<count($value);$i++){
 				self::sanitize( $value[$i], $regexp, $defaultvalue );
 			}
-		}
-		elseif (is_string($value))
-		{
+		} elseif (is_string($value)) {
 			$value = trim( $value );
 			
-			if ($value == 'null')
-			{
+			if ($value == 'null') {
 				// exception for javascript serialization of null-values
 				$value = null;
 			}
-			elseif ($regexp && !preg_match($regexp, $value))
-			{
+			elseif ($regexp && !preg_match($regexp, $value)) {
 				$value = $defaultvalue;
 			}
 		}
@@ -127,8 +118,8 @@ namespace TinyQueries;
 	public static function getServerName()
 	{
 		$servername = ($_SERVER && array_key_exists('SERVER_NAME', $_SERVER) && $_SERVER['SERVER_NAME']) 
-								? $_SERVER['SERVER_NAME']
-								: "localhost";
+			? $_SERVER['SERVER_NAME']
+			: "localhost";
 								
 		// add 'www.' if it is left out
 		if (preg_match('/^\w+\.\w+$/', $servername))
@@ -141,8 +132,7 @@ namespace TinyQueries;
 	{
 		$paramValues = array();
 		
-		foreach ($parameters as $key=>$value)
-		{
+		foreach ($parameters as $key=>$value) {
 			if (is_string($value))
 				$paramValues[] = urlencode($key) . '=' . urlencode($value);
 		}
@@ -153,8 +143,8 @@ namespace TinyQueries;
 	public static function addParamsToURL($url, $parameters)
 	{
 		$joinChar = (strpos($url, '?') === FALSE)
-						? '?'
-						: '&';
+			? '?'
+			: '&';
 						
 		return $url . $joinChar . self::urlEncode($parameters);
 	}
@@ -171,8 +161,7 @@ namespace TinyQueries;
 				? $GLOBALS['http_response_code'] 
 				: 200;
 
-		switch ($code) 
-		{
+		switch ($code) {
 			case 100: $text = 'Continue'; break;
 			case 101: $text = 'Switching Protocols'; break;
 			case 200: $text = 'OK'; break;
@@ -226,4 +215,3 @@ namespace TinyQueries;
 		return $code;
 	}
 }
- 

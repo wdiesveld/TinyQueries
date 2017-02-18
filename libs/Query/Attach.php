@@ -73,8 +73,7 @@ class QueryAttach extends Query
 		$params[ $key ] = $baseQuery->keyValues($key, $rows);
 
 		// Attach all other queries
-		for ($i=1; $i<$n; $i++)
-		{
+		for ($i=1; $i<$n; $i++) {
 			$query 		= $this->children[ $i ];
 			$keyField 	= $query->keyField($key);
 			$rows1 		= $query->select($params, $keyField, false );
@@ -82,8 +81,7 @@ class QueryAttach extends Query
 			if ($query->output->rows == 'first')
 				$rows1 = array( $rows1[$keyField] => $rows1 );
 			
-			for ($j=0;$j<count($rows);$j++)
-			{
+			for ($j=0;$j<count($rows);$j++) {
 				$keyValue = $rows[$j][$fieldBase];
 					
 				// Attach the fields of $rows1 to $rows

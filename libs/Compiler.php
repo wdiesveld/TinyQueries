@@ -69,14 +69,10 @@ class Compiler
 		if (!$force && !$this->compileNeeded())
 			return;
 		
-		try
-		{
+		try {
 			$this->callCompiler($doCleanUp, 'POST');
-		}
-		catch (\Exception $e)
-		{
+		} catch (\Exception $e) {
 			$this->log( $e->getMessage() );
-				
 			throw $e;
 		}
 	}
@@ -87,14 +83,10 @@ class Compiler
 	 */
 	public function download()
 	{
-		try
-		{
+		try {
 			$this->callCompiler(true, 'GET');
-		}
-		catch (\Exception $e)
-		{
+		} catch (\Exception $e) {
 			$this->log( $e->getMessage() );
-				
 			throw $e;
 		}
 	}
@@ -110,8 +102,7 @@ class Compiler
 		$sqlChanged = null;
 		
 		// Get max time of all sql files
-		foreach ($sqlFiles as $file)
-		{
+		foreach ($sqlFiles as $file) {
 			$mtime = filemtime($file);
 			if ($mtime > $sqlChanged)
 				$sqlChanged = $mtime;
@@ -134,12 +125,9 @@ class Compiler
 		$qplChanged = 0;
 		$sqlChanged = 0;
 		
-		try
-		{
+		try {
 			$project = $this->querySet->project();
-		}
-		catch (\Exception $e)
-		{
+		} catch (\Exception $e) {
 			// If there is no compiled project file, a compile is needed
 			return true;
 		}
@@ -152,8 +140,7 @@ class Compiler
 		list($sqlPath, $dummy)  = $this->getFolder( self::SQL_FILES );
 		
 		// Get max time of all source files
-		foreach ($sourceFiles as $file)
-		{
+		foreach ($sourceFiles as $file) {
 			$mtime = filemtime($file);
 			if ($mtime > $qplChanged)
 				$qplChanged = $mtime;
@@ -166,11 +153,9 @@ class Compiler
 			
 		// Check for source files which are deleted
 		foreach ($project->queries as $queryID => $dummy)
-			if (!in_array($queryID, $sourceIDs))
-			{
+			if (!in_array($queryID, $sourceIDs)) {
 				$sqlFile = $sqlPath . "/" . $queryID . ".sql";
-				if (file_exists($sqlFile))
-				{
+				if (file_exists($sqlFile)) {
 					$mtime = filemtime($sqlFile);
 					if ($mtime < $sqlChanged)
 						return true; 
@@ -188,8 +173,7 @@ class Compiler
 	{
 		$extension = null;
 		
-		switch ($fileType)
-		{
+		switch ($fileType) {
 			case self::SQL_FILES:
 				$path = $this->querySet->path() . QuerySet::PATH_SQL;
 				$extenstion = "sql"; 
@@ -214,8 +198,7 @@ class Compiler
 		$match	= null;
 		
 		foreach (scandir($path) as $file)
-			if (preg_match('/^(.+)\.'.$extenstion.'$/', $file, $match))
-			{
+			if (preg_match('/^(.+)\.'.$extenstion.'$/', $file, $match)) {
 				$files[] = $path . "/" . $file;
 				$ids[] 	 = $match[1];
 			}
@@ -258,8 +241,7 @@ class Compiler
 
 		// Only add source files for POST calls
 		if ($method == 'POST')
-			for ($i=0; $i<count($sourceFiles); $i++)
-			{
+			for ($i=0; $i<count($sourceFiles); $i++) {
 				$content = @file_get_contents( $sourceFiles[ $i ] );
 			
 				if (!$content) 	
@@ -273,12 +255,10 @@ class Compiler
 		// Catch curl output
 		$handleLogfile = null;
 		
-		if ($this->logfile)
-		{
+		if ($this->logfile) {
 			$handleLogfile = @fopen($this->logfile, 'a');
 
-			if ($handleLogfile)
-			{
+			if ($handleLogfile) {
 				curl_setopt($ch, CURLOPT_VERBOSE, true);
 				curl_setopt($ch, CURLOPT_STDERR, $handleLogfile);	
 			}
@@ -322,8 +302,7 @@ class Compiler
 		if (preg_match('/^HTTP.* ([0-9]+) /', $response[0], $matches)) 
 			$status = intval($matches[1]);
 
-		if ($status != 200)
-		{
+		if ($status != 200) {
 			$error = @simplexml_load_string( $response[1] ); 
 			$errorMessage = ($error)
 				? $error->message
@@ -336,8 +315,7 @@ class Compiler
 		$ids 	= @simplexml_load_string( $response[1] ); 
 		$code	= @simplexml_load_string( $response[1] , 'SimpleXMLElement', LIBXML_NOCDATA ); 
 		
-		if ($ids===false || $code===false) 
-		{
+		if ($ids===false || $code===false) {
 			$errorMsg = 'Error parsing xml coming from the TinyQueryCompiler - please visit www.tinyqueries.com for support.';
 			
 			if ($this->verbose) 
@@ -347,8 +325,7 @@ class Compiler
 		}
 
 		// Update sql & interface-files
-		for ($i=0;$i<count($ids->query);$i++)
-		{
+		for ($i=0;$i<count($ids->query);$i++) {
 			$queryID = $ids->query[$i]->attributes()->id;
 			
 			$this->writeInterface( $queryID, $code->query[$i]->{'interface'} );
@@ -364,10 +341,8 @@ class Compiler
 		$cleanUpTypes = array(self::SQL_FILES, self::INTERFACE_FILES);
 
 		// Write source code if present
-		if ($code->source)
-		{
-			for ($i=0;$i<count($ids->source);$i++)
-			{
+		if ($code->source) {
+			for ($i=0;$i<count($ids->source);$i++) {
 				$sourceID = $ids->source[$i]->attributes()->id;
 				$this->writeSource($sourceID, $code->source[$i]->code);
 			}
@@ -381,12 +356,10 @@ class Compiler
 			
 		// Clean up files which were not in the compiler output
 		if ($doCleanUp)
-			foreach ($cleanUpTypes as $filetype)
-			{
+			foreach ($cleanUpTypes as $filetype) {
 				list($path, $files) = $this->getFolder( $filetype );
 				foreach ($files as $file)
-					if (!in_array($file, $this->filesWritten))
-					{
+					if (!in_array($file, $this->filesWritten)) {
 						$r = @unlink($file);
 						if ($r)
 							$this->log( 'Deleted ' . $file );

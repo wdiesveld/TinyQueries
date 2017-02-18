@@ -64,8 +64,7 @@ class Query
 	public function params( $paramValues )
 	{
 		// If paramValues is already an assoc, just copy the params
-		if (Arrays::isAssoc($paramValues) || is_null($paramValues))
-		{
+		if (Arrays::isAssoc($paramValues) || is_null($paramValues)) {
 			// Only copy the params which are defined for this query
 			foreach ($this->params as $name => $def)
 				if (array_key_exists($name, $paramValues))
@@ -75,8 +74,7 @@ class Query
 		}
 		
 		// Check if there is a default param
-		if ($this->defaultParam)
-		{
+		if ($this->defaultParam) {
 			$this->paramValues[ $this->defaultParam ] = $paramValues;
 			return $this;
 		}
@@ -84,8 +82,7 @@ class Query
 		// First try to find a param which has no default value
 		$n = 0;
 		foreach ($this->params as $name => $def)
-			if (!property_exists($def, 'default'))
-			{
+			if (!property_exists($def, 'default')) {
 				$n++;
 				$paramName = $name;
 			}
@@ -95,8 +92,7 @@ class Query
 
 		// If none was found, also take into account params having default values	
 		if ($n == 0)
-			foreach ($this->params as $name => $def)
-			{
+			foreach ($this->params as $name => $def) {
 				$n++;
 				$paramName = $name;
 			}
@@ -173,8 +169,7 @@ class Query
 			return $values;
 			
 		// Simple case, just select the values from the key-column
-		if (!is_array($keyField))
-		{
+		if (!is_array($keyField)) {
 			if (!array_key_exists($keyField, $rows[0]))
 				throw new \Exception("Field $keyField is not present in rows");
 				
@@ -193,8 +188,7 @@ class Query
 				throw new \Exception("Field $field is not present in rows");
 		
 		// Create an array of arrays
-		for ($i=0; $i<count($rows); $i++)
-		{
+		for ($i=0; $i<count($rows); $i++) {
 			$value = array();
 			foreach ($keyField as $field)
 				$value[] = $rows[$i][ $field ];
@@ -301,8 +295,7 @@ class Query
 			
 		$this->execute($paramValues);
 		
-		switch ($this->operation)
-		{
+		switch ($this->operation) {
 			case self::CREATE: return "Created item";
 			case self::UPDATE: return "Updated item";
 			case self::DELETE: return "Deleted item";
@@ -428,10 +421,8 @@ class Query
 		if (property_exists($query, 'operation')) 		$this->operation 	= $query->operation;
 		if (property_exists($query, 'maxResults')) 		$this->maxResults 	= $query->maxResults;
 		
-		if (property_exists($query, 'output'))
-		{
-			if ($query->output)
-			{
+		if (property_exists($query, 'output')) {
+			if ($query->output) {
 				$fields = array('key', 'group', 'rows', 'columns', 'nested', 'fields', 'rows2columns');
 				foreach ($fields as $field)
 					if (property_exists($query->output, $field) && !is_null($query->output->$field) && $query->output->$field !== '')
@@ -440,8 +431,7 @@ class Query
 				// Take default setting from db if nested is not specified
 				if (is_null($this->output->nested))
 					$this->output->nested = $this->db->nested;
-			}
-			else
+			} else
 				// This means, the query is an insert, update or delete
 				$this->output = false;
 		}
@@ -495,8 +485,7 @@ class Query
 		
 		$columnsToRemove = array();
 		
-		switch ($type)
-		{
+		switch ($type) {
 			case 'keys':
 				$registeredOutputFields = is_array($this->output->fields)
 					? $this->output->fields
@@ -559,8 +548,7 @@ class Query
 	{
 		$prefix = null;
 		
-		if ($firstAsRoot)
-		{
+		if ($firstAsRoot) {
 			$term = array_shift($terms);
 			
 			// Link first query to get prefix
@@ -574,8 +562,7 @@ class Query
 				throw new \Exception("prefix not known for " . $term);
 		}
 	
-		foreach ($terms as $term)
-		{
+		foreach ($terms as $term) {
 			if ($prefix)
 				$term = $prefix . "." . $term;
 				
@@ -615,8 +602,7 @@ class Query
 			? $queries
 			: array( $this, $queries );
 
-		foreach ($list as $query)
-		{
+		foreach ($list as $query) {
 			$keys = array_keys( get_object_vars( $query->keys ) );
 	
 			$matching = ($matching)

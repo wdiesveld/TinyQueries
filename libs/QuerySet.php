@@ -40,8 +40,7 @@ class QuerySet
 	 */
 	public function label($label = -1)
 	{
-		if ($label != -1)
-		{
+		if ($label != -1) {
 			if ($label && !preg_match("/^[\w\-]+$/", $label))
 				throw new \Exception("setLabel: No valid label value");
 			
@@ -120,12 +119,9 @@ class QuerySet
 	{
 		$filename = $this->path() . self::PATH_INTERFACE . "/" . $queryID . ".json";
 
-		try
-		{
+		try {
 			return $this->load( $filename, true );
-		}
-		catch (\Exception $e)
-		{
+		} catch (\Exception $e) {
 			// Throw more human readable message
 			throw new \Exception("Cannot load query '" . $queryID . "' - maybe the name of the query is misspelled, the project might not be compiled yet or the file permissions of the queries folder are not set correctly");
 		}
@@ -169,5 +165,4 @@ class QuerySet
 		
 		return $this->project;
 	}
-};
-
+}

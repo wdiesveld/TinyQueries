@@ -17,8 +17,8 @@ class Arrays
 	public static function isAssoc(&$array)
 	{
 		return (is_array($array) && array_keys($array) !== range(0, count($array) - 1)) 
-					? true 
-					: false;
+			? true 
+			: false;
 	}
 	
 	/**
@@ -58,8 +58,7 @@ class Arrays
 			throw new \Exception("Arrays::groupBy: key '$key' not present in rows'");
 			
 		// Build the new array
-		foreach ($rows as $row)
-		{
+		foreach ($rows as $row) {
 			$keyValue = $row[ $key ];
 			
 			if ($deleteKey)
@@ -93,36 +92,34 @@ class Arrays
 	/**
 	 * Merges two numerical arrays based on an the order of a common field (which is denoted by $orderBy)
 	 *
-	 * @param &$array {array} Array which will be modified by adding element of the next array:
-	 * @param $arrayToAdd {array}
+	 * @param array &$array Array which will be modified by adding element of the next array:
+	 * @param array $arrayToAdd 
 	 * @param string $orderBy (optional) Name of the field which should be used for ordering the merged result
 	 * @param string $orderType (optional) 'asc' or 'desc'; default is 'asc'
 	 */
 	public static function mergeArrays(&$array, $arrayToAdd, $orderBy = null, $orderType = 'asc')
 	{ 
-		if (!$orderBy)
-		{
+		if (!$orderBy) {
 			// Simply add the array
 			$array = array_merge($array, $arrayToAdd);
 			return;
 		}
 		
 		/// TODO this algorithm can be made much faster if it can be assumed that each query returns sorted output
-		foreach ($arrayToAdd as $item)
-		{
+		foreach ($arrayToAdd as $item) {
 			// find position in the objects-array where the item should be added
 			
 			$k = 0;
 				
-			while (	$k < count( $array ) && 
-					(
-						($orderType == 'asc' 	&& $array[$k][ $orderBy ] < $item[ $orderBy ]) ||
-						($orderType == 'desc' 	&& $array[$k][ $orderBy ] > $item[ $orderBy ]) 
-					)
+			while (	
+				$k < count( $array ) && 
+				(
+					($orderType == 'asc' 	&& $array[$k][ $orderBy ] < $item[ $orderBy ]) ||
+					($orderType == 'desc' 	&& $array[$k][ $orderBy ] > $item[ $orderBy ]) 
 				)
-				{
-					$k++;
-				}
+			) {
+				$k++;
+			}
 			
 			if ($k < count( $array ))
 				array_splice( $array, $k, 0, array( $item ) );
@@ -142,15 +139,15 @@ class Arrays
         $replacement = (array) $replacement;
         $key_indices = array_flip(array_keys($input));
         if (isset($input[$offset]) && is_string($offset)) {
-                $offset = $key_indices[$offset];
+			$offset = $key_indices[$offset];
         }
         if (isset($input[$length]) && is_string($length)) {
-                $length = $key_indices[$length] - $offset;
+			$length = $key_indices[$length] - $offset;
         }
 
         $input = array_slice($input, 0, $offset, TRUE)
-                + $replacement
-                + array_slice($input, $offset + $length, NULL, TRUE);
+			+ $replacement
+			+ array_slice($input, $offset + $length, NULL, TRUE);
 	}
 
 	/**
@@ -165,8 +162,7 @@ class Arrays
 	public static function mergeField( &$assoc, $key, $value )
 	{
 		// Simple case; key is not present
-		if (!array_key_exists($key, $assoc))
-		{
+		if (!array_key_exists($key, $assoc)) {
 			// Create entry
 			$assoc[$key] = $value;
 			return;
@@ -176,8 +172,7 @@ class Arrays
 		if (is_null($value))
 			return;
 
-		if (is_null($assoc[$key]))
-		{
+		if (is_null($assoc[$key])) {
 			$assoc[$key] = $value;
 			return;
 		}
@@ -185,15 +180,13 @@ class Arrays
 		$a1 = self::isAssoc( $assoc[$key] );
 		$a2 = self::isAssoc( $value );
 		
-		if (!$a1 && !$a2)
-		{
+		if (!$a1 && !$a2) {
 			// Overwrite entry
 			$assoc[$key] = $value;
 			return;
 		}
 		
-		if ($a1 && $a2)
-		{
+		if ($a1 && $a2) {
 			// Do recursive call
 			foreach ($value as $subkey => $subvalue)
 				self::mergeField( $assoc[$key], $subkey, $subvalue );
@@ -209,27 +202,23 @@ class Arrays
 	 */
 	public static function mergeAssocs(&$array, $arrayToAdd, $orderBy = null, $orderType = 'asc')
 	{ 
-		foreach ($arrayToAdd as $idToAdd => $itemToAdd)
-		{
+		foreach ($arrayToAdd as $idToAdd => $itemToAdd) {
 			// element already exists
-			if (array_key_exists($idToAdd, $array))
-			{
+			if (array_key_exists($idToAdd, $array)) {
 				// copy and/or add the fields of the array-element
 				foreach (array_keys($itemToAdd) as $field)
 					self::mergeField( $array[ $idToAdd ], $field, $itemToAdd[ $field ] );
 			}
 			// element does not exist and elements should be ordered
-			elseif ($orderBy)
-			{
+			elseif ($orderBy) {
 				// find position in the array where the item should be added
 				$k = 0;
 				
-				foreach ($array as $id => $item)
-				{	
+				foreach ($array as $id => $item) {	
 					if (
-							($orderType == 'asc' 	&& $item[ $orderBy ] < $itemToAdd[ $orderBy ]) ||
-							($orderType == 'desc' 	&& $item[ $orderBy ] > $itemToAdd[ $orderBy ])
-						)
+						($orderType == 'asc' 	&& $item[ $orderBy ] < $itemToAdd[ $orderBy ]) ||
+						($orderType == 'desc' 	&& $item[ $orderBy ] > $itemToAdd[ $orderBy ])
+					)
 						$k++;
 					else
 						break;
@@ -241,8 +230,7 @@ class Arrays
 					$array[ $idToAdd  ] = $itemToAdd;
 			}
 			// element does not exist and elements are not ordered
-			else
-			{
+			else {
 				// just add the new field
 				$array[ $idToAdd  ] = $itemToAdd;
 			}
@@ -264,8 +252,7 @@ class Arrays
 			* for recursive call
 			*/
 			return array_map( 'self::objectToArray', $d);
-		}
-		else {
+		} else {
 			// Return array
 			return $d;
 		}
@@ -308,13 +295,11 @@ class Arrays
 	{
 		$trans = array();
 		
-		foreach ($array as $row)
-		{
+		foreach ($array as $row) {
 			$id = "id" . $row[ $key ];
 			
 			if (!array_key_exists($id, $trans))
-				$trans[ $id ] = array
-				(
+				$trans[ $id ] = array(
 					$key => $row[ $key ]
 				);
 				
@@ -340,4 +325,3 @@ class Arrays
 		return array( $any );
 	}
 } 
- 

@@ -41,15 +41,14 @@ class QueryMerge extends Query
 			: $this->match( $this->children );
 
 		$orderBy = (count($this->orderBy) == 1)
-					? $this->orderBy[0]
-					: null;
+			? $this->orderBy[0]
+			: null;
 		
 		$result = ($mergeKey)
 			? $this->mergeByKey( $mergeKey, $orderBy )
 			: $this->mergePlain( $orderBy );
 			
-		if ($this->maxResults)
-		{
+		if ($this->maxResults) {
 			if (Arrays::isAssoc($result))
 				Arrays::spliceAssoc($result, (int) $this->maxResults);
 			else
@@ -88,8 +87,7 @@ class QueryMerge extends Query
 	{
 		$result = array();
 		
-		foreach ($this->children as $query)
-		{
+		foreach ($this->children as $query) {
 			$rows = $query->params( $this->paramValues )->select();
 			Arrays::mergeArrays( $result, $rows, $orderBy, $this->orderType );
 		}
@@ -106,8 +104,7 @@ class QueryMerge extends Query
 	{
 		$result = array();
 		
-		foreach ($this->children as $query)
-		{
+		foreach ($this->children as $query) {
 			$rows = $query->select( $this->paramValues, $query->keyField($key), false );
 				
 			Arrays::mergeAssocs( $result, $rows, $orderBy, $this->orderType );
@@ -145,4 +142,3 @@ class QueryMerge extends Query
 			$this->defaultParam = $defaultParam;
 	}
 }
-

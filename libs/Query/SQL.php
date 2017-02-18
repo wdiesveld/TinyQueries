@@ -75,8 +75,7 @@ class QuerySQL extends Query
 		// Check if there is a split defined for a parameter
 		$paramSplit = null;
 		foreach ($this->params as $paramID => $def)
-			if (property_exists($this->params->$paramID, 'split') && is_array($this->paramValues[ $paramID]))
-			{
+			if (property_exists($this->params->$paramID, 'split') && is_array($this->paramValues[ $paramID])) {
 				$buffersize = $this->params->$paramID->split;
 				$paramSplit = $paramID;
 			}
@@ -88,8 +87,7 @@ class QuerySQL extends Query
 		$output 	= array();
 		$nValues 	= count( $this->paramValues[ $paramSplit ] );
 		
-		for ($k=0; $k<$nValues; $k+=$buffersize)
-		{
+		for ($k=0; $k<$nValues; $k+=$buffersize) {
 			// Create parameter value set for the current buffer
 			$paramsBuffer = array();
 			foreach ($this->paramValues as $key => $value)
@@ -112,8 +110,7 @@ class QuerySQL extends Query
 		try
 		{
 			// If the query has no output just execute it
-			if (!$this->output)
-			{
+			if (!$this->output) {
 				list($sql, $pdoParams) = $this->getSql( $paramValues );
 				return $this->db->execute( $sql, $pdoParams, true );
 			}
@@ -129,9 +126,7 @@ class QuerySQL extends Query
 			
 			// Default:
 			return $this->selectAllAssoc( $paramValues );
-		}
-		catch (\Exception $e)
-		{
+		} catch (\Exception $e) {
 			throw new \Exception("SQL error for query " . $this->id . ": " . $e->getMessage());
 		}
 	}
@@ -259,8 +254,7 @@ class QuerySQL extends Query
 			? $type->type
 			: $type;
 		
-		switch ($typeStr)
-		{
+		switch ($typeStr) {
 			// Basic type casting
 			case 'int': 	$field = (int) $field; break;
 			case 'float': 	$field = (float) $field; break;
@@ -308,8 +302,7 @@ class QuerySQL extends Query
 		$mapping	= array();
 		
 		// Split dotted fieldnames
-		foreach ($keys as $key)
-		{
+		foreach ($keys as $key) {
 			$map = explode('.', $key);
 			if (count($map) > 1)
 				$mapping[ $key ] = $map;
@@ -317,11 +310,9 @@ class QuerySQL extends Query
 		
 		// Apply nesting for each row
 		foreach ($mapping as $key => $map)
-			for ($i=0; $i<count($rows); $i++)
-			{
+			for ($i=0; $i<count($rows); $i++) {
 				// These are some shortcuts for faster processing (nestField does the same but is slower)
-				switch (count($map))
-				{
+				switch (count($map)) {
 					case 2: $rows[$i][$map[0]][$map[1]] = $rows[$i][$key]; break;
 					case 3: $rows[$i][$map[0]][$map[1]][$map[2]] = $rows[$i][$key]; break;
 					case 4: $rows[$i][$map[0]][$map[1]][$map[2]][$map[3]] = $rows[$i][$key]; break;
@@ -354,8 +345,7 @@ class QuerySQL extends Query
 		$head = array_shift( $fieldComponents );
 		
 		// If last field component
-		if (count($fieldComponents) == 0)
-		{
+		if (count($fieldComponents) == 0) {
 			$row[ $head ] = $value;
 			return;
 		}
@@ -453,13 +443,11 @@ class QuerySQL extends Query
 		// Set the parameters
 		foreach ($params as $name => $value)
 			// Convert array to CSV which is suitable for IN
-			if (is_array($value))
-			{
+			if (is_array($value)) {
 				$this->setArrayParam($sqlParsed, $name, $value);
 			}
 			// Param is a registered parameter
-			elseif (property_exists($this->_interface->params, $name))
-			{
+			elseif (property_exists($this->_interface->params, $name)) {
 				switch ($this->_interface->params->$name->type)
 				{
 					case "int": $pdoType = \PDO::PARAM_INT; break;
@@ -473,8 +461,7 @@ class QuerySQL extends Query
 				);
 			}
 			// Param is not registered (DEPRECATED - but still needed for global params)
-			else
-			{
+			else {
 				$valueSQL = $this->db->toSQL( $value, true );
 				$this->setParam($sqlParsed, $name, $valueSQL);
 			}
@@ -521,12 +508,10 @@ class QuerySQL extends Query
 		
 		
 		// Create the tuples, but also collect the separate values
-		foreach ($value as $v)
-		{
+		foreach ($value as $v) {
 			$tuple = array();
 			
-			foreach ($v as $i => $w)
-			{
+			foreach ($v as $i => $w) {
 				$encval = $this->db->encode( $w );
 				
 				$values[$i][] 	= $encval;

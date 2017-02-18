@@ -41,8 +41,7 @@ class AdminApi extends Api
 		if (!Config::exists( $this->configFile ))
 			return;
 	
-		try
-		{
+		try {
 			if ($this->db)
 				return;
 			
@@ -50,9 +49,7 @@ class AdminApi extends Api
 			$this->db = new DB( null, $this->configFile, $this->profiler, true );
 			
 			$this->db->connect();
-		}
-		catch (\Exception $e)
-		{
+		} catch (\Exception $e) {
 			// If initializing fails, there is no DB connection
 			// A DB connection is not required for the admin tool (except that some functions are not available)
 			// So no exception must be thrown, only the message must be saved
@@ -92,8 +89,7 @@ class AdminApi extends Api
 			throw new UserFeedback('Compiler which is calling this api does not match with compiler in config');
 			
 		// Set global query params
-		if ($this->db && $globals)
-		{
+		if ($this->db && $globals) {
 			$globals = json_decode( $globals );
 			foreach ($globals as $name => $value)
 				$this->db->param($name, $value);
@@ -104,8 +100,7 @@ class AdminApi extends Api
 			return parent::processRequest();
 			
 		// Method mapper
-		switch ($method)
-		{
+		switch ($method) {
 			case 'compile': 		return $this->compile();
 			case 'createView':		return $this->createView();
 			case 'deleteQuery':		return $this->deleteQuery();
@@ -348,8 +343,7 @@ class AdminApi extends Api
 		
 		// Don't throw error in this case, because the query which is being renamed might not be saved yet
 		if (!file_exists($filenameSourceOld))
-			return array
-			(
+			return array(
 				'message' => 'Query is not present on file system'
 			);
 		
@@ -377,16 +371,13 @@ class AdminApi extends Api
 		
 		if (preg_match("/^(\w+)$/", $dbType, $match))
 			$baseType = $match[1];
-		elseif (preg_match("/^(\w+)\((.+)\)/", $dbType, $match))
-		{
+		elseif (preg_match("/^(\w+)\((.+)\)/", $dbType, $match)) {
 			$baseType = $match[1];
 			$details = $match[2];
-		}
-		else
+		} else
 			return 'string';
 			
-		switch ($baseType)
-		{
+		switch ($baseType) {
 			case 'enum':
 				$values = array();
 				foreach (explode(',', $details) as $element)
@@ -437,8 +428,7 @@ class AdminApi extends Api
 			
 		$tables = $this->db->selectAllFirst('show tables');
 		
-		foreach ($tables as $table)
-		{
+		foreach ($tables as $table) {
 			$columns = $this->db->selectAllAssoc('show columns from `' . $table . '`');
 			
 			foreach ($columns as $column)
@@ -461,12 +451,9 @@ class AdminApi extends Api
 		$config 	= new Config();
 		$project 	= null;
 
-		try
-		{
+		try {
 			$project = $this->compiler->querySet->project();
-		}
-		catch (\Exception $e)
-		{
+		} catch (\Exception $e) {
 			$project = new \StdClass();
 			$project->loadError = $e->getMessage();
 		}
@@ -484,8 +471,7 @@ class AdminApi extends Api
 			$project->queries = new \StdClass();
 		
 		// Set runnable = true for all compiled queries & add id
-		foreach ($project->queries as $queryID => $def)
-		{
+		foreach ($project->queries as $queryID => $def) {
 			$project->queries->$queryID->id			= $queryID;
 			$project->queries->$queryID->runnable 	= true;
 		}
@@ -512,8 +498,7 @@ class AdminApi extends Api
 		
 		// Source files which are not in the compiled list should be added
 		foreach ($sourceIDs as $sourceID)		
-			if (!property_exists( $project->queries, $sourceID ))
-			{
+			if (!property_exists( $project->queries, $sourceID )) {
 				$queryDef = new \StdClass();
 				$queryDef->id			= $sourceID;
 				$queryDef->expose 		= 'hide';
@@ -593,8 +578,7 @@ class AdminApi extends Api
 		$interface = $this->compiler->querySet->getInterface($queryID);
 		
 		// Add parameters for aliases
-		if (property_exists($interface, 'term'))
-		{
+		if (property_exists($interface, 'term')) {
 			$response = $this->getTermParams();
 		
 			$interface->params = $response['params'];

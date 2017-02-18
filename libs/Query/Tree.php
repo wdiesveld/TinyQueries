@@ -205,8 +205,7 @@ class QueryTree extends Query
 		$paramID = $child->defaultParam;
 		
 		// Fall back in case there is no default param (should not occur anymore)
-		if (!$paramID)
-		{
+		if (!$paramID) {
 			// Get parameters of second (last) child of $child. 
 			// Suppose you have "a(b)". This corresponds to parent = "a" and child = "b:a"
 			// "b:a" has two childs: "b" and "b.a"
@@ -255,8 +254,7 @@ class QueryTree extends Query
 		$childFieldName = $child->prefix();
 		
 		// Combine child rows with parent rows
-		for ($i=0;$i<count($parentRows);$i++)
-		{
+		for ($i=0;$i<count($parentRows);$i++) {
 			$keyValue = $parentRows[$i][$parentKey];
 					 
 			$parentRows[$i][ $childFieldName ] = (array_key_exists($keyValue, $childRows)) 

@@ -21,7 +21,7 @@ class Session
 	/**
 	 * Constructor
 	 *
-	 * @param {\PDO} $pdoHandle
+	 * @param \PDO $pdoHandle
 	 */
 	public function __construct($pdoHandle)
 	{
@@ -41,8 +41,7 @@ class Session
 			session_start();
 		
 		// check for token
-		if ($token = HttpTools::getRequestVar( $this->fieldnameToken ))
-		{
+		if ($token = HttpTools::getRequestVar( $this->fieldnameToken )) {
 			if (!$this->loginByToken( $token ))
 				$this->logout();
 		}
@@ -103,8 +102,7 @@ class Session
 	
 	public function login($username, $password)
 	{
-		if ($user = $this->getUserByCredentials($username, $password))
-		{
+		if ($user = $this->getUserByCredentials($username, $password)) {
 			$_SESSION['userID'] = $user[ $this->fieldnameUserID ];
 			return $user;
 		}
@@ -114,8 +112,7 @@ class Session
 	
 	public function loginByToken($token)
 	{
-		if ($user = $this->getUserByToken($token))
-		{
+		if ($user = $this->getUserByToken($token)) {
 			$_SESSION['userID'] = $user[ $this->fieldnameUserID ];
 			return $user;
 		}
@@ -132,8 +129,7 @@ class Session
 	{
 		$this->reset();
 		
-		if (ini_get("session.use_cookies")) 
-		{
+		if (ini_get("session.use_cookies")) {
 			$params = session_get_cookie_params();
 			setcookie(session_name(), '', time() - 42000, $params["path"], $params["domain"],$params["secure"], $params["httponly"]);
 		}
