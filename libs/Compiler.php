@@ -164,6 +164,34 @@ class Compiler
 			
 		return false;	
 	}
+
+	/**
+	 * Returns the content of the folder and recursively scans all subdirs
+	 *
+	 * @param string $path 
+	 * @param string $subFolder
+	 * @return array
+	 */
+	private function getFolderContents($path, $subFolder = '')
+	{
+		$files = array();
+		$ids = array();
+
+		foreach (scandir($path . '/' . $subFolder) as $file) 
+			if (!in_array($file, array('.', '..'))) {
+				$pathFile = $path . '/' . $subFolder . $file; 
+				if (is_dir($pathFile)) {
+					list($filesSub, $idsSub) = $this->getFolderContents($path, $subFolder . $file . '/');
+					$files = array_merge($files, $filesSub);
+					$ids = array_merge($ids, $idsSub);
+				} else {
+					$files[] = $pathFile;
+					$ids[] = $subFolder . $file;
+				}
+			}
+
+		return array($files, $ids);
+	}
 	
 	/**
 	 * Returns the path + files + fileID's
@@ -176,32 +204,21 @@ class Compiler
 		switch ($fileType) {
 			case self::SQL_FILES:
 				$path = $this->querySet->path() . QuerySet::PATH_SQL;
-				$extenstion = "sql"; 
 				break;
 				
 			case self::INTERFACE_FILES:
 				$path = $this->querySet->path() . QuerySet::PATH_INTERFACE;
-				$extenstion = "json"; 
 				break;
 				
 			case self::SOURCE_FILES:
 				$path = $this->folderInput;
-				$extenstion = '\w+'; // Meaning *.*
 				break;
 				
 			default: 
 				throw new \Exception("getFolder: Unknown filetype");
 		}
 		
-		$files 	= array();
-		$ids	= array();
-		$match	= null;
-		
-		foreach (scandir($path) as $file)
-			if (preg_match('/^(.+)\.'.$extenstion.'$/', $file, $match)) {
-				$files[] = $path . "/" . $file;
-				$ids[] 	 = $match[1];
-			}
+		list($files, $ids) = $this->getFolderContents($path);
 				
 		return array($path, $files, $ids);
 	}
@@ -278,7 +295,6 @@ class Compiler
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $postBody);
 	
 		curl_setopt($ch, CURLOPT_URL, $compilerURL);
-		
 		
 		// Execute the API call
 		$raw_data = curl_exec($ch); 
@@ -380,7 +396,7 @@ class Compiler
 		if (!$this->logfile) 
 			return;
 		
-		$message = "[" . date('Y-m-d H:i:s') . "] " . $message . "\n";
+		$message = '[' . date('Y-m-d H:i:s') . '] ' . $message . "\n";
 		
 		@file_put_contents( $this->logfile, $message, FILE_APPEND);
 	}
@@ -393,7 +409,7 @@ class Compiler
 	 */
 	private function writeSource($fileID, $code)
 	{
-		$filename = $this->folderInput . "/" . $fileID . ".json";
+		$filename = $this->folderInput . '/' . $fileID . '.json';
 			
 		$this->writeFile( $filename, $code );
 	}
@@ -406,7 +422,7 @@ class Compiler
 	 */
 	private function writeInterface($fileID, $interface)
 	{
-		$filename = $this->querySet->path() . QuerySet::PATH_INTERFACE . "/" . $fileID . ".json";
+		$filename = $this->querySet->path() . QuerySet::PATH_INTERFACE . '/' . $fileID . '.json';
 
 		$this->writeFile( $filename, $interface );
 	}
@@ -419,7 +435,7 @@ class Compiler
 	 */
 	private function writeSQLfile($fileID, $sqlCode)
 	{
-		$filename = $this->querySet->path() . QuerySet::PATH_SQL . "/" . $fileID . ".sql";
+		$filename = $this->querySet->path() . QuerySet::PATH_SQL . '/' . $fileID . '.sql';
 			
 		$this->writeFile( $filename, $sqlCode );
 	}
@@ -434,8 +450,21 @@ class Compiler
 	{
 		$r = @file_put_contents($filename, (string) $content);
 			
-		if (!$r) 
-			throw new \Exception('Error writing ' . $filename . ' -  are the permissions set correctly?' );
+		if (!$r) {
+			//Try to create folder first
+			$path = explode('/', $filename);
+			array_pop($path);
+			$folder = implode('/', $path);
+			$r = @mkdir($folder, 0755, true);
+
+			if (!$r)
+				throw new \Exception('Error writing ' . $filename . ' -  are the permissions set correctly?' );
+
+			$r = @file_put_contents($filename, (string) $content);
+
+			if (!$r)
+				throw new \Exception('Folder was created but still error writing ' . $filename . ' -  are the permissions set correctly?' );
+		}
 			
 		$this->filesWritten[] = $filename;
 	}
