@@ -404,12 +404,12 @@ class Compiler
 	/**
 	 * Writes the source file
 	 *
-	 * @param string $fileID 
+	 * @param string $filename (incl file extension) 
 	 * @param string $code
 	 */
-	private function writeSource($fileID, $code)
+	private function writeSource($filename, $code)
 	{
-		$filename = $this->folderInput . '/' . $fileID . '.json';
+		$filename = $this->folderInput . '/' . $filename;
 			
 		$this->writeFile( $filename, $code );
 	}
