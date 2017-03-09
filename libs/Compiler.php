@@ -326,16 +326,27 @@ class Compiler
 								
 			throw new \Exception( $errorMessage );
 		}
-		
+
+		$this->saveCode($response[1], $doCleanUp);
+	}
+
+	/**
+	 * Parses compiler output and writes files to disk
+	 *
+	 * @param string $xmlFromCompiler
+	 * @param boolean $doCleanUp Remove files which are not in compiler output
+	 */
+	public function saveCode($xmlFromCompiler, $doCleanUp)
+	{
 		// Unfortunately, the xml-code needs to be parsed twice in order to handle the CDATA-blocks
-		$ids 	= @simplexml_load_string( $response[1] ); 
-		$code	= @simplexml_load_string( $response[1] , 'SimpleXMLElement', LIBXML_NOCDATA ); 
+		$ids 	= @simplexml_load_string( $xmlFromCompiler ); 
+		$code	= @simplexml_load_string( $xmlFromCompiler , 'SimpleXMLElement', LIBXML_NOCDATA ); 
 		
 		if ($ids===false || $code===false) {
 			$errorMsg = 'Error parsing xml coming from the TinyQueryCompiler - please visit www.tinyqueries.com for support.';
 			
 			if ($this->verbose) 
-				$errorMsg .= '\n\nResponse:\n\n' . $response[1];
+				$errorMsg .= '\n\nResponse:\n\n' . $xmlFromCompiler;
 			
 			throw new \Exception( $errorMsg );
 		}
