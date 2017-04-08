@@ -703,7 +703,14 @@ class Api extends HttpTools
 			throw new \Exception("Cannot convert reponse to CSV");
 
 		// Encode as UTF8
-		array_walk_recursive($response, array($this, 'toUTF8'));			
+		array_walk_recursive($response, array($this, 'toUTF8'));
+
+		// Format callback for CSV cell items
+		$formatter = function($item) {
+			if (is_array($item))
+				return implode("\n", $item);
+			return $item;
+		};			
 			
 		// If output is array of assocs
 		if (count($response)>0 && Arrays::isAssoc($response[0])) {
@@ -711,16 +718,16 @@ class Api extends HttpTools
 		    fputcsv($stdout, array_keys($response[0]), ';');
 			
 			foreach($response as $row) 
-				fputcsv($stdout, array_values($row), ';');
+				fputcsv($stdout, array_map( $formatter, array_values($row) ), ';');
 		}
 		// Output is an array of arrays
 		elseif (count($response)>0 && is_array($response[0]))
 			foreach($response as $row) 
-				fputcsv($stdout, $row, ';');
+				fputcsv($stdout, array_map($formatter, $row), ';');
 		// Output is 1 dim array
 		else
 			foreach($response as $item) 
-				fputcsv($stdout, array( $item ), ';');
+				fputcsv($stdout, array_map( $formatter, array( $item ) ), ';');
 		
         fclose($stdout);
 	}
