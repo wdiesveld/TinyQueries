@@ -124,7 +124,10 @@ class DB
 		
 		// throw exception for each error
 		$this->dbh->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-		
+
+		// Needed for Postgres to be able to execute multiple SQL statements at once
+		$this->dbh->setAttribute(\PDO::ATTR_EMULATE_PREPARES, 1);
+
 		// execute the initial query
 		if ($this->initQuery)
 			$this->execute($this->initQuery);
