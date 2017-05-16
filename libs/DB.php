@@ -362,7 +362,7 @@ class DB
 	}
 	
 	/**
-	 * Executes the given query 
+	 * Executes the given query
 	 * 
 	 * Note that when using $checkForMultipleStatements, this will only work for non-select queries
 	 * because the statement cursor is moved forward and cannot be rewinded 
