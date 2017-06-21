@@ -25,6 +25,7 @@ class DB
 	public $driver;
 	public $host;
 	public $port;
+	public $charset;
 	public $dbname;
 	public $user;
 	
@@ -62,6 +63,7 @@ class DB
 		$this->dbname		= $config->database->name;
 		$this->user			= $config->database->user;
 		$this->pw 			= $config->database->password;
+		$this->charset 		= $config->database->charset;
 		$this->initQuery	= $config->database->initQuery;
 		$this->nested		= $config->postprocessor->nest_fields;
 
@@ -115,7 +117,10 @@ class DB
 			throw new \Exception("No database user specified in config");
 		
 		// construct PDO object
-		$dsn = $this->driver . ":dbname=" . $this->dbname . ";host=" . $this->host;
+		$dsn = $this->driver . ':dbname=' . $this->dbname . ';host=' . $this->host;
+		
+		if ($this->driver != 'pgsql' && $this->charset)
+			$dsn .= ';charset=' . $this->charset;
 		
 		if ($this->port)
 			$dsn .= ';port=' . $this->port;
@@ -131,6 +136,9 @@ class DB
 		// execute the initial query
 		if ($this->initQuery)
 			$this->execute($this->initQuery);
+
+		if ($this->driver == 'pgsql' && $this->charset)
+			$this->execute("SET NAMES '" . $this->charset . "'");
 	}
 
 	/**

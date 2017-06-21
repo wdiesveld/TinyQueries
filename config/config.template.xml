@@ -48,6 +48,7 @@
 		name		= ""
 		user		= ""
 		password	= ""
+		charset 	= ""
 	/>
 
 	<!--

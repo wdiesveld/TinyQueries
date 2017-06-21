@@ -142,6 +142,7 @@ class Config
 		$this->database->driver		= ((string) $config->database['driver']) ? (string) $config->database['driver'] : 'mysql';
 		$this->database->host		= ((string) $config->database['host']) ? (string) $config->database['host'] : 'localhost';
 		$this->database->port		= ((string) $config->database['port']) ? (string) $config->database['port'] : null;
+		$this->database->charset	= ((string) $config->database['charset']) ? (string) $config->database['charset'] : 'utf8';
 		$this->database->name		= (string) $config->database['name'];
 		$this->database->user		= (string) $config->database['user'];
 		$this->database->password	= (string) $config->database['password'];
