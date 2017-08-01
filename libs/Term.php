@@ -18,7 +18,7 @@ require_once('Query/Tree.php');
 class Term
 {
 	// A term string should match the following reg exp
-	const CHARS = '/^[\w\.\:\#\-\,\(\)\|\+\;\s]+$/';
+	const CHARS = '/^[\w\.\:\#\-\,\(\)\|\+\;\s\/]+$/';
 	
 	/**
 	 * Parses a query term and returns an object of type Query (or extended class)
@@ -170,12 +170,12 @@ class Term
 		$idTree = trim($idTree);
 		
 		// If tree has only one node this is just the ID of the query
-		if (preg_match('/^[\w\-\.]+$/', $idTree))
+		if (preg_match('/^[\w\-\.\/]+$/', $idTree))
 			return array($idTree, null);
 			
 		$match = null;
 		
-		if (!preg_match('/^([\w\-\.]*)\s*\((.*)\)$/', $idTree, $match))
+		if (!preg_match('/^([\w\-\.\/]*)\s*\((.*)\)$/', $idTree, $match))
 			return array( null, null );
 			
 		$id = ($match[1])
