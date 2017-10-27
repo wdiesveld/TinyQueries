@@ -12,7 +12,7 @@ require_once('Compiler.php');
  *
  * PDO based DB layer which can be used to call predefined SQL queries
  *
- * @author 	Wouter Diesveld <wouter@tinyqueries.com>
+ * @author Wouter Diesveld <wouter@tinyqueries.com>
  * @package TinyQueries
  */
 class DB
@@ -144,6 +144,7 @@ class DB
 	/**
 	 * Checks if there is a connection
 	 *
+	 * @return boolean
 	 */
 	public function connected()
 	{
@@ -172,6 +173,7 @@ class DB
 	 * Creates and returns a new Query object 
 	 *
 	 * @param string $term A query term like "a" or "a:b+c(d|e)"
+	 * @return Query
 	 */
 	public function query($term)
 	{
@@ -183,6 +185,7 @@ class DB
 	 *
 	 * @param string $term
 	 * @param mixed $paramValues
+	 * @return array|string
 	 */
 	public function get($term, $paramValues = null)
 	{
@@ -194,10 +197,35 @@ class DB
 	 *
 	 * @param string $term
 	 * @param mixed $paramValues
+	 * @return array|string
 	 */
 	public function get1($term, $paramValues = null)
 	{
 		return $this->query($term)->select1($paramValues);
+	}
+
+	/**
+	 * @param string $identifier Can be a table name or field name
+	 * @return string
+	 */
+	public function quoteIdentifier($identifier)
+	{
+		$match = null;
+		$quoteChar = null;
+
+		switch ($this->driver) {
+			case 'pgsql':
+				$quoteChar = '"';
+				break;
+			case 'mysql':
+			default:
+				$quoteChar = '`';
+				break;
+		}
+
+		return (preg_match('/^(.+)\.(.+)$/', $identifier, $match))
+			? $match[1] . $quoteChar . $match[2] . $quoteChar
+			: $quoteChar . $identifier . $quoteChar;
 	}
 	
 	/**
@@ -205,15 +233,37 @@ class DB
 	 *
 	 * @param string $table
 	 * @param int|array $IDfields If an integer is supplied, it is assumed to be the primary key. 
-	 *                            If it is an array, it is assumed to be an assoc array of fields which should all be matched
+	 * If it is an array, it is assumed to be an assoc array of fields which should all be matched
+	 * @param string|array $orderByFields
+	 * @return string
 	 */
-	private function createSelect($table, $IDfields)
+	private function createSelect($table, $IDfields, $orderByFields = null)
 	{
 		// Convert to primary key selection
-		if (!is_array($IDfields))
+		if (!is_array($IDfields)) {
 			$IDfields = array( $this->primaryKey => $IDfields );
-			
-		return "select * from `" . $this->toSQL($table) . "` where " . $this->fieldList( $IDfields, " and ", true );
+		}
+
+		$sql =
+			"SELECT * FROM " .
+			$this->quoteIdentifier($table) .
+			" WHERE " .
+			$this->fieldList($IDfields, " AND ", true);
+
+		if ($orderByFields) {
+			if (is_string($orderByFields)) {
+				$orderByFields = array($orderByFields);
+			}
+
+			$sql .= 
+				" ORDER BY " .
+				implode(", ", array_map(
+					array($this, 'quoteIdentifier'), 
+					$orderByFields
+				));
+		}
+
+		return $sql;
 	}
 	
 	/**
@@ -221,7 +271,8 @@ class DB
 	 *
 	 * @param string $table
 	 * @param int|array $IDfields If an integer is supplied, it is assumed to be the primary key. 
-	 *                            If it is an array, it is assumed to be an assoc array of fields which should all be matched
+	 * If it is an array, it is assumed to be an assoc array of fields which should all be matched
+	 * @return array
 	 */
 	public function getRecord($table, $IDfields)
 	{
@@ -233,11 +284,13 @@ class DB
 	 *
 	 * @param string $table
 	 * @param int|array $IDfields If an integer is supplied, it is assumed to be the primary key. 
-	 *                            If it is an array, it is assumed to be an assoc array of fields which should all be matched
+	 * If it is an array, it is assumed to be an assoc array of fields which should all be matched
+	 * @param array $orderByFields
+	 * @return array
 	 */
-	public function getRecordSet($table, $IDfields)
+	public function getRecordSet($table, $IDfields, $orderByFields = null)
 	{
-		return $this->selectAllAssoc( $this->createSelect($table, $IDfields) );
+		return $this->selectAllAssoc( $this->createSelect($table, $IDfields, $orderByFields) );
 	}
 	
 	/**
@@ -246,6 +299,7 @@ class DB
 	 * @param string $field Fieldname which is used for selection
 	 * @param string $table
 	 * @param int|string $value Fieldvalue
+	 * @return array
 	 */
 	public function getRecordBy($field, $table, $value)
 	{
@@ -258,10 +312,12 @@ class DB
 	 * @param string $field Fieldname which is used for selection
 	 * @param string $table
 	 * @param int|string $value Fieldvalue
+	 * @param array $orderByFields
+	 * @return array
 	 */
-	public function getRecordSetBy($field, $table, $value)
+	public function getRecordSetBy($field, $table, $value, $orderByFields = null)
 	{
-		return $this->getRecordSet($table, array( $field => $value ));
+		return $this->getRecordSet($table, array( $field => $value ), $orderByFields);
 	}
 	
 	/**
@@ -270,6 +326,7 @@ class DB
 	 * @param string $table
 	 * @param assoc $record
 	 * @param boolean $updateOnDuplicateKey If the insert fails due to a duplicate key error, then try to do an update (MySQL only)
+	 * @return int Id of the new record
 	 */
 	public function insert($table, $record, $updateOnDuplicateKey = false)
 	{
@@ -280,14 +337,14 @@ class DB
 		$values	= array_values($record);
 		
 		for ($i=0;$i<count($keys);$i++) {
-			$keys[$i] 	= "`" . $this->toSQL($keys[$i]) . "`";
+			$keys[$i] = $this->quoteIdentifier($keys[$i]);
 			$values[$i] = $this->toSQL($values[$i], true);
 		}
 		
 		$keysSQL 	= implode(",", $keys);
 		$valuesSQL 	= implode(",", $values);
 		
-		$query = "insert into `" . $this->toSQL($table) . "` ($keysSQL) values ($valuesSQL)";
+		$query = "INSERT INTO " . $this->quoteIdentifier($table) . " ($keysSQL) VALUES ($valuesSQL)";
 		
 		if ($updateOnDuplicateKey)
 			$query .= " on duplicate key update " . $this->fieldList( $record, "," );
@@ -321,6 +378,7 @@ class DB
 	 *
 	 * @param string $table
 	 * @param assoc $record
+	 * @return int
 	 */
 	public function save($table, $record)
 	{
@@ -332,7 +390,7 @@ class DB
 	 *
 	 * @param string $table
 	 * @param int|array $IDfields If an integer is supplied, it is assumed to be the primary key. 
-	 *                            If it is an array, it is assumed to be an assoc array of fields which should all be matched
+	 * If it is an array, it is assumed to be an assoc array of fields which should all be matched
 	 * @param assoc $record
 	 */
 	public function update($table, $IDfields, $record)
@@ -344,9 +402,10 @@ class DB
 		if (!is_array($IDfields))
 			$IDfields = array( $this->primaryKey => $IDfields );
 
-		$query = 	"update `" . $this->toSQL($table) . "`" .
-					" set " . $this->fieldList( $record, "," ) . 
-					" where " . $this->fieldList( $IDfields, " and ", true );
+		$query = 
+			"UPDATE " . $this->quoteIdentifier($table) .
+			" SET " . $this->fieldList( $record, "," ) .
+			" WHERE " . $this->fieldList( $IDfields, " and ", true );
 		
 		$this->execute($query);
 	}
@@ -356,16 +415,20 @@ class DB
 	 *
 	 * @param string $table
 	 * @param int|array $IDfields If an integer is supplied, it is assumed to be the primary key. 
-	 *                            If it is an array, it is assumed to be an assoc array of fields which should all be matched
+	 * If it is an array, it is assumed to be an assoc array of fields which should all be matched
 	 */
 	public function delete($table, $IDfields)
 	{
 		// Convert to primary key selection
 		if (!is_array($IDfields))
 			$IDfields = array( $this->primaryKey => $IDfields );
-			
-		$query = "delete from `" . $this->toSQL($table) . "` where " . $this->fieldList( $IDfields, " and ", true );
-		
+
+		$query = 
+			"DELETE FROM " .
+			$this->quoteIdentifier($table) .
+			" WHERE " .
+			$this->fieldList($IDfields, " AND ", true);
+
 		$this->execute($query);
 	}
 	
@@ -428,6 +491,7 @@ class DB
 	 * @param string $string
 	 * @param boolean $addquotes (optional)
 	 * @param boolean $useNULLforEmptyValue (optional)
+	 * @return string
 	 */
 	public function toSQL($string, $addquotes = false, $useNULLforEmptyValue = false)
 	{
@@ -464,6 +528,7 @@ class DB
 	 * Same as toSQL, except that integers & tuples like (1,2,3) are not quoted
 	 *
 	 * @param string $string
+	 * @return string
 	 */
 	public function encode($string)
 	{
@@ -478,6 +543,7 @@ class DB
 	 *
 	 * @param string $query SQL-query
 	 * @param assoc $params Query parameters
+	 * @return array
 	 */
 	public function selectAll($query, $params = array())
 	{
@@ -489,6 +555,7 @@ class DB
 	 *
 	 * @param string $query SQL-query
 	 * @param assoc $params Query parameters
+	 * @return array
 	 */
 	public function selectAllAssoc($query, $params = array())
 	{
@@ -500,6 +567,7 @@ class DB
 	 *
 	 * @param string $query SQL-query
 	 * @param assoc $params Query parameters
+	 * @return array
 	 */
 	public function selectRow($query, $params = array())
 	{
@@ -511,6 +579,7 @@ class DB
 	 *
 	 * @param string $query SQL-query
 	 * @param assoc $params Query parameters
+	 * @return array
 	 */
 	public function selectAssoc($query, $params = array())
 	{
@@ -522,6 +591,7 @@ class DB
 	 *
 	 * @param string $query SQL-query
 	 * @param assoc $params Query parameters
+	 * @return string|int
 	 */
 	public function selectFirst($query, $params = array()) 
 	{
@@ -535,6 +605,7 @@ class DB
 	 *
 	 * @param string $query SQL-query
 	 * @param assoc $params Query parameters
+	 * @return array
 	 */
 	public function selectAllFirst($query, $params = array()) 
 	{
@@ -547,24 +618,25 @@ class DB
 	}
 	
 	/**
-	 * Create a concatenation of `fieldname` = "value" strings
+	 * Create a concatenation of fieldname = "value" strings
 	 *
-	 * @param assoc $fields
+	 * @param array $fields key/value pairs
 	 * @param string $glue
 	 * @param boolean $isOnNull If true, it uses 'is' for NULL values
+	 * @return string
 	 */
 	private function fieldList($fields, $glue, $isOnNull = false)
 	{
 		$list = array();
-		
+
 		foreach ($fields as $name => $value) {
-			$equalsSign = ($isOnNull && is_null($value)) 
-							? " is " 
-							: " = ";
-							
-			$list[] = "`" . $this->toSQL($name) . "`" . $equalsSign . $this->toSQL($value, true);
+			$equalsSign = ($isOnNull && is_null($value))
+				? " is "
+				: " = ";
+
+			$list[] = $this->quoteIdentifier($name) . $equalsSign . $this->toSQL($value, true);
 		}
 	
-		return implode( $glue, $list );
+		return implode($glue, $list);
 	}
 } 
