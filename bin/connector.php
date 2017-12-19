@@ -11,81 +11,80 @@
  * The query parameters should be encoded as JSON
  *
  * The output of this script is the resulting data set in JSON
- * 
+ *
  */
 
 // This will be used to catch PHP fatal errors
-register_shutdown_function( '_shutdown' );
+register_shutdown_function('_shutdown');
 
 error_reporting(0);
 
-require_once( dirname(__FILE__) . '/../libs/DB.php' ); 
-require_once( dirname(__FILE__) . '/../libs/Api/Api.php' ); 
+require_once(dirname(__FILE__) . '/../libs/DB.php');
+require_once(dirname(__FILE__) . '/../libs/Api/Api.php');
 
-try
-{
-	// Show usage message
-	if (count($argv) <= 1)
-	{
-		echo "Usage: php connector.php [queryTerm] [queryParameters] [globalParameters]\n";
-		exit(0);
-	}
-	
-	// Catch all output which is send to stdout
-	ob_start();
+try {
+    // Show usage message
+    if (count($argv) <= 1) {
+        echo "Usage: php connector.php [queryTerm] [queryParameters] [globalParameters]\n";
+        exit(0);
+    }
 
-	// Get query term
-	$term 		= $argv[1];
-	$params 	= null;
-	$globals 	= null;
-	
-	// Get query parameters
-	if (count($argv) >= 3)
-	{
-		$params = @json_decode( $argv[2], true );
-		
-		if (is_null($params))
-			throw new Exception("Cannot decode parameters - parameters should be encoded as JSON");
-	}
-	
-	// Get global query parameters
-	if (count($argv) >= 4)
-	{
-		$globals = @json_decode( $argv[3], true );
-		
-		if (is_null($globals))
-			throw new Exception("Cannot decode global parameters - global parameters should be encoded as JSON");
-	}
-	
-	// Create database object
-	$db = new TinyQueries\DB();
-	
-	$db->connect();
-	
-	if ($globals)
-		foreach ($globals as $name => $value)
-			$db->param($name, $value);
-	
-	// Run query and return result as JSON
-	$json = TinyQueries\Api::jsonEncode( $db->query($term)->run($params) );
-	
-	$textOutput = ob_get_contents();
+    // Catch all output which is send to stdout
+    ob_start();
 
-	if ($textOutput)
-		throw new \Exception($textOutput);
-		
-	// reset output buffer
-	ob_clean();
-	
-	echo $json;
-}
-catch (Exception $e)
-{
-	// reset output buffer
-	ob_clean();
+    // Get query term
+    $term 		= $argv[1];
+    $params 	= null;
+    $globals 	= null;
 
-	echo json_encode( array( "error" => $e->getMessage() ) );
-	exit(1);
+    // Get query parameters
+    if (count($argv) >= 3) {
+        $params = @json_decode($argv[2], true);
+
+        if (is_null($params)) {
+            throw new Exception("Cannot decode parameters - parameters should be encoded as JSON");
+        }
+    }
+
+    // Get global query parameters
+    if (count($argv) >= 4) {
+        $globals = @json_decode($argv[3], true);
+
+        if (is_null($globals)) {
+            throw new Exception("Cannot decode global parameters - global parameters should be encoded as JSON");
+        }
+    }
+
+    // Create database object
+    $db = new TinyQueries\DB();
+
+    $db->connect();
+
+    if ($globals) {
+        foreach ($globals as $name => $value) {
+            $db->param($name, $value);
+        }
+    }
+
+    // Run query and return result as JSON
+    $json = TinyQueries\Api::jsonEncode($db->query($term)->run($params));
+
+    $textOutput = ob_get_contents();
+
+    if ($textOutput) {
+        throw new \Exception($textOutput);
+    }
+
+    // reset output buffer
+    ob_clean();
+
+    echo $json;
+} catch (Exception $e) {
+    // reset output buffer
+    ob_clean();
+
+    echo json_encode(array( "error" => $e->getMessage() ));
+    exit(1);
 }
 
 exit(0);
@@ -96,9 +95,9 @@ exit(0);
  */
 function _shutdown()
 {
-	$error = error_get_last();
+    $error = error_get_last();
 
-	if ($error !== NULL)
-		echo json_encode( array( 'error' => 'PHP error: ' . $error['message'] . ' in ' . $error['file'] . ' line ' . $error['line'] ) );
+    if ($error !== null) {
+        echo json_encode(array( 'error' => 'PHP error: ' . $error['message'] . ' in ' . $error['file'] . ' line ' . $error['line'] ));
+    }
 }
-
