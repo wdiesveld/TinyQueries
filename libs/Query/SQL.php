@@ -484,9 +484,8 @@ class QuerySQL extends Query
             // Convert array to CSV which is suitable for IN
             if (is_array($value)) {
                 $this->setArrayParam($sqlParsed, $name, $value);
-            }
             // Param is a registered parameter
-            elseif (property_exists($this->_interface->params, $name)) {
+            } elseif (property_exists($this->_interface->params, $name)) {
                 switch ($this->_interface->params->$name->type) {
                     case "int": $pdoType = \PDO::PARAM_INT; break;
                     default:	$pdoType = \PDO::PARAM_STR; break;
@@ -496,11 +495,26 @@ class QuerySQL extends Query
                     'value'	=> $value,
                     'type'	=> $pdoType
                 );
-            }
             // Param is not registered (DEPRECATED - but still needed for global params)
-            else {
-                $valueSQL = $this->db->toSQL($value, true);
-                $this->setParam($sqlParsed, $name, $valueSQL);
+            } else {
+                $this->setParam(
+                    $sqlParsed,
+                    $name,
+                    $this->db->toSQL($value, true)
+                );
+            }
+        }
+
+        // Not all ODBC drivers support named parameters, so to be sure set param ourselves
+        if ($pdoParams && 
+            $this->db->pdo()->getAttribute(\PDO::ATTR_DRIVER_NAME) == 'odbc') {
+            foreach ($pdoParams as $name => $def) {
+                $addQuotes = ($def['type'] != \PDO::PARAM_INT || !preg_match('/^\d+$/', $def['value']));
+                $this->setParam(
+                    $sqlParsed,
+                    $name,
+                    $this->db->toSQL($def['value'], $addQuotes)
+                );
             }
         }
 

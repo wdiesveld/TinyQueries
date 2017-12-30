@@ -541,7 +541,15 @@ class DB
             $string = "";
         }
 
-        $sql = $this->dbh->quote($string);
+        // Not all drivers implement PDO::quote, so check if it is working
+        if (preg_match('/test/', $this->dbh->quote('test'))) {
+            $sql = $this->dbh->quote($string);
+        // Do default quote-encoding
+        } else {
+            $sql = preg_replace('/\'/', "\\\'", $string);
+            $sql = preg_replace('/\"/', "\\\"", $sql);
+            $sql = "'" . $sql . "'";
+        }
 
         // remove quotes added by quote(.)
         if (!$addquotes) {
