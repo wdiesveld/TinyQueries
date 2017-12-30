@@ -343,8 +343,12 @@ class Query
      */
     public function select($paramValues = null, $key = null, $cleanUp = true)
     {
+        if ($this->operation != self::READ) {
+            throw new \Exception('Query::select cannot be called on ' . $this->operation . '-queries');
+        }
+
         // If no key is supplied take default from JSON spec
-        if (is_null($key)) {
+        if (is_null($key) && $this->output) {
             $key = $this->output->key;
         }
 
@@ -524,6 +528,10 @@ class Query
      */
     protected function cleanUp(&$rows, $type, $key = null)
     {
+        if (!$this->output) {
+            return;
+        }
+
         if ($this->output->columns == 'first') {
             return;
         }
