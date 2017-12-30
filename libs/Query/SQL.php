@@ -516,6 +516,7 @@ class QuerySQL extends Query
                     $this->db->toSQL($def['value'], $addQuotes)
                 );
             }
+            $pdoParams = array();
         }
 
         return array($sqlParsed, $pdoParams);
