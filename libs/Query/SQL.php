@@ -325,7 +325,14 @@ class QuerySQL extends Query
 
         // Split dotted fieldnames
         foreach ($keys as $key) {
-            $map = explode('.', $key);
+            if (preg_match('/^DOTTED_/', $key)) {
+                $field = substr($key,7);
+                $dotSign = '_DOT_';
+            } else {
+                $field = $key;
+                $dotSign = '.';
+            }
+            $map = explode($dotSign, $field);
             if (count($map) > 1) {
                 $mapping[ $key ] = $map;
             }
