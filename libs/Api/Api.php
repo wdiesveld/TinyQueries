@@ -41,13 +41,13 @@ class Api extends HttpTools
      */
     public function __construct($configFile = null, $debugMode = false, $addProfilingInfo = false)
     {
-        $this->server 	 		= self::getServerVar('SERVER_NAME');
-        $this->debugMode 		= $debugMode;
-        $this->configFile 		= $configFile;
+        $this->server = self::getServerVar('SERVER_NAME');
+        $this->debugMode = $debugMode;
+        $this->configFile = $configFile;
         $this->addProfilingInfo = $addProfilingInfo;
-        $this->doTransaction	= true;
-        $this->contentType		= null;
-        $this->reservedParams 	= array('query', 'param'); // + all params starting with _ are also ignored as query parameter
+        $this->doTransaction = true;
+        $this->contentType = null;
+        $this->reservedParams = array('query', 'param'); // + all params starting with _ are also ignored as query parameter
 
         // Request contains the details of the request
         $this->request = array(
