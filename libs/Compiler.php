@@ -274,7 +274,7 @@ class Compiler
                 $content = @file_get_contents($sourceFiles[ $i ]);
 
                 if (!$content) {
-                    throw new \Exception('Cannot read ' . $file);
+                    throw new \Exception('Cannot read ' . $sourceFiles[ $i ]);
                 }
 
                 $sourceID = $sourceIDs[ $i ];
