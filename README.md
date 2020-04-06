@@ -1,5 +1,7 @@
 [![TinyQueries](http://tinyqueries.com/css/images/tiny-queries-logo-large.png)](http://www.tinyqueries.com/)
 
+_This repo is **@deprecated** - please use `tqc-win` or `tqc-php` instead - see https://compile.tinyqueries.com for more info_
+
 With TinyQueries you can create a REST API in which the endpoints are mapped directly to database queries, without an intermediate object layer. The queries can be created either by plain SQL or by a compiler which compiles object oriented notation into SQL.
 It's based on two components:
 * A query compiler - it's like a Less for SQL, so you create SQL queries by compiling them.
