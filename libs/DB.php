@@ -627,13 +627,15 @@ class DB
      *
      * @param string $query SQL-query
      * @param assoc $params Query parameters
-     * @return string|int
+     * @return string|int|null
      */
     public function selectFirst($query, $params = array())
     {
         $sth = $this->execute($query, $params);
         $row = $sth->fetch(\PDO::FETCH_NUM);
-        return $row[0];
+        return is_array($row)
+            ? $row[0]
+            : null;
     }
 
     /**
