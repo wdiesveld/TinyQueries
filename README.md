@@ -2,7 +2,7 @@
 
 ___
 
-_This repo is **@deprecated** - please use `tqc-win` or `tqc-php` instead - see https://compile.tinyqueries.com for more info_
+_This repo is **@deprecated** - please use https://github.com/querytechnology/tqc-php instead_
 
 ___
 
